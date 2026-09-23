@@ -4,6 +4,8 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
+import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { 
   DareItem, 
   UserProfile, 
@@ -30,6 +32,10 @@ import { initialDropZones } from './src/data/dropZones';
 import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog';
 
 dotenv.config();
+
+// Initialize Firebase Admin
+admin.initializeApp();
+const db = getFirestore();
 
 const PORT = 3000;
 
