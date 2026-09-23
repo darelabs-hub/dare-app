@@ -39,6 +39,7 @@ import { ConfettiEffect, triggerConfetti } from './components/ConfettiEffect';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { APIProvider } from '@vis.gl/react-google-maps';
+import { useAuth } from './hooks/useAuth';
 import { DareItem, UserProfile, NotificationItem, CredTransaction } from './types';
 import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';

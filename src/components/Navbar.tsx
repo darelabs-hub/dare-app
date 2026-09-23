@@ -31,7 +31,7 @@ import { DareDayLogo } from './DareDayLogo';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
-  currentUser: UserProfile;
+  currentUser?: UserProfile;
   allUsers: UserProfile[];
   onSelectUser: (user: UserProfile) => void;
   onOpenCreateModal: () => void;
@@ -43,6 +43,8 @@ interface NavbarProps {
   onOpenCredLog?: () => void;
   onOpenProUpgrade?: () => void;
   onOpenEventsMerch?: () => void;
+  onSignIn: () => void;
+  onSignOut: () => void;
   onOpenArmory?: () => void;
   onOpenSeasonPass?: () => void;
   onOpenProfile?: (user: UserProfile, tab?: 'heatmap' | 'location-map' | 'completed' | 'created' | 'settings' | 'squad' | 'rivalry') => void;
@@ -278,51 +280,69 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Prominent User Profile & Account Dropdown Trigger */}
           <div className="relative shrink-0" ref={userDropdownRef}>
-            <button
-              id="user-profile-menu-btn"
-              type="button"
-              onClick={() => {
-                playSound('click');
-                setUserDropdownOpen(prev => !prev);
-              }}
-              className={`flex items-center gap-1 sm:gap-2 rounded-xl border p-1 sm:px-2.5 sm:py-1.5 text-left transition-all cursor-pointer ${
-                userDropdownOpen
-                  ? 'border-indigo-400 bg-indigo-950/80 shadow-[0_0_15px_rgba(99,102,241,0.4)] ring-2 ring-indigo-500'
-                  : 'border-slate-700 bg-slate-900/95 hover:border-indigo-500 hover:bg-slate-800'
-              }`}
-              aria-expanded={userDropdownOpen}
-              aria-label="User Profile and Account Menu"
-            >
-              <div className="relative shrink-0">
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover transition-all ${
-                    currentUser.equippedFrame === 'frame_neon_cyan' ? 'ring-2 ring-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.7)] animate-pulse' :
-                    currentUser.equippedFrame === 'frame_matrix_glitch' ? 'ring-2 ring-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.8)]' :
-                    currentUser.equippedFrame === 'frame_syndicate_gold' ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.9)]' :
-                    currentUser.equippedFrame === 'frame_quantum_void' ? 'ring-2 ring-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.9)] animate-pulse' :
-                    'ring-1.5 ring-indigo-500/60 shadow-sm'
-                  }`}
-                />
-                {currentUser.isPro && (
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-sm ring-1 ring-slate-900">
-                    <Crown className="h-1.5 w-1.5" />
-                  </span>
-                )}
-              </div>
+export const Navbar: React.FC<NavbarProps> = ({
+  currentUser,
+  allUsers,
+  onSelectUser,
+  onSignIn,
+  onSignOut,
+  // ... rest of props ...
+}) => {
+  // ... inside render:
+  {currentUser ? (
+    <button
+      id="user-profile-menu-btn"
+      type="button"
+      onClick={() => {
+        playSound('click');
+        setUserDropdownOpen(prev => !prev);
+      }}
+      className={`flex items-center gap-1 sm:gap-2 rounded-xl border p-1 sm:px-2.5 sm:py-1.5 text-left transition-all cursor-pointer ${
+        userDropdownOpen
+          ? 'border-indigo-400 bg-indigo-950/80 shadow-[0_0_15px_rgba(99,102,241,0.4)] ring-2 ring-indigo-500'
+          : 'border-slate-700 bg-slate-900/95 hover:border-indigo-500 hover:bg-slate-800'
+      }`}
+      aria-expanded={userDropdownOpen}
+      aria-label="User Profile and Account Menu"
+    >
+      <div className="relative shrink-0">
+        <img
+          src={currentUser.avatar}
+          alt={currentUser.name}
+          className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover transition-all ${
+            currentUser.equippedFrame === 'frame_neon_cyan' ? 'ring-2 ring-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.7)] animate-pulse' :
+            currentUser.equippedFrame === 'frame_matrix_glitch' ? 'ring-2 ring-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.8)]' :
+            currentUser.equippedFrame === 'frame_syndicate_gold' ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.9)]' :
+            currentUser.equippedFrame === 'frame_quantum_void' ? 'ring-2 ring-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.9)] animate-pulse' :
+            'ring-1.5 ring-indigo-500/60 shadow-sm'
+          }`}
+        />
+        {currentUser.isPro && (
+          <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-sm ring-1 ring-slate-900">
+            <Crown className="h-1.5 w-1.5" />
+          </span>
+        )}
+      </div>
 
-              <div className="flex flex-col min-w-0 pr-0.5">
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <span className="font-bold text-xs text-white truncate max-w-[55px] xs:max-w-[75px] sm:max-w-[95px]">{currentUser.handle}</span>
-                  <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-white' : ''}`} />
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
-                  <span className="text-amber-400 font-bold">{currentUser.cred} CR</span>
-                  <span className="hidden sm:inline text-slate-500">• {currentUser.equippedTitle || currentUser.rank}</span>
-                </div>
-              </div>
-            </button>
+      <div className="flex flex-col min-w-0 pr-0.5">
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <span className="font-bold text-xs text-white truncate max-w-[55px] xs:max-w-[75px] sm:max-w-[95px]">{currentUser.handle}</span>
+          <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-white' : ''}`} />
+        </div>
+        <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+          <span className="text-amber-400 font-bold">{currentUser.cred} CR</span>
+          <span className="hidden sm:inline text-slate-500">• {currentUser.equippedTitle || currentUser.rank}</span>
+        </div>
+      </div>
+    </button>
+  ) : (
+    <button
+      onClick={onSignIn}
+      className="rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-3 py-1.5 text-xs font-bold text-indigo-200 hover:border-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
+    >
+      Sign In
+    </button>
+  )}
 
             {/* Persona Switcher & Account Menu Dropdown */}
             {userDropdownOpen && (
