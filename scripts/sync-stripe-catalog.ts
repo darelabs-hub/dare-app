@@ -7,6 +7,7 @@ export interface DareCatalogProduct {
   id: string;
   name: string;
   description: string;
+  imageUrl?: string;
   type: 'recurring' | 'one_time';
   interval?: 'month' | 'year';
   amount: number;
@@ -19,6 +20,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_lite_monthly',
     name: 'DARE Pro Lite — Monthly',
     description: 'Pro Status Lite — Budget Friendly. Exclusive Gold PRO Badge, Daily Stipend Multiplier (120 CR/day), Basic Custom Dare Creation.',
+    imageUrl: 'https://dare.me.uk/assets/pro-lite.png',
     type: 'recurring',
     interval: 'month',
     amount: 99, // £0.99
@@ -33,6 +35,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_lite_yearly',
     name: 'DARE Pro Lite — Annual',
     description: 'Full year of Pro Lite with 2 months free (£9.99/year). Exclusive Gold PRO badge, 120 CR daily stipend, basic custom dare creations.',
+    imageUrl: 'https://dare.me.uk/assets/pro-lite.png',
     type: 'recurring',
     interval: 'year',
     amount: 999, // £9.99
@@ -47,6 +50,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_elite_monthly',
     name: 'DARE Pro Elite — Monthly',
     description: 'Most Popular — Best Value. Exclusive Gold PRO Badge, AI Challenge Oracle, Premium Card Highlights, Streak Loss Protection, 250 CR/day Stipend.',
+    imageUrl: 'https://dare.me.uk/assets/pro-elite.png',
     type: 'recurring',
     interval: 'month',
     amount: 199, // £1.99
@@ -61,6 +65,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_elite_yearly',
     name: 'DARE Pro Elite — Annual',
     description: 'Full year of Pro Elite with 2 months free (£19.99/year). Includes AI Challenge Oracle, card highlights, streak shields, and 250 CR daily stipend.',
+    imageUrl: 'https://dare.me.uk/assets/pro-elite.png',
     type: 'recurring',
     interval: 'year',
     amount: 1999, // £19.99
@@ -75,6 +80,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_ultra_monthly',
     name: 'DARE Pro Ultra — Monthly',
     description: 'Ultimate Unrestricted — Full Unlock. Exclusive Gold PRO Badge, Unlimited AI Challenge Oracle, Priority Badge & Custom Aura Frame, 3x Voting Power, 450 CR/day Stipend.',
+    imageUrl: 'https://dare.me.uk/assets/pro-ultra.png',
     type: 'recurring',
     interval: 'month',
     amount: 399, // £3.99
@@ -89,6 +95,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_pro_ultra_yearly',
     name: 'DARE Pro Ultra — Annual',
     description: 'Full year of Pro Ultra with 2 months free (£39.99/year). Ultimate status, unlimited AI prompts, custom aura frame, 3x voting power, 450 CR/day stipend.',
+    imageUrl: 'https://dare.me.uk/assets/pro-ultra.png',
     type: 'recurring',
     interval: 'year',
     amount: 3999, // £39.99
@@ -103,6 +110,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_battle_pass_s1',
     name: 'Season 1 Battle Pass: Elite Track',
     description: 'Unlock 50 premium tier rewards, exclusive weapon/cyberdeck cosmetics, 1,500 Cred return, and the Legendary Netrunner Prime title.',
+    imageUrl: 'https://dare.me.uk/assets/battle-pass.png',
     type: 'one_time',
     amount: 499, // £4.99
     currency: 'gbp',
@@ -115,6 +123,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_cred_pack_500',
     name: 'Cyber Cred Starter Pack (500 Cred + Cryo-Shield)',
     description: 'Instant injection of 500 Cred + 1x Cryo-Shield streak protector item for the Cyber Armory.',
+    imageUrl: 'https://dare.me.uk/assets/cred-pack.png',
     type: 'one_time',
     amount: 199, // £1.99
     currency: 'gbp',
@@ -127,6 +136,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_cred_pack_2500',
     name: 'Cyber Cred Vault (2,500 Cred + Rare Matrix Frame)',
     description: 'High-roller bankroll of 2,500 Cred + animated Matrix Glitch avatar frame.',
+    imageUrl: 'https://dare.me.uk/assets/cred-pack.png',
     type: 'one_time',
     amount: 499, // £4.99
     currency: 'gbp',
@@ -139,6 +149,7 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     id: 'dare_booster_bundle',
     name: 'Armory Tactical Booster Bundle',
     description: 'Includes 3x Quantum Oracle Reroll tokens and 2x Cryo-Shield Streak Freezes.',
+    imageUrl: 'https://dare.me.uk/assets/booster.png',
     type: 'one_time',
     amount: 99, // £0.99
     currency: 'gbp',
@@ -178,6 +189,7 @@ export async function syncStripeCatalog(customKey?: string) {
           name: item.name,
           description: item.description,
           tax_code: 'txcd_10000000',
+          images: item.imageUrl ? [item.imageUrl] : undefined,
           metadata: {
             ...item.metadata,
             dareday_item_id: item.id,
@@ -190,6 +202,7 @@ export async function syncStripeCatalog(customKey?: string) {
           name: item.name,
           description: item.description,
           tax_code: 'txcd_10000000',
+          images: item.imageUrl ? [item.imageUrl] : undefined,
           metadata: {
             ...item.metadata,
             dareday_item_id: item.id,

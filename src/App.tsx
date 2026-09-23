@@ -45,6 +45,7 @@ import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
 
 export default function App() {
+  const { user, signIn, logout } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile>({
     id: 'u_dareday',
@@ -594,9 +595,11 @@ export default function App() {
       
       {/* Navbar */}
       <Navbar
-        currentUser={currentUser}
+        currentUser={user ? currentUser : undefined}
         allUsers={users}
         onSelectUser={(u) => setCurrentUser(u)}
+        onSignIn={signIn}
+        onSignOut={logout}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         onOpenTournaments={() => setIsTournamentsOpen(true)}
