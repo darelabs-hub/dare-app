@@ -3001,7 +3001,8 @@ Provide your response in strictly valid JSON with this structure:
         const matchingProduct = DARE_PRODUCTS.find(p => p.id === itemId);
         if (matchingProduct) {
           const prices = await stripe.prices.list({ limit: 100, active: true });
-          const found = prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId);
+          const found = prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId && pr.currency === 'gbp') ||
+                        prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId);
           if (found) {
             targetPriceId = found.id;
           }
@@ -3113,7 +3114,7 @@ Provide your response in strictly valid JSON with this structure:
   // 5. Payment Intent fallback
   app.post('/api/stripe/create-payment-intent', async (req, res) => {
     try {
-      const { amount, currency = 'usd', description, userId } = req.body;
+      const { amount, currency = 'gbp', description, userId } = req.body;
       const stripe = getStripe();
       if (!stripe) {
         return res.json({

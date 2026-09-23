@@ -55,13 +55,13 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       name: 'Pro Lite',
       tagline: 'PRO STATUS LITE — BUDGET FRIENDLY',
       priceCred: 2500,
-      priceUSD: '$0.99/mo',
+      priceUSD: '£0.99/mo',
       color: 'border-slate-800 text-slate-200 bg-slate-900/40',
       badge: '⚡ Pro Lite',
       icon: <Zap className="h-5 w-5 text-indigo-400" />,
       features: [
         'Exclusive Gold "PRO" Badge',
-        'Daily Stipend Multiplier (200 CR)',
+        'Daily Stipend Multiplier (120 CR/day)',
         'Basic Custom Dare Creation'
       ]
     },
@@ -70,7 +70,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       name: 'Pro Elite',
       tagline: 'MOST POPULAR — BEST VALUE',
       priceCred: 5000,
-      priceUSD: '$1.99/mo',
+      priceUSD: '£1.99/mo',
       color: 'border-indigo-500 bg-indigo-500/5 text-indigo-400 ring-2 ring-indigo-500/20',
       badge: '💎 Pro Elite',
       icon: <Sparkles className="h-5 w-5 text-indigo-400" />,
@@ -78,7 +78,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
         'Exclusive Gold "PRO" Badge',
         'AI Challenge Oracle (Smart Custom Prompts)',
         'Premium Card Highlights & Accents',
-        'Daily Stipend Multiplier (300 CR)',
+        'Daily Stipend Multiplier (250 CR/day)',
         'Streak Protection (12-hour grace period)'
       ],
       popular: true
@@ -88,7 +88,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       name: 'Pro Ultra',
       tagline: 'ULTIMATE UNRESTRICTED — FULL UNLOCK',
       priceCred: 12000,
-      priceUSD: '$3.99/mo',
+      priceUSD: '£3.99/mo',
       color: 'border-amber-500 text-amber-400 bg-amber-500/5 ring-2 ring-amber-500/20',
       badge: '👑 Pro Ultra',
       icon: <Crown className="h-5 w-5 text-amber-400" />,
@@ -96,7 +96,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
         'Exclusive Gold "PRO" Badge + Crown Icon',
         'AI Challenge Oracle (Custom Prompts & Unlimited Uses)',
         'Priority Badge & Custom Card Accent Styles',
-        'Daily Stipend Multiplier (450 CR)',
+        'Daily Stipend Multiplier (450 CR/day)',
         'Immediate 250 CR Sign-up Bonus',
         'Priority community voting weight (x3 power)'
       ]
@@ -108,7 +108,14 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
     setError(null);
     playSound('oracle');
     try {
-      const tierItemId = `dare_pro_${selectedTier}_monthly`;
+      const tierIdMap: Record<string, string> = {
+        runner: 'dare_pro_lite_monthly',
+        lite: 'dare_pro_lite_monthly',
+        elite: 'dare_pro_elite_monthly',
+        overlord: 'dare_pro_ultra_monthly',
+        ultra: 'dare_pro_ultra_monthly'
+      };
+      const tierItemId = tierIdMap[selectedTier] || 'dare_pro_lite_monthly';
       const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,14 +169,14 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       }
 
       // Execute Stripe PaymentIntent
-      const usdNumeric = Number(selectedTierDetails.priceUSD.replace(/[^0-9.]/g, '')) || 1.99;
+      const gbpNumeric = Number(selectedTierDetails.priceUSD.replace(/[^0-9.]/g, '')) || 1.99;
       try {
         const piRes = await fetch('/api/stripe/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            amount: usdNumeric,
-            currency: 'usd',
+            amount: gbpNumeric,
+            currency: 'gbp',
             description: `DARE PRO Subscription - ${selectedTierDetails.name}`,
             userId: currentUser.id
           }),
