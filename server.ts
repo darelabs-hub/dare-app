@@ -2996,33 +2996,38 @@ Provide your response in strictly valid JSON with this structure:
 
       // Lookup price by itemId if raw priceId is not provided
       if (!targetPriceId && itemId) {
-        const matchingProduct = DARE_PRODUCTS.find(p => p.id === itemId);
-        if (matchingProduct) {
-          const prices = await stripe.prices.list({ limit: 100, active: true });
-          const found = prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId && pr.currency === 'gbp') ||
-                        prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId);
-          if (found) {
-            targetPriceId = found.id;
+        try {
+          const matchingProduct = DARE_PRODUCTS.find(p => p.id === itemId);
+          if (matchingProduct) {
+            const prices = await stripe.prices.list({ limit: 100, active: true });
+            const found = prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId && pr.currency === 'gbp') ||
+                          prices.data.find(pr => (pr.metadata as any)?.dareday_item_id === itemId);
+            if (found) {
+              targetPriceId = found.id;
+            }
           }
+        } catch (lookupErr: any) {
+          console.warn('Stripe price list permission restricted, using direct price_data fallback:', lookupErr.message);
         }
       }
 
       if (!targetPriceId) {
-        // If still no price ID, dynamically create a line item or fallback to custom price
+        // If still no price ID, dynamically create a line item via price_data (works with restricted keys!)
         const matchingProduct = DARE_PRODUCTS.find(p => p.id === itemId) || DARE_PRODUCTS[0];
+        const isRecurring = matchingProduct.type === 'recurring';
         const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: matchingProduct.type === 'recurring' ? 'subscription' : 'payment',
+          mode: isRecurring ? 'subscription' : 'payment',
           line_items: [
             {
               price_data: {
-                currency: matchingProduct.currency,
+                currency: matchingProduct.currency || 'gbp',
                 product_data: {
                   name: matchingProduct.name,
                   description: matchingProduct.description,
+                  tax_code: 'txcd_10000000',
                 },
                 unit_amount: matchingProduct.amount,
-                recurring: matchingProduct.type === 'recurring' && matchingProduct.interval ? { interval: matchingProduct.interval } : undefined,
+                recurring: isRecurring && matchingProduct.interval ? { interval: matchingProduct.interval } : undefined,
               },
               quantity: 1,
             },
@@ -3045,11 +3050,15 @@ Provide your response in strictly valid JSON with this structure:
       }
 
       // Check whether price is recurring or one-time
-      const priceObject = await stripe.prices.retrieve(targetPriceId);
-      const isSubscription = Boolean(priceObject.recurring);
+      let isSubscription = itemId?.includes('monthly') || itemId?.includes('yearly') || itemId?.includes('pro');
+      try {
+        const priceObject = await stripe.prices.retrieve(targetPriceId);
+        isSubscription = Boolean(priceObject.recurring);
+      } catch (retrieveErr: any) {
+        console.warn('Stripe price retrieve restricted, inferring mode:', retrieveErr.message);
+      }
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
         mode: isSubscription ? 'subscription' : 'payment',
         line_items: [
           {

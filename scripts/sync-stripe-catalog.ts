@@ -177,6 +177,7 @@ export async function syncStripeCatalog(customKey?: string) {
         product = await stripe.products.update(product.id, {
           name: item.name,
           description: item.description,
+          tax_code: 'txcd_10000000',
           metadata: {
             ...item.metadata,
             dareday_item_id: item.id,
@@ -188,6 +189,7 @@ export async function syncStripeCatalog(customKey?: string) {
         product = await stripe.products.create({
           name: item.name,
           description: item.description,
+          tax_code: 'txcd_10000000',
           metadata: {
             ...item.metadata,
             dareday_item_id: item.id,
