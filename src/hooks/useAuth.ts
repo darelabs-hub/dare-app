@@ -18,16 +18,21 @@ export const useAuth = () => {
   const signIn = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      return await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      return result;
     } catch (err: any) {
       if (err?.code === 'auth/unauthorized-domain') {
         console.warn(
-          'Firebase Auth Notice: Current domain is not in Authorized Domains list. Please add your domain (e.g. dare.me.uk) in the Firebase Console -> Authentication -> Settings -> Authorized Domains.'
+          'Firebase Auth Notice: Current domain is not in Authorized Domains list for project ' +
+            auth.app.options.projectId +
+            '. Please verify the domain (dare.me.uk) is added to Authorized Domains for this specific project in the Firebase Console.'
         );
-      } else if (err?.code !== 'auth/popup-closed-by-user') {
+      } else if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        // User closed the popup window, harmless
+      } else {
         console.error('Firebase Auth Error:', err);
       }
-      throw err;
+      return null;
     }
   };
 
