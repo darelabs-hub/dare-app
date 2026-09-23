@@ -589,7 +589,7 @@ let dares: DareItem[] = [...initialDares];
 async function startServer() {
   const app = express();
   app.use((_req, res, next) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
     next();
   });
   app.use(express.json({ 
