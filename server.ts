@@ -53,24 +53,38 @@ try {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
 
+// Check if Firebase Admin credentials are provided in the environment
+const hasAdminCredentials = !!(
+  process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+  process.env.FIREBASE_SERVICE_ACCOUNT ||
+  process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+);
+
 // User persistence helpers
 async function saveUserToFirestore(user: UserProfile) {
   try {
-    if (!db || !user || !user.id) return;
+    if (!db || !user || !user.id || !hasAdminCredentials) return;
     await db.collection('users').doc(user.id).set(user, { merge: true });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === 7 || err?.message?.includes('PERMISSION_DENIED')) {
+      // Missing GCP service account permissions in current runtime; fallback to memory store
+      return;
+    }
     console.warn('Error saving user to Firestore:', err);
   }
 }
 
 async function getUserFromFirestore(userId: string): Promise<UserProfile | null> {
   try {
-    if (!db || !userId) return null;
+    if (!db || !userId || !hasAdminCredentials) return null;
     const snap = await db.collection('users').doc(userId).get();
     if (snap.exists) {
       return snap.data() as UserProfile;
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === 7 || err?.message?.includes('PERMISSION_DENIED')) {
+      return null;
+    }
     console.warn('Error reading user from Firestore:', err);
   }
   return null;

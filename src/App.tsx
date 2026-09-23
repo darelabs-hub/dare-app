@@ -40,6 +40,8 @@ import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { useAuth } from './hooks/useAuth';
+import { db } from './lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { DareItem, UserProfile, NotificationItem, CredTransaction } from './types';
 import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
@@ -247,6 +249,13 @@ export default function App() {
           fetchDailyMission();
         })
         .catch(err => console.error('Error syncing auth user:', err));
+
+      // Client-side Firestore sync with authenticated user credentials
+      try {
+        setDoc(doc(db, 'users', user.uid), profileToSync, { merge: true }).catch(() => {});
+      } catch (e) {
+        // Ignore fallback
+      }
     }
   }, [user]);
 
