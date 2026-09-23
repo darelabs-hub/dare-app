@@ -3063,7 +3063,17 @@ Provide your response in strictly valid JSON with this structure:
         mode: isSubscription ? 'subscription' : 'payment',
         line_items: [
           {
-            price: targetPriceId,
+            price_data: {
+              currency: 'gbp',
+              product_data: {
+                name: matchingProduct.name,
+                description: matchingProduct.description,
+                tax_code: 'txcd_10000000',
+                images: matchingProduct.imageUrl ? [matchingProduct.imageUrl] : undefined,
+              },
+              unit_amount: matchingProduct.amount,
+              recurring: isSubscription && matchingProduct.interval ? { interval: matchingProduct.interval } : undefined,
+            },
             quantity: 1,
           },
         ],
