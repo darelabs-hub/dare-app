@@ -3025,6 +3025,7 @@ Provide your response in strictly valid JSON with this structure:
                   name: matchingProduct.name,
                   description: matchingProduct.description,
                   tax_code: 'txcd_10000000',
+                  images: matchingProduct.imageUrl ? [matchingProduct.imageUrl] : undefined,
                 },
                 unit_amount: matchingProduct.amount,
                 recurring: isRecurring && matchingProduct.interval ? { interval: matchingProduct.interval } : undefined,
