@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "handle": { "type": "string" },
+        "name": { "type": "string" },
+        "avatar": { "type": "string" },
+        "cred": { "type": "number" },
+        "rank": { "type": "string" },
+        "completedDaresCount": { "type": "number" },
+        "createdDaresCount": { "type": "number" },
+        "streak": { "type": "number" },
+        "isPro": { "type": "boolean" },
+        "referralCode": { "type": "string" },
+        "referralCount": { "type": "number" }
+      },
+      "required": ["id", "handle", "name"]
+    },
+    "Dare": {
+      "title": "Dare",
+      "description": "Dare challenge information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "rewardCred": { "type": "number" },
+        "status": { "type": "string" },
+        "creatorId": { "type": "string" }
+      },
+      "required": ["id", "title", "status", "creatorId"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "dares/{dareId}": {
+      "schema": "Dare",
+      "description": "Challenge dares"
+    }
+  }
+}

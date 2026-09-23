@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#07090e" />
+    </linearGradient>
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#fb7185" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)" />
+  <rect width="512" height="512" rx="112" fill="none" stroke="url(#primary-grad)" stroke-width="8" opacity="0.4" />
+
+  <!-- Stylized Cyber Shield / Diamond -->
+  <polygon points="256,64 420,160 420,330 256,448 92,330 92,160" fill="#1e1b4b" fill-opacity="0.6" stroke="url(#primary-grad)" stroke-width="12" />
+
+  <!-- Glowing Lightning Bolt / Cyber Flare -->
+  <path d="M280 120 L160 270 L244 270 L216 392 L352 236 L268 236 Z" fill="url(#primary-grad)" filter="url(#glow)" />
+  <path d="M280 120 L160 270 L244 270 L216 392 L352 236 L268 236 Z" fill="#ffffff" fill-opacity="0.85" />
+
+  <!-- Cyber Accent Dots -->
+  <circle cx="256" cy="74" r="6" fill="#38bdf8" />
+  <circle cx="410" cy="165" r="6" fill="#818cf8" />
+  <circle cx="102" cy="165" r="6" fill="#818cf8" />
+  <circle cx="256" cy="438" r="6" fill="#f43f5e" />
+</svg>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Filter out benign Vite HMR websocket notices in sandboxed preview iframe
+      (function() {
+        var isBenignViteNotice = function(arg) {
+          if (!arg) return false;
+          var str = typeof arg === 'string' ? arg : (arg.message || arg.stack || String(arg));
+          return str.indexOf('[vite]') !== -1 || 
+                 str.indexOf('websocket') !== -1 || 
+                 str.indexOf('WebSocket') !== -1 ||
+                 str.indexOf('failed to connect') !== -1 ||
+                 str.indexOf('ws://') !== -1 ||
+                 str.indexOf('wss://') !== -1;
+        };
+
+        ['log', 'info', 'warn', 'error', 'debug'].forEach(function(method) {
+          var orig = console[method];
+          if (!orig) return;
+          console[method] = function() {
+            for (var i = 0; i < arguments.length; i++) {
+              if (isBenignViteNotice(arguments[i])) {
+                return;
+              }
+            }
+            return orig.apply(console, arguments);
+          };
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+          if (e && isBenignViteNotice(e.reason)) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        });
+
+        window.addEventListener('error', function(e) {
+          if (e && isBenignViteNotice(e.message || e.error)) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        });
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#07090e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DARE" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512x512.png" />
+    <title>DARE</title>
+    <meta name="description" content="A modern, high-fidelity platform to challenge your peers, post custom bounties, submit proof, and get instant fun AI verdicts." />
+    <meta property="og:title" content="DARE" />
+    <meta property="og:description" content="A modern, high-fidelity platform to challenge your peers, post custom bounties, submit proof, and get instant fun AI verdicts." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#07090e] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
