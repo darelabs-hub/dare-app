@@ -43,8 +43,24 @@ import { useAuth } from './hooks/useAuth';
 import { DareItem, UserProfile, NotificationItem, CredTransaction } from './types';
 import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
 
 export default function App() {
+  const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname.toLowerCase());
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname.toLowerCase());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path.toLowerCase());
+  };
   const { user, signIn, logout } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile>({
@@ -618,6 +634,26 @@ export default function App() {
   };
 
   const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  if (currentPath === '/privacy' || currentPath === '/privacy-policy') {
+    return (
+      <PrivacyPolicyPage
+        onBack={() => {
+          navigateTo('/');
+        }}
+      />
+    );
+  }
+
+  if (currentPath === '/terms' || currentPath === '/terms-of-service') {
+    return (
+      <TermsOfServicePage
+        onBack={() => {
+          navigateTo('/');
+        }}
+      />
+    );
+  }
 
   const appContent = (
     <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">

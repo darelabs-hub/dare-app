@@ -380,6 +380,29 @@ export const LegalAndFaqModal: React.FC<LegalAndFaqModalProps> = ({
           {/* TAB 2: TERMS OF SERVICE */}
           {activeTab === 'terms' && (
             <div className="space-y-6 text-xs text-slate-300 leading-relaxed font-sans animate-in fade-in duration-150">
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-tech text-sm font-bold text-cyan-300 uppercase tracking-wide">
+                    Terms of Service Codex
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Official platform terms governing dares, peer rivalry, and Cred economies.
+                  </p>
+                </div>
+                <a
+                  href="/terms"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onClose();
+                    window.history.pushState({}, '', '/terms');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/60 px-3 py-1.5 font-mono text-[11px] font-bold text-cyan-300 hover:bg-cyan-900/40 transition-colors shrink-0"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open Standalone Page (/terms)
+                </a>
+              </div>
               <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
@@ -565,7 +588,7 @@ export const LegalAndFaqModal: React.FC<LegalAndFaqModalProps> = ({
           {/* TAB 4: PRIVACY POLICY */}
           {activeTab === 'privacy' && (
             <div className="space-y-6 text-xs text-slate-300 leading-relaxed font-sans animate-in fade-in duration-150">
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4">
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <Lock className="h-5 w-5 text-cyan-400 shrink-0" />
                   <div>
@@ -577,6 +600,19 @@ export const LegalAndFaqModal: React.FC<LegalAndFaqModalProps> = ({
                     </p>
                   </div>
                 </div>
+                <a
+                  href="/privacy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onClose();
+                    window.history.pushState({}, '', '/privacy');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/60 px-3 py-1.5 font-mono text-[11px] font-bold text-cyan-300 hover:bg-cyan-900/40 transition-colors shrink-0"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open Standalone Page (/privacy)
+                </a>
               </div>
 
               <section className="space-y-2">

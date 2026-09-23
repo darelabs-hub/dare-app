@@ -88,9 +88,9 @@ export const Footer: React.FC<FooterProps> = ({
           </ul>
         </div>
 
-        {/* Pro & Support */}
+        {/* Pro, Legal & Support */}
         <div className="space-y-4">
-          <h3 className="font-bold text-white text-sm uppercase tracking-wider">Support</h3>
+          <h3 className="font-bold text-white text-sm uppercase tracking-wider">Legal &amp; Support</h3>
           <ul className="space-y-2 text-xs">
             <li>
               <button onClick={onOpenProUpgrade} className="flex items-center gap-2 hover:text-amber-400 transition-colors">
@@ -99,14 +99,69 @@ export const Footer: React.FC<FooterProps> = ({
             </li>
             <li>
               <button onClick={() => onOpenLegalModal('faq')} className="flex items-center gap-2 hover:text-indigo-400 transition-colors">
-                <HelpCircle className="h-3.5 w-3.5" /> FAQ & Codex
+                <HelpCircle className="h-3.5 w-3.5" /> FAQ &amp; Codex
               </button>
+            </li>
+            <li>
+              <a 
+                href="/privacy" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, '', '/privacy');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="flex items-center gap-2 hover:text-pink-400 transition-colors text-slate-400"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>
+                Privacy Policy
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/terms" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, '', '/terms');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="flex items-center gap-2 hover:text-pink-400 transition-colors text-slate-400"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>
+                Terms of Service
+              </a>
             </li>
           </ul>
         </div>
       </div>
-      <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-slate-800 text-[10px] text-center text-slate-600 font-mono">
-        &copy; 2026 DARE DAY LABS. ALL RIGHTS RESERVED. ALL DARES ARE UNDERTAKEN VOLUNTARILY AND AT PARTICIPANT RISK.
+      <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+        <div>
+          &copy; 2026 DARE DAY LABS. ALL RIGHTS RESERVED. ALL DARES ARE UNDERTAKEN VOLUNTARILY AND AT PARTICIPANT RISK.
+        </div>
+        <div className="flex items-center gap-4 text-xs font-medium">
+          <a 
+            href="/privacy" 
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, '', '/privacy');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+            className="hover:text-pink-400 transition-colors underline-offset-4 hover:underline"
+          >
+            Privacy Policy
+          </a>
+          <span>&bull;</span>
+          <a 
+            href="/terms" 
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, '', '/terms');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+            className="hover:text-pink-400 transition-colors underline-offset-4 hover:underline"
+          >
+            Terms of Service
+          </a>
+        </div>
       </div>
     </footer>
   );
