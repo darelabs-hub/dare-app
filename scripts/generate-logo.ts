@@ -1,4 +1,8 @@
-<svg 
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+
+const svgContent = `<svg 
   width="512" 
   height="512" 
   viewBox="0 0 200 200" 
@@ -66,4 +70,41 @@
     d="M 88 84 L 116 100 L 88 116 Z" 
     fill="url(#ddLightGrad)" 
   />
-</svg>
+</svg>`;
+
+async function run() {
+  const publicDir = path.resolve('public');
+  
+  // Save icon.svg
+  fs.writeFileSync(path.join(publicDir, 'icon.svg'), svgContent);
+  
+  // 512x512
+  await sharp(Buffer.from(svgContent))
+    .resize(512, 512)
+    .png()
+    .toFile(path.join(publicDir, 'logo.png'));
+    
+  await sharp(Buffer.from(svgContent))
+    .resize(512, 512)
+    .png()
+    .toFile(path.join(publicDir, 'pwa-512x512.png'));
+
+  await sharp(Buffer.from(svgContent))
+    .resize(512, 512)
+    .png()
+    .toFile(path.join(publicDir, 'pwa-maskable-512x512.png'));
+
+  await sharp(Buffer.from(svgContent))
+    .resize(192, 192)
+    .png()
+    .toFile(path.join(publicDir, 'pwa-192x192.png'));
+
+  await sharp(Buffer.from(svgContent))
+    .resize(180, 180)
+    .png()
+    .toFile(path.join(publicDir, 'apple-touch-icon.png'));
+
+  console.log('Successfully generated exact header logos to public/*.png');
+}
+
+run();
