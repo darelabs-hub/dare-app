@@ -27,6 +27,7 @@ import {
   DropZone
 } from './src/types.js';
 import { initialTournaments } from './src/data/tournaments';
+import { initialLiveDuels } from './src/data/liveDuels';
 import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initialDares } from './src/data/initialDares';
