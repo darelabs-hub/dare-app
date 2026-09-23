@@ -3066,6 +3066,7 @@ Provide your response in strictly valid JSON with this structure:
             quantity: 1,
           },
         ],
+        managed_payments: { enabled: false },
         client_reference_id: userId || 'u_active_user',
         customer_email: userEmail,
         metadata: {
