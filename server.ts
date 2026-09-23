@@ -65,12 +65,8 @@ async function saveUserToFirestore(user: UserProfile) {
   try {
     if (!db || !user || !user.id || !hasAdminCredentials) return;
     await db.collection('users').doc(user.id).set(user, { merge: true });
-  } catch (err: any) {
-    if (err?.code === 7 || err?.message?.includes('PERMISSION_DENIED')) {
-      // Missing GCP service account permissions in current runtime; fallback to memory store
-      return;
-    }
-    console.warn('Error saving user to Firestore:', err);
+  } catch (_err) {
+    // Graceful fallback to memory store if service account IAM is not present
   }
 }
 
@@ -78,14 +74,11 @@ async function getUserFromFirestore(userId: string): Promise<UserProfile | null>
   try {
     if (!db || !userId || !hasAdminCredentials) return null;
     const snap = await db.collection('users').doc(userId).get();
-    if (snap.exists) {
+    if (snap && snap.exists) {
       return snap.data() as UserProfile;
     }
-  } catch (err: any) {
-    if (err?.code === 7 || err?.message?.includes('PERMISSION_DENIED')) {
-      return null;
-    }
-    console.warn('Error reading user from Firestore:', err);
+  } catch (_err) {
+    // Graceful fallback to memory store if service account IAM is not present
   }
   return null;
 }
