@@ -29,21 +29,29 @@ import {
 import { initialTournaments } from './src/data/tournaments';
 import { initialLiveDuels } from './src/data/liveDuels';
 import { initialDropZones } from './src/data/dropZones';
+import { initialDares } from './src/data/initialDares';
 import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog';
 
 dotenv.config();
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin safely
 import firebaseConfig from './firebase-applet-config.json';
-admin.initializeApp({
-  projectId: firebaseConfig.projectId,
-});
-const db = getFirestore(firebaseConfig.firestoreDatabaseId || undefined);
+let db: any = null;
+try {
+  if (admin.apps.length === 0) {
+    admin.initializeApp({
+      projectId: firebaseConfig.projectId,
+    });
+  }
+  db = getFirestore(firebaseConfig.firestoreDatabaseId || undefined);
+} catch (e) {
+  console.warn('Firebase Admin init warning (falling back to memory store):', e);
+}
 
 // User persistence helpers
 async function saveUserToFirestore(user: UserProfile) {
   try {
-    if (!user || !user.id) return;
+    if (!db || !user || !user.id) return;
     await db.collection('users').doc(user.id).set(user, { merge: true });
   } catch (err) {
     console.warn('Error saving user to Firestore:', err);
@@ -52,6 +60,7 @@ async function saveUserToFirestore(user: UserProfile) {
 
 async function getUserFromFirestore(userId: string): Promise<UserProfile | null> {
   try {
+    if (!db || !userId) return null;
     const snap = await db.collection('users').doc(userId).get();
     if (snap.exists) {
       return snap.data() as UserProfile;
@@ -563,7 +572,7 @@ function addTransaction(userId: string, type: CredTransactionType, amount: numbe
 }
 
 // In-Memory Dares Store
-let dares: DareItem[] = [];
+let dares: DareItem[] = [...initialDares];
 
 async function startServer() {
   const app = express();
