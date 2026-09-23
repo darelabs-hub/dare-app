@@ -666,7 +666,7 @@ CHALLENGE PRO RECEIPT
 Transaction ID: tx_pro_${Date.now()}
 Identity: ${currentUser.handle}
 Tier Status: ${currentTierData?.name}
-Amount: ${currentTierData?.priceUSD}
+Amount: {currentTierData?.priceUSD}
 Date: ${new Date().toISOString()}
 Payment Status: VERIFIED
 ====================================`;
