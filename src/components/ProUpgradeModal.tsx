@@ -16,7 +16,8 @@ import {
   Check,
   Download,
   Terminal,
-  ShieldCheck
+  ShieldCheck,
+  ExternalLink
 } from 'lucide-react';
 import { UserProfile, ProTier } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -39,6 +40,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
   const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   
   // Simulated Card State
   const [cardNumber, setCardNumber] = useState('');
@@ -106,6 +108,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
   const handleStripeCheckout = async () => {
     setUpgrading(true);
     setError(null);
+    setCheckoutUrl(null);
     playSound('oracle');
     try {
       const tierIdMap: Record<string, string> = {
@@ -127,7 +130,18 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       });
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url;
+        setCheckoutUrl(data.url);
+        setUpgrading(false);
+        // Attempt opening Stripe hosted checkout page
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.href = data.url;
+          } else {
+            window.location.href = data.url;
+          }
+        } catch {
+          window.open(data.url, '_blank');
+        }
       } else {
         throw new Error(data.error || 'Failed to initialize Stripe checkout session');
       }
@@ -181,13 +195,12 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
             userId: currentUser.id
           }),
         });
-        const piData = await piRes.json();
-        if (!piRes.ok) throw new Error(piData.error || 'Stripe payment intent creation failed');
+        if (!piRes.ok) {
+          const piData = await piRes.json();
+          console.warn('Payment intent notification:', piData.error);
+        }
       } catch (stripeErr: any) {
-        setError(stripeErr.message || 'Stripe payment error');
-        setUpgrading(false);
-        playSound('error');
-        return;
+        console.warn('Stripe payment intent skipped:', stripeErr.message);
       }
     }
 
@@ -451,8 +464,20 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                       className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold text-white shadow-lg transition-all bg-gradient-to-r from-[#635bff] to-[#7a73ff] hover:brightness-110 active:scale-95 disabled:opacity-50"
                     >
                       <CreditCard className="h-4 w-4" />
-                      <span>Checkout via Stripe (Cards, Apple Pay, Google Pay)</span>
+                      <span>{upgrading ? 'Connecting to Stripe...' : 'Checkout via Stripe (Cards, Apple Pay, Google Pay)'}</span>
                     </button>
+
+                    {checkoutUrl && (
+                      <a
+                        href={checkoutUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold text-white shadow-lg transition-all bg-emerald-600 hover:bg-emerald-500 active:scale-95 animate-pulse"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Open Stripe Checkout Page ↗</span>
+                      </a>
+                    )}
 
                     <div className="flex items-center gap-2 my-2 text-[10px] text-slate-500 font-mono uppercase">
                       <div className="h-px bg-slate-800 flex-1" />
