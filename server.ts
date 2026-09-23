@@ -27,8 +27,8 @@ import {
   DropZone
 } from './src/types.js';
 import { initialTournaments } from './src/data/tournaments';
-import { initialLiveDuels } from './src/data/liveDuels';
-import { initialDropZones } from './src/data/dropZones';
+import * as admin from 'firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { initialDares } from './src/data/initialDares';
 import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog';
 
@@ -38,12 +38,12 @@ dotenv.config();
 import firebaseConfig from './firebase-applet-config.json';
 let db: any = null;
 try {
-  if (admin.apps.length === 0) {
+  if (!admin.apps || admin.apps.length === 0) {
     admin.initializeApp({
       projectId: firebaseConfig.projectId,
     });
   }
-  db = getFirestore(firebaseConfig.firestoreDatabaseId || undefined);
+  db = getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId || undefined);
 } catch (e) {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
