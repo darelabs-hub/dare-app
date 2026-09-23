@@ -249,6 +249,24 @@ export async function syncStripeCatalog(customKey?: string) {
     }
   }
 
+  // Automatically archive old products from previous iterations
+  try {
+    console.log('🧹 Checking for legacy products to archive...');
+    const allProducts = await stripe.products.list({ limit: 100, active: true });
+    const currentItemIds = new Set(DARE_PRODUCTS.map(p => p.id));
+
+    for (const prod of allProducts.data) {
+      const legacyId = prod.metadata?.dareday_item_id;
+      // If product has old prefix 'dareday_' or doesn't match current catalog
+      if (legacyId && !currentItemIds.has(legacyId) && legacyId.startsWith('dareday_')) {
+        console.log(`  Archiving obsolete legacy product: ${prod.name} (${prod.id})`);
+        await stripe.products.update(prod.id, { active: false });
+      }
+    }
+  } catch (cleanErr: any) {
+    console.warn('Notice: Legacy archiving skipped:', cleanErr.message);
+  }
+
   console.log('\n========================================');
   console.log('🎉 Stripe Catalog Sync Completed!');
   console.log(`Total items processed: ${results.length}`);
