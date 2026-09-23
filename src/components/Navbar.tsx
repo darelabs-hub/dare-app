@@ -348,7 +348,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <div 
                   id="profile-dropdown-menu"
-                  className="fixed left-1/2 -translate-x-1/2 top-18 sm:top-full sm:right-0 sm:left-auto sm:translate-x-0 sm:absolute mt-2 w-[calc(100vw-1.5rem)] sm:w-80 max-w-sm sm:max-w-none rounded-2xl border border-slate-700 bg-[#0c1222] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-2xl z-[100] animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="fixed left-1/2 -translate-x-1/2 top-18 sm:top-full sm:right-0 sm:left-auto sm:translate-x-0 sm:absolute mt-2 w-[calc(100vw-1.5rem)] sm:w-84 max-w-sm sm:max-w-none rounded-2xl border border-slate-700 bg-[#0c1222] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-2xl z-[100] animate-in fade-in slide-in-from-top-2 duration-150 max-h-[88vh] overflow-y-auto"
                 >
                 {/* User Header Summary Card */}
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-indigo-500/30 bg-indigo-950/40 mb-2.5">
@@ -397,6 +397,270 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
+                  {onOpenLeaderboard && (
+                    <button
+                      id="menu-leaderboard-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenLeaderboard();
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Trophy className="h-4 w-4 text-amber-400" />
+                        <span>Hall of Fame Leaderboard</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-amber-400 font-bold">Ranks →</span>
+                    </button>
+                  )}
+
+                  {onOpenProfile && (
+                    <button
+                      id="menu-squad-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenProfile(currentUser, 'squad');
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Users className="h-4 w-4 text-indigo-400" />
+                        <span>My Squad & Teammates</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-indigo-400 font-bold">Manage →</span>
+                    </button>
+                  )}
+
+                  {onOpenProfile && (
+                    <button
+                      id="menu-rivalry-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenProfile(currentUser, 'rivalry');
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Swords className="h-4 w-4 text-amber-400" />
+                        <span>Head-to-Head Rivalry</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-amber-400 font-bold">Versus →</span>
+                    </button>
+                  )}
+
+                  {onOpenLiveDuels && (
+                    <button
+                      id="menu-live-duels-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenLiveDuels();
+                        playSound('laser');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-bold text-rose-300 bg-rose-950/30 hover:bg-rose-950/60 hover:text-white transition-colors text-left cursor-pointer border border-rose-500/30"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Swords className="h-4 w-4 text-rose-400 animate-pulse" />
+                        <span className="flex items-center gap-1.5">
+                          <span>Live 1v1 Duels Arena</span>
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider">Live →</span>
+                    </button>
+                  )}
+
+                  {onOpenTournaments && (
+                    <button
+                      id="menu-tournaments-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenTournaments();
+                        playSound('laser');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-pink-300 hover:bg-pink-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Swords className="h-4 w-4 text-pink-400" />
+                        <span>Squad Wars Arena</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-pink-400 font-bold">Active →</span>
+                    </button>
+                  )}
+
+                  {/* Daily Missions Shortcut */}
+                  <button
+                    id="menu-daily-missions-btn"
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      playSound('pop');
+                      const el = document.getElementById('daily-mission-widget');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        el.classList.add('ring-2', 'ring-cyan-400');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-cyan-400'), 2000);
+                      }
+                    }}
+                    className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Target className="h-4 w-4 text-cyan-400" />
+                      <span>Daily Missions & Ops</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-cyan-400 font-bold">3 Ops →</span>
+                  </button>
+
+                  {onOpenDropZones && (
+                    <button
+                      id="menu-drop-zones-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenDropZones();
+                        playSound('laser');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Compass className="h-4 w-4 text-emerald-400" />
+                        <span>Drop Zones & AR Beacons</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold">GPS Radar →</span>
+                    </button>
+                  )}
+
+                  {onOpenArmory && (
+                    <button
+                      id="menu-armory-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenArmory();
+                        playSound('purchase');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <ShoppingBag className="h-4 w-4 text-cyan-400" />
+                        <span>Armory & Shop</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400 font-bold">Shop →</span>
+                    </button>
+                  )}
+
+                  {onOpenSeasonPass && (
+                    <button
+                      id="menu-season-pass-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenSeasonPass();
+                        playSound('levelUp');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-purple-300 hover:bg-purple-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Zap className="h-4 w-4 text-purple-400" />
+                        <span>Season 1 Battle Pass</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-purple-400 font-bold">LVL {currentUser?.seasonPassLevel || 1} →</span>
+                    </button>
+                  )}
+
+                  {onOpenCredLog && (
+                    <button
+                      id="menu-cred-log-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenCredLog();
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <Coins className="h-4 w-4 text-amber-400" />
+                      <span>Cred Transaction Log</span>
+                    </button>
+                  )}
+
+                  {/* Heatmap Link */}
+                  {onOpenProfile && (
+                    <button
+                      id="menu-heatmap-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenProfile(currentUser, 'location-map');
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <Map className="h-4 w-4 text-cyan-400" />
+                      <span>Location Heatmap</span>
+                    </button>
+                  )}
+
+                  {onOpenEventsMerch && (
+                    <button
+                      id="menu-events-merch-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenEventsMerch();
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <ShoppingBag className="h-4 w-4 text-pink-400" />
+                      <span>Gauntlet Merch & Events</span>
+                    </button>
+                  )}
+
+                  {onOpenProUpgrade && (
+                    <button
+                      id="menu-pro-upgrade-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenProUpgrade();
+                        playSound('oracle');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-950/50 hover:text-amber-200 border border-amber-500/30 transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Crown className="h-4 w-4 text-amber-400" />
+                        <span>{currentUser?.isPro ? 'Manage PRO Tier' : 'Upgrade to PRO'}</span>
+                      </div>
+                      {!currentUser?.isPro && (
+                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-amber-400 border border-amber-500/30">
+                          PRO
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  <button
+                    id="menu-create-dare-btn"
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      onOpenCreateModal();
+                      playSound('click');
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-800/80 hover:text-emerald-300 transition-colors text-left cursor-pointer"
+                  >
+                    <PlusCircle className="h-4 w-4 text-emerald-400" />
+                    <span>Create Custom Dare</span>
+                  </button>
+
                   <button
                     id="menu-sign-out-btn"
                     type="button"
@@ -405,12 +669,103 @@ export const Navbar: React.FC<NavbarProps> = ({
                       if (onSignOut) onSignOut();
                       playSound('click');
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 hover:text-white transition-colors text-left cursor-pointer mt-2 border border-rose-500/30"
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 hover:text-white transition-colors text-left cursor-pointer mt-1 border border-rose-500/30"
                   >
                     <X className="h-4 w-4 text-rose-400" />
                     <span>Sign Out</span>
                   </button>
-                  {/* ... other actions ... */}
+                </div>
+
+                {/* Switch Persona / Accounts */}
+                <div className="mt-2.5 pt-2 border-t border-slate-800">
+                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5">
+                      <Users className="h-3 w-3 text-slate-400" />
+                      <span>Switch Active Persona</span>
+                    </span>
+                    <span className="text-[9px] text-slate-500">
+                      {(allUsers && allUsers.length > 0 ? allUsers : [currentUser]).length} profiles
+                    </span>
+                  </div>
+                  <div className="mt-1 space-y-1 max-h-36 overflow-y-auto pr-1">
+                    {(allUsers && allUsers.length > 0 ? allUsers : [currentUser]).map((user) => (
+                      <button
+                        key={user.id}
+                        id={`switch-persona-${user.id}`}
+                        type="button"
+                        onClick={() => {
+                          onSelectUser(user);
+                          setUserDropdownOpen(false);
+                          playSound('click');
+                        }}
+                        className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-xs transition-colors cursor-pointer ${
+                          user.id === currentUser?.id
+                            ? 'bg-indigo-950/70 border border-indigo-500/40 text-indigo-200 shadow-sm'
+                            : 'hover:bg-slate-800/70 text-slate-300'
+                        }`}
+                      >
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="font-semibold truncate text-white text-xs">{user.handle}</span>
+                            {user.isPro && (
+                              <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.2 border border-amber-500/30 bg-amber-500/10 text-[8px] font-bold font-mono tracking-wider text-amber-400 shrink-0 scale-90">
+                                <Crown className="h-2 w-2 text-amber-400" />
+                                <span>PRO</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono">{user.cred} Cred • {user.rank}</div>
+                        </div>
+                        {user.id === currentUser?.id && (
+                          <div className="h-2 w-2 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer System Quick Links */}
+                <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between px-1 text-xs">
+                  <button
+                    id="menu-faq-rules-btn"
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      if (onOpenLegalModal) onOpenLegalModal('faq');
+                      playSound('click');
+                    }}
+                    className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-indigo-300 transition-colors p-1 cursor-pointer"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>FAQ & Codex</span>
+                  </button>
+
+                  <button
+                    id="menu-toggle-audio-btn"
+                    type="button"
+                    onClick={() => {
+                      onToggleSound();
+                    }}
+                    className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-indigo-300 transition-colors p-1 cursor-pointer"
+                    title={soundActive ? 'Mute Audio' : 'Enable Audio'}
+                  >
+                    {soundActive ? (
+                      <>
+                        <Volume2 className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Audio On</span>
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="h-3.5 w-3.5 text-slate-500" />
+                        <span>Muted</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </>
