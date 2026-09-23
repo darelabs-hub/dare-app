@@ -39,9 +39,7 @@ const getStripe = () => {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return null;
   if (!stripeClient) {
-    stripeClient = new Stripe(key, {
-      apiVersion: '2025-02-28.acacia' as any,
-    });
+    stripeClient = new Stripe(key);
   }
   return stripeClient;
 };
