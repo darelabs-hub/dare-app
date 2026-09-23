@@ -30,6 +30,7 @@ import { initialTournaments } from './src/data/tournaments';
 import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initialDares } from './src/data/initialDares';
+import { initialDropZones } from './src/data/dropZones';
 import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog';
 
 dotenv.config();
@@ -38,12 +39,15 @@ dotenv.config();
 import firebaseConfig from './firebase-applet-config.json';
 let db: any = null;
 try {
+  let app;
   if (!admin.apps || admin.apps.length === 0) {
-    admin.initializeApp({
+    app = admin.initializeApp({
       projectId: firebaseConfig.projectId,
     });
+  } else {
+    app = admin.app();
   }
-  db = getFirestore(admin.app(), firebaseConfig.firestoreDatabaseId || undefined);
+  db = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
 } catch (e) {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
