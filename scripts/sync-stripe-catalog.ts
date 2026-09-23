@@ -16,67 +16,95 @@ export interface DareCatalogProduct {
 
 export const DARE_PRODUCTS: DareCatalogProduct[] = [
   {
-    id: 'dareday_pro_monthly',
-    name: 'DARE Pro — Monthly (Neon Netrunner)',
-    description: 'Unlock 2x Cred multiplier, custom profile badges, unlimited dare creations, and zero platform fees.',
+    id: 'dare_pro_lite_monthly',
+    name: 'DARE Pro Lite — Monthly',
+    description: 'Pro Status Lite — Budget Friendly. Exclusive Gold PRO Badge, Daily Stipend Multiplier (120 CR/day), Basic Custom Dare Creation.',
     type: 'recurring',
     interval: 'month',
+    amount: 99, // $0.99
+    currency: 'usd',
+    metadata: {
+      tier: 'lite',
+      billing: 'monthly',
+      role: 'pro_lite',
+    },
+  },
+  {
+    id: 'dare_pro_lite_yearly',
+    name: 'DARE Pro Lite — Annual',
+    description: 'Full year of Pro Lite with 2 months free ($9.99/year). Exclusive Gold PRO badge, 120 CR daily stipend, basic custom dare creations.',
+    type: 'recurring',
+    interval: 'year',
     amount: 999, // $9.99
     currency: 'usd',
     metadata: {
-      tier: 'runner',
-      billing: 'monthly',
-      role: 'pro_netrunner',
-    },
-  },
-  {
-    id: 'dareday_pro_yearly',
-    name: 'DARE Pro — Annual (Neon Netrunner)',
-    description: 'Full year of Pro tier benefits + 2 months free + exclusive Neon Founder holo-badge.',
-    type: 'recurring',
-    interval: 'year',
-    amount: 9900, // $99.00
-    currency: 'usd',
-    metadata: {
-      tier: 'runner',
+      tier: 'lite',
       billing: 'yearly',
-      role: 'pro_netrunner',
+      role: 'pro_lite',
     },
   },
   {
-    id: 'dareday_elite_monthly',
-    name: 'DARE Elite — Monthly (Syndicate Overlord)',
-    description: 'Everything in Pro + 3x Cred multiplier, custom glowing animated frames, priority AI arbitrations, and weekly private drop zones.',
+    id: 'dare_pro_elite_monthly',
+    name: 'DARE Pro Elite — Monthly',
+    description: 'Most Popular — Best Value. Exclusive Gold PRO Badge, AI Challenge Oracle, Premium Card Highlights, Streak Loss Protection, 250 CR/day Stipend.',
     type: 'recurring',
     interval: 'month',
+    amount: 199, // $1.99
+    currency: 'usd',
+    metadata: {
+      tier: 'elite',
+      billing: 'monthly',
+      role: 'pro_elite',
+    },
+  },
+  {
+    id: 'dare_pro_elite_yearly',
+    name: 'DARE Pro Elite — Annual',
+    description: 'Full year of Pro Elite with 2 months free ($19.99/year). Includes AI Challenge Oracle, card highlights, streak shields, and 250 CR daily stipend.',
+    type: 'recurring',
+    interval: 'year',
     amount: 1999, // $19.99
     currency: 'usd',
     metadata: {
       tier: 'elite',
-      billing: 'monthly',
-      role: 'syndicate_overlord',
+      billing: 'yearly',
+      role: 'pro_elite',
     },
   },
   {
-    id: 'dareday_elite_yearly',
-    name: 'DARE Elite — Annual (Syndicate Overlord)',
-    description: 'Full year of Elite tier with VIP Syndicate status + 2 months free + 2,000 bonus Cred instantly.',
+    id: 'dare_pro_ultra_monthly',
+    name: 'DARE Pro Ultra — Monthly',
+    description: 'Ultimate Unrestricted — Full Unlock. Exclusive Gold PRO Badge, Unlimited AI Challenge Oracle, Priority Badge & Custom Aura Frame, 3x Voting Power, 450 CR/day Stipend.',
     type: 'recurring',
-    interval: 'year',
-    amount: 19900, // $199.00
+    interval: 'month',
+    amount: 399, // $3.99
     currency: 'usd',
     metadata: {
-      tier: 'elite',
-      billing: 'yearly',
-      role: 'syndicate_overlord',
+      tier: 'ultra',
+      billing: 'monthly',
+      role: 'pro_ultra',
     },
   },
   {
-    id: 'dareday_battle_pass_s1',
-    name: 'Season 1 Battle Pass: Elite Track (Neon Insurgency)',
+    id: 'dare_pro_ultra_yearly',
+    name: 'DARE Pro Ultra — Annual',
+    description: 'Full year of Pro Ultra with 2 months free ($39.99/year). Ultimate status, unlimited AI prompts, custom aura frame, 3x voting power, 450 CR/day stipend.',
+    type: 'recurring',
+    interval: 'year',
+    amount: 3999, // $39.99
+    currency: 'usd',
+    metadata: {
+      tier: 'ultra',
+      billing: 'yearly',
+      role: 'pro_ultra',
+    },
+  },
+  {
+    id: 'dare_battle_pass_s1',
+    name: 'Season 1 Battle Pass: Elite Track',
     description: 'Unlock 50 premium tier rewards, exclusive weapon/cyberdeck cosmetics, 1,500 Cred return, and the Legendary Netrunner Prime title.',
     type: 'one_time',
-    amount: 999, // $9.99
+    amount: 499, // $4.99
     currency: 'usd',
     metadata: {
       itemType: 'battle_pass',
@@ -84,11 +112,11 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     },
   },
   {
-    id: 'dareday_cred_pack_500',
-    name: 'Cyber Cred Starter Pack (500 Cred + 1x Cryo-Shield)',
+    id: 'dare_cred_pack_500',
+    name: 'Cyber Cred Starter Pack (500 Cred + Cryo-Shield)',
     description: 'Instant injection of 500 Cred + 1x Cryo-Shield streak protector item for the Cyber Armory.',
     type: 'one_time',
-    amount: 499, // $4.99
+    amount: 199, // $1.99
     currency: 'usd',
     metadata: {
       itemType: 'cred_pack',
@@ -96,11 +124,11 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     },
   },
   {
-    id: 'dareday_cred_pack_2500',
+    id: 'dare_cred_pack_2500',
     name: 'Cyber Cred Vault (2,500 Cred + Rare Matrix Frame)',
     description: 'High-roller bankroll of 2,500 Cred + animated Matrix Glitch avatar frame.',
     type: 'one_time',
-    amount: 1999, // $19.99
+    amount: 499, // $4.99
     currency: 'usd',
     metadata: {
       itemType: 'cred_pack',
@@ -108,11 +136,11 @@ export const DARE_PRODUCTS: DareCatalogProduct[] = [
     },
   },
   {
-    id: 'dareday_booster_bundle',
+    id: 'dare_booster_bundle',
     name: 'Armory Tactical Booster Bundle',
     description: 'Includes 3x Quantum Oracle Reroll tokens and 2x Cryo-Shield Streak Freezes.',
     type: 'one_time',
-    amount: 299, // $2.99
+    amount: 99, // $0.99
     currency: 'usd',
     metadata: {
       itemType: 'armory_bundle',

@@ -14,7 +14,7 @@ export type DareStatus =
   | 'rejected' 
   | 'forfeited';
 
-export type ProTier = 'runner' | 'elite' | 'overlord';
+export type ProTier = 'lite' | 'runner' | 'elite' | 'overlord' | 'ultra';
 
 export type ArmoryCategory = 'booster' | 'cosmetic' | 'title' | 'perk' | 'merch';
 export type ItemRarity = 'common' | 'rare' | 'epic' | 'legendary';
@@ -130,6 +130,7 @@ export interface UserProfile {
   streak?: number;
   lastActiveDate?: string;
   isPro?: boolean;
+  email?: string;
   referralCode?: string;
   referralCount?: number;
   proTier?: ProTier | null;

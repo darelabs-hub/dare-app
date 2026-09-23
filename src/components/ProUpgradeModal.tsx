@@ -103,6 +103,34 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
     }
   ];
 
+  const handleStripeCheckout = async () => {
+    setUpgrading(true);
+    setError(null);
+    playSound('oracle');
+    try {
+      const tierItemId = `dare_pro_${selectedTier}_monthly`;
+      const res = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: tierItemId,
+          userId: currentUser.id,
+          userEmail: currentUser.email || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to initialize Stripe checkout session');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Stripe checkout error');
+      setUpgrading(false);
+      playSound('error');
+    }
+  };
+
   const handleUpgrade = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -409,6 +437,22 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                 {/* Credit Card checkout Form */}
                 {paymentMode === 'card' && (
                   <div className="space-y-2.5 text-xs animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={handleStripeCheckout}
+                      disabled={upgrading}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold text-white shadow-lg transition-all bg-gradient-to-r from-[#635bff] to-[#7a73ff] hover:brightness-110 active:scale-95 disabled:opacity-50"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Checkout via Stripe (Cards, Apple Pay, Google Pay)</span>
+                    </button>
+
+                    <div className="flex items-center gap-2 my-2 text-[10px] text-slate-500 font-mono uppercase">
+                      <div className="h-px bg-slate-800 flex-1" />
+                      <span>Or pay with card below</span>
+                      <div className="h-px bg-slate-800 flex-1" />
+                    </div>
+
                     <div>
                       <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">
                         Cardholder Name

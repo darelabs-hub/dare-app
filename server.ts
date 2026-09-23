@@ -3170,18 +3170,24 @@ Provide your response in strictly valid JSON with this structure:
 
           if (userId) {
             const user = findOrCreateUser(userId);
-            if (itemId?.includes('pro')) {
+            if (itemId?.includes('ultra')) {
               user.isPro = true;
-              user.proTier = 'runner';
-              user.badges = Array.from(new Set([...user.badges, '⚡ Pro Lite']));
-              user.cred += 500;
-              addTransaction(user.id, 'stipend_claimed', 500, 'Bonus Cred for Pro Lite subscription activation');
+              user.proTier = 'ultra';
+              user.badges = Array.from(new Set([...(user.badges || []), '👑 Pro Ultra']));
+              user.cred += 1000;
+              addTransaction(user.id, 'stipend_claimed', 1000, 'Bonus Cred for Pro Ultra subscription activation');
             } else if (itemId?.includes('elite')) {
               user.isPro = true;
               user.proTier = 'elite';
-              user.badges = Array.from(new Set([...user.badges, '💎 Pro Elite']));
-              user.cred += 2000;
-              addTransaction(user.id, 'stipend_claimed', 2000, 'Bonus Cred for Pro Elite subscription');
+              user.badges = Array.from(new Set([...(user.badges || []), '💎 Pro Elite']));
+              user.cred += 500;
+              addTransaction(user.id, 'stipend_claimed', 500, 'Bonus Cred for Pro Elite subscription activation');
+            } else if (itemId?.includes('lite') || itemId?.includes('pro') || itemId?.includes('runner')) {
+              user.isPro = true;
+              user.proTier = 'lite';
+              user.badges = Array.from(new Set([...(user.badges || []), '⚡ Pro Lite']));
+              user.cred += 250;
+              addTransaction(user.id, 'stipend_claimed', 250, 'Bonus Cred for Pro Lite subscription activation');
             } else if (itemId?.includes('battle_pass')) {
               user.hasElitePass = true;
               user.cred += 250;
@@ -3192,6 +3198,9 @@ Provide your response in strictly valid JSON with this structure:
             } else if (itemId?.includes('2500')) {
               user.cred += 2500;
               addTransaction(user.id, 'stipend_claimed', 2500, 'Purchased 2,500 Cred Vault');
+            } else if (itemId?.includes('booster')) {
+              user.cred += 100;
+              addTransaction(user.id, 'stipend_claimed', 100, 'Purchased Armory Booster Pack');
             }
 
             addNotification({
