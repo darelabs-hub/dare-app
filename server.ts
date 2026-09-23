@@ -34,8 +34,33 @@ import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog'
 dotenv.config();
 
 // Initialize Firebase Admin
-admin.initializeApp();
-const db = getFirestore();
+import firebaseConfig from './firebase-applet-config.json';
+admin.initializeApp({
+  projectId: firebaseConfig.projectId,
+});
+const db = getFirestore(firebaseConfig.firestoreDatabaseId || undefined);
+
+// User persistence helpers
+async function saveUserToFirestore(user: UserProfile) {
+  try {
+    if (!user || !user.id) return;
+    await db.collection('users').doc(user.id).set(user, { merge: true });
+  } catch (err) {
+    console.warn('Error saving user to Firestore:', err);
+  }
+}
+
+async function getUserFromFirestore(userId: string): Promise<UserProfile | null> {
+  try {
+    const snap = await db.collection('users').doc(userId).get();
+    if (snap.exists) {
+      return snap.data() as UserProfile;
+    }
+  } catch (err) {
+    console.warn('Error reading user from Firestore:', err);
+  }
+  return null;
+}
 
 const PORT = 3000;
 
@@ -348,6 +373,14 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile>)
       squadReceivedRequests: defaultProfile?.squadReceivedRequests || [],
     };
     initialUsers.push(user);
+    saveUserToFirestore(user);
+  } else if (defaultProfile) {
+    if (defaultProfile.name) user.name = defaultProfile.name;
+    if (defaultProfile.handle) user.handle = defaultProfile.handle;
+    if (defaultProfile.avatar) user.avatar = defaultProfile.avatar;
+    if (defaultProfile.isPro !== undefined) user.isPro = defaultProfile.isPro;
+    if (defaultProfile.proTier !== undefined) user.proTier = defaultProfile.proTier;
+    saveUserToFirestore(user);
   }
   return user;
 }
@@ -654,14 +687,21 @@ async function startServer() {
   });
 
   // Get Daily Mission for user
-  app.get('/api/users/:userId/daily-mission', (req, res) => {
+  app.get('/api/users/:userId/daily-mission', async (req, res) => {
     const { userId } = req.params;
-    const user = initialUsers.find(u => u.id === userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    let user = initialUsers.find(u => u.id === userId);
+    if (!user) {
+      user = await getUserFromFirestore(userId) || findOrCreateUser(userId);
+    }
     
     // Select a random open dare for the daily mission
     const openDares = dares.filter(d => d.status === 'open');
-    if (openDares.length === 0) return res.status(404).json({ error: 'No dares available' });
+    if (openDares.length === 0) {
+      if (dares.length > 0) {
+        return res.json(dares[0]);
+      }
+      return res.status(404).json({ error: 'No dares available' });
+    }
     
     const dailyMission = openDares[Math.floor(Math.random() * openDares.length)];
     res.json(dailyMission);

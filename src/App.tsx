@@ -208,6 +208,33 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (user) {
+      const handle = user.email ? `@${user.email.split('@')[0]}` : `@${user.uid.slice(0, 8)}`;
+      const profileToSync: Partial<UserProfile> = {
+        id: user.uid,
+        name: user.displayName || 'DARE Operative',
+        handle: handle,
+        avatar: user.photoURL || currentUser.avatar,
+      };
+
+      fetch('/api/users/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileToSync),
+      })
+        .then(res => res.json())
+        .then((syncedUser: UserProfile) => {
+          if (syncedUser && syncedUser.id) {
+            setCurrentUser(syncedUser);
+          }
+          fetchUsers();
+          fetchDailyMission();
+        })
+        .catch(err => console.error('Error syncing auth user:', err));
+    }
+  }, [user]);
+
+  useEffect(() => {
     // Sync current user with server on launch
     fetch('/api/users/sync', {
       method: 'POST',
@@ -215,6 +242,7 @@ export default function App() {
       body: JSON.stringify(currentUser),
     }).then(() => {
       fetchUsers();
+      fetchDailyMission();
     }).catch(err => console.error('Error syncing user:', err));
 
     fetchStats();
@@ -237,6 +265,7 @@ export default function App() {
 
   useEffect(() => {
     fetchNotifications();
+    fetchDailyMission();
   }, [currentUser.id]);
 
   useEffect(() => {
