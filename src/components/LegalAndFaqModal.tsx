@@ -30,7 +30,7 @@ interface LegalAndFaqModalProps {
 
 interface FaqItem {
   id: string;
-  category: 'general' | 'dares' | 'ai' | 'streaks' | 'safety';
+  category: 'general' | 'dares' | 'ai' | 'streaks' | 'safety' | 'economy';
   question: string;
   answer: string;
   badge?: string;
@@ -44,6 +44,54 @@ const FAQ_DATA: FaqItem[] = [
     answer:
       'DARE is a social challenge and bounty protocol. Netrunners can deploy dares to the public grid or challenge rivals directly, earn virtual Cred rewards, level up their consecutive streak, and have their video/photo proof audited by our automated Oracle AI engine.',
     badge: 'Basics',
+  },
+  {
+    id: 'how-can-i-spend-cred',
+    category: 'economy',
+    question: 'How can I spend my Cred (CR) on the platform?',
+    answer:
+      'Cred (CR) is the core currency and reputation token of the DARE ecosystem. You can spend your Cred across 5 major utilities:\n\n' +
+      '1. 💰 Funding Bounty Pots: Stake Cred when creating public bounties or challenging friends. The winner who completes the dare claims the pot.\n' +
+      '2. 🛍️ The Cyber Armory: Buy tactical boosters (2x XP Overclock, Streak Aegis Shields, Bounty Multipliers), animated neon avatar rings, profile banners, and prestige Operative Titles.\n' +
+      '3. ⚔️ 1v1 Live Duels & Staking: Wager Cred against rivals in real-time dare duels or place peer stakes on squadmate challenges.\n' +
+      '4. ⚡ Season Pass Tier Skips: Spend Cred to instantly advance levels on the Season Pass track and unlock elite rewards.\n' +
+      '5. 🧭 GPS Drop Zone Overdrives: Trigger high-frequency radar scans to discover and hack rare physical drop beacons in your city.\n' +
+      '6. 🎁 Gauntlet Merch & Events: Redeem high-tier Cred balances for exclusive merchandise discount vouchers and tournament entries.',
+    badge: 'Cred Utility',
+  },
+  {
+    id: 'tactical-boosters-in-armory',
+    category: 'economy',
+    question: 'What tactical boosters are available in the Cyber Armory?',
+    answer:
+      'The Cyber Armory offers powerful consumable chips to optimize your operative stats:\n' +
+      '• 2x XP Overclock Chip (~250 CR): Doubles all XP gained from completed dares for 24 hours.\n' +
+      '• Streak Protection Aegis Shield (~350 CR): Preserves your active daily streak if you miss a day.\n' +
+      '• Double Bounty Multiplier (~500 CR): Multiplies the payout pot on your next completed dare.\n' +
+      '• Radar Overdrive Sensor (~200 CR): Expands GPS scan radius for discovering distant AR Drop Zones.',
+    badge: 'Cyber Armory',
+  },
+  {
+    id: 'how-do-i-earn-cred',
+    category: 'economy',
+    question: 'How do I earn more Cred (CR)?',
+    answer:
+      'You can earn Cred through multiple gameplay loops:\n' +
+      '• Completing open community bounties & peer dares verified by the Oracle AI.\n' +
+      '• Winning 1v1 Live Duels and Rivalry wagers.\n' +
+      '• Executing Daily Missions to crack the Daily Trifecta Cyber Safe.\n' +
+      '• Traveling to and claiming GPS Drop Zones in the real world.\n' +
+      '• Maintaining daily login/action streaks and reaching milestone badges.\n' +
+      '• Climbing Season Pass milestone levels.',
+    badge: 'Earning Cred',
+  },
+  {
+    id: 'cred-transaction-history',
+    category: 'economy',
+    question: 'Where can I track my Cred spending and earnings history?',
+    answer:
+      'Click your profile avatar/handle dropdown menu in the top navigation bar and select "Cred Transaction Log". This opens your complete transparent ledger showing all bounty payouts, Armory purchases, duel wagers, and mission rewards with precise timestamps and transaction IDs.',
+    badge: 'Ledger',
   },
   {
     id: 'how-to-accept',
@@ -71,7 +119,7 @@ const FAQ_DATA: FaqItem[] = [
   },
   {
     id: 'what-is-cred',
-    category: 'streaks',
+    category: 'economy',
     question: 'What is Cred and can it be converted to real money?',
     answer:
       'Cred is DARE’s native in-app reputation score and virtual bounty currency. It measures your standing and credibility within the Netrunner community. Cred is strictly a virtual utility point system for leaderboards, dare stakes, and badge unlocking, and has no cash redemption value.',
@@ -271,6 +319,7 @@ export const LegalAndFaqModal: React.FC<LegalAndFaqModalProps> = ({
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                   {[
                     { id: 'all', label: 'All' },
+                    { id: 'economy', label: 'Cred & Economy' },
                     { id: 'general', label: 'General' },
                     { id: 'dares', label: 'Dares' },
                     { id: 'ai', label: 'AI Arbiter' },
@@ -350,7 +399,7 @@ export const LegalAndFaqModal: React.FC<LegalAndFaqModalProps> = ({
                         </button>
 
                         {isOpen && (
-                          <div className="border-t border-slate-800/60 px-4 pb-4 pt-3 font-sans text-xs leading-relaxed text-slate-300">
+                          <div className="border-t border-slate-800/60 px-4 pb-4 pt-3 font-sans text-xs leading-relaxed text-slate-300 whitespace-pre-line">
                             <p>{faq.answer}</p>
                           </div>
                         )}
