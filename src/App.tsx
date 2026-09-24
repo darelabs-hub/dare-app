@@ -74,12 +74,24 @@ export default function App() {
     window.history.pushState({}, '', path);
     setCurrentPath(path.toLowerCase());
   };
-  const getLocalGuestUser = (): UserProfile => {
+  const getInitialUser = (): UserProfile => {
+    // 1. Check if there is an active custom profile saved on this device
+    try {
+      const lastCustom = localStorage.getItem('dareday_last_custom_profile');
+      if (lastCustom) {
+        const parsed = JSON.parse(lastCustom);
+        if (parsed && parsed.id && parsed.name && parsed.name !== 'Guest Operative') {
+          return parsed;
+        }
+      }
+    } catch (_e) {}
+
+    // 2. Check guest session
     try {
       const saved = localStorage.getItem('dareday_guest_session');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.id && parsed.id.startsWith('guest_')) {
+        if (parsed && parsed.id) {
           return parsed;
         }
       }
@@ -114,7 +126,7 @@ export default function App() {
 
   const { user, signIn, logout } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [currentUser, setCurrentUser] = useState<UserProfile>(getLocalGuestUser);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(getInitialUser);
 
   const handleSignOut = async () => {
     try {
@@ -122,7 +134,7 @@ export default function App() {
     } catch (e) {
       console.warn('Sign out error:', e);
     }
-    const guest = getLocalGuestUser();
+    const guest = getInitialUser();
     setCurrentUser(guest);
   };
 
@@ -236,9 +248,20 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
-        // Sync currentUser object if in list
+        // Sync currentUser object if in list without clobbering active custom name/avatar
         const found = data.find((u: UserProfile) => u.id === currentUser.id);
-        if (found) setCurrentUser(found);
+        if (found) {
+          setCurrentUser(prev => {
+            const isCustomName = prev.name && prev.name !== 'Guest Operative' && prev.name !== 'Active Operative';
+            const isCustomAvatar = prev.avatar && !prev.avatar.includes('photo-1535713875002');
+            return {
+              ...found,
+              name: isCustomName ? prev.name : (found.name || prev.name),
+              handle: prev.handle && !prev.handle.startsWith('@guest_') ? prev.handle : (found.handle || prev.handle),
+              avatar: isCustomAvatar ? prev.avatar : (found.avatar || prev.avatar),
+            };
+          });
+        }
         
         // Sync profileViewingUser if currently viewing someone
         if (profileViewingUser) {
@@ -292,6 +315,43 @@ export default function App() {
     let isMounted = true;
     const syncUserProfile = async () => {
       try {
+        // Retrieve any local custom profile saved on this machine to avoid flicker
+        let localCustom: Partial<UserProfile> | null = null;
+        try {
+          const userSaved = localStorage.getItem(`dareday_profile_${user.uid}`);
+          if (userSaved) {
+            localCustom = JSON.parse(userSaved);
+          } else {
+            const lastCustom = localStorage.getItem('dareday_last_custom_profile');
+            if (lastCustom) {
+              const parsed = JSON.parse(lastCustom);
+              if (parsed && parsed.name && parsed.name !== 'Guest Operative' && parsed.name !== 'Active Operative') {
+                localCustom = parsed;
+              }
+            } else {
+              const guestSaved = localStorage.getItem('dareday_guest_session');
+              if (guestSaved) {
+                const parsed = JSON.parse(guestSaved);
+                if (parsed && parsed.name && parsed.name !== 'Guest Operative' && parsed.name !== 'Active Operative') {
+                  localCustom = parsed;
+                }
+              }
+            }
+          }
+        } catch (_e) {}
+
+        // If we have a local custom profile ("DARE OPS"), immediately apply it to currentUser to prevent any UI flickering!
+        if (localCustom && localCustom.name && localCustom.name !== 'Guest Operative') {
+          setCurrentUser(prev => ({
+            ...prev,
+            ...localCustom,
+            id: user.uid,
+            name: localCustom?.name || prev.name,
+            handle: localCustom?.handle || prev.handle,
+            avatar: localCustom?.avatar || prev.avatar,
+          }));
+        }
+
         let savedData: UserProfile | null = null;
 
         // 1. Check if user profile is already saved in Firestore
@@ -308,68 +368,65 @@ export default function App() {
         const defaultAvatar = user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
         const defaultName = user.displayName || 'DARE Operative';
 
-        let profileToSync: UserProfile;
+        // Choose the best name, handle, and avatar prioritizing explicit user customizations over Google defaults
+        const isCustomLocalName = localCustom?.name && localCustom.name !== 'Guest Operative' && localCustom.name !== 'Active Operative';
+        const isCustomSavedName = savedData?.name && savedData.name !== 'Guest Operative' && savedData.name !== 'Active Operative' && savedData.name !== 'DARE Operative';
+        const resolvedName = isCustomLocalName ? localCustom!.name! : (isCustomSavedName ? savedData!.name : defaultName);
 
-        if (savedData) {
-          // Preserve all user's custom saved attributes (custom handle, custom avatar, custom name, cred, etc.)
-          profileToSync = {
-            ...savedData,
-            id: user.uid,
-            name: savedData.name || defaultName,
-            handle: savedData.handle || defaultHandle,
-            avatar: savedData.avatar || defaultAvatar,
-            cred: savedData.cred !== undefined ? savedData.cred : 100,
-            xp: savedData.xp || 0,
-            level: savedData.level || 1,
-            rank: savedData.rank || 'New Recruit',
-            completedDaresCount: savedData.completedDaresCount || 0,
-            createdDaresCount: savedData.createdDaresCount || 0,
-            streak: savedData.streak || 1,
-            lastActiveDate: savedData.lastActiveDate || new Date().toISOString().split('T')[0],
-            badges: savedData.badges || ['⚡ Active Operative'],
-            isPro: savedData.isPro || false,
-            proTier: savedData.proTier || null,
-            inventory: savedData.inventory || [],
-            activeBoosters: savedData.activeBoosters || [],
-            seasonPassLevel: savedData.seasonPassLevel || 1,
-            seasonPassXp: savedData.seasonPassXp || 0,
-            disableHelpBubbles: savedData.disableHelpBubbles || false,
-            referralCode: savedData.referralCode,
-            referralCount: savedData.referralCount || 0,
-          };
-        } else {
-          // Create new persistent profile for first-time sign in
-          profileToSync = {
-            id: user.uid,
-            name: defaultName,
-            handle: defaultHandle,
-            avatar: defaultAvatar,
-            cred: 100,
-            xp: 0,
-            level: 1,
-            rank: 'New Recruit',
-            completedDaresCount: 0,
-            createdDaresCount: 0,
-            streak: 1,
-            lastActiveDate: new Date().toISOString().split('T')[0],
-            badges: ['⚡ Active Operative'],
-            isPro: false,
-            inventory: [],
-            activeBoosters: [],
-            seasonPassLevel: 1,
-            seasonPassXp: 0,
-            disableHelpBubbles: false,
-          };
+        const isCustomLocalHandle = localCustom?.handle && !localCustom.handle.startsWith('@guest_');
+        const isCustomSavedHandle = savedData?.handle && !savedData.handle.startsWith('@guest_');
+        const resolvedHandle = isCustomLocalHandle ? localCustom!.handle! : (isCustomSavedHandle ? savedData!.handle : defaultHandle);
 
-          // Save new profile to Firestore permanently
-          try {
-            await setDoc(doc(db, 'users', user.uid), profileToSync);
-          } catch (writeErr) {
-            console.warn('Firestore initial profile save warning:', writeErr);
-          }
+        const isCustomLocalAvatar = localCustom?.avatar && !localCustom.avatar.includes('photo-1535713875002');
+        const isCustomSavedAvatar = savedData?.avatar && !savedData.avatar.includes('photo-1535713875002');
+        const resolvedAvatar = isCustomLocalAvatar ? localCustom!.avatar! : (isCustomSavedAvatar ? savedData!.avatar : defaultAvatar);
+
+        const profileToSync: UserProfile = {
+          ...(savedData || {}),
+          ...(localCustom || {}),
+          id: user.uid,
+          name: resolvedName,
+          handle: resolvedHandle,
+          avatar: resolvedAvatar,
+          cred: savedData?.cred !== undefined ? savedData.cred : (localCustom?.cred !== undefined ? localCustom.cred : 100),
+          xp: savedData?.xp || localCustom?.xp || 0,
+          level: savedData?.level || localCustom?.level || 1,
+          rank: savedData?.rank || localCustom?.rank || 'New Recruit',
+          completedDaresCount: savedData?.completedDaresCount || localCustom?.completedDaresCount || 0,
+          createdDaresCount: savedData?.createdDaresCount || localCustom?.createdDaresCount || 0,
+          streak: savedData?.streak || localCustom?.streak || 1,
+          lastActiveDate: savedData?.lastActiveDate || new Date().toISOString().split('T')[0],
+          badges: savedData?.badges || localCustom?.badges || ['⚡ Active Operative'],
+          isPro: savedData?.isPro !== undefined ? savedData.isPro : (localCustom?.isPro || false),
+          proTier: savedData?.proTier || localCustom?.proTier || null,
+          inventory: savedData?.inventory || localCustom?.inventory || [],
+          activeBoosters: savedData?.activeBoosters || localCustom?.activeBoosters || [],
+          seasonPassLevel: savedData?.seasonPassLevel || localCustom?.seasonPassLevel || 1,
+          seasonPassXp: savedData?.seasonPassXp || localCustom?.seasonPassXp || 0,
+          disableHelpBubbles: savedData?.disableHelpBubbles !== undefined ? savedData.disableHelpBubbles : (localCustom?.disableHelpBubbles || false),
+          referralCode: savedData?.referralCode || localCustom?.referralCode,
+          referralCount: savedData?.referralCount || localCustom?.referralCount || 0,
+        };
+
+        // Persist to localStorage immediately
+        try {
+          localStorage.setItem(`dareday_profile_${user.uid}`, JSON.stringify(profileToSync));
+          localStorage.setItem('dareday_last_custom_profile', JSON.stringify(profileToSync));
+        } catch (_e) {}
+
+        // Persist to Firestore
+        try {
+          await setDoc(doc(db, 'users', user.uid), profileToSync, { merge: true });
+        } catch (writeErr) {
+          console.warn('Firestore profile save warning:', writeErr);
         }
 
-        // 2. Sync to Backend API
+        // Apply to currentUser state
+        if (isMounted) {
+          setCurrentUser(profileToSync);
+        }
+
+        // Sync to backend API
         const res = await fetch('/api/users/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -381,8 +438,6 @@ export default function App() {
           if (syncedUser && syncedUser.id) {
             setCurrentUser(syncedUser);
           }
-        } else if (isMounted) {
-          setCurrentUser(profileToSync);
         }
 
         if (isMounted) {
@@ -1273,11 +1328,15 @@ export default function App() {
           setCurrentUser(updated);
           setUsers((prev) => prev.map((u) => u.id === updated.id ? updated : u));
           setProfileViewingUser(updated);
-          if (updated.id.startsWith('guest_')) {
-            try {
+          try {
+            localStorage.setItem('dareday_last_custom_profile', JSON.stringify(updated));
+            if (updated.id.startsWith('guest_')) {
               localStorage.setItem('dareday_guest_session', JSON.stringify(updated));
-            } catch (_e) {}
-          } else if (user && (updated.id === user.uid || updated.id === currentUser.id)) {
+            } else {
+              localStorage.setItem(`dareday_profile_${updated.id}`, JSON.stringify(updated));
+            }
+          } catch (_e) {}
+          if (user && (updated.id === user.uid || updated.id === currentUser.id)) {
             try {
               setDoc(doc(db, 'users', updated.id), updated, { merge: true }).catch((err) => {
                 console.warn('Firestore user update notice:', err);

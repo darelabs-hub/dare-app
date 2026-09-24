@@ -337,6 +337,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       if (res.ok) {
         const data = await res.json();
         const savedUser = data.user || updatedUserObj;
+        try {
+          localStorage.setItem('dareday_last_custom_profile', JSON.stringify(savedUser));
+          if (!savedUser.id.startsWith('guest_')) {
+            localStorage.setItem(`dareday_profile_${savedUser.id}`, JSON.stringify(savedUser));
+          } else {
+            localStorage.setItem('dareday_guest_session', JSON.stringify(savedUser));
+          }
+        } catch (_e) {}
         if (onUpdateUser) {
           onUpdateUser(savedUser);
         }
