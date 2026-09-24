@@ -74,7 +74,7 @@ export const ProofGalleryModal: React.FC<ProofGalleryModalProps> = ({
         category: 'creative',
         difficulty: 'Level 2 - Moderate',
         rewardCred: proofItem.rewardCred || 50,
-        creator: { id: 'sys', handle: '@daredaylabs', name: 'DARE Ops', avatar: '' },
+        creator: { id: 'u_dare_ops', handle: '@DARE_OPS', name: 'DARE_OPS', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
         targetType: 'public',
         status: 'verified',
         createdAt: proofItem.submittedAt,

@@ -687,6 +687,56 @@ async function startServer() {
     res.json(sorted);
   });
 
+  // Get single user by ID or handle
+  app.get('/api/users/:id', async (req, res) => {
+    const identifier = req.params.id;
+    if (!identifier) {
+      return res.status(400).json({ error: 'User identifier is required' });
+    }
+
+    const cleanHandle = identifier.startsWith('@') ? identifier : `@${identifier}`;
+    let user = initialUsers.find(u => 
+      u.id === identifier || 
+      u.handle.toLowerCase() === identifier.toLowerCase() ||
+      u.handle.toLowerCase() === cleanHandle.toLowerCase()
+    );
+
+    if (!user && hasAdminCredentials) {
+      user = await getUserFromFirestore(identifier);
+    }
+
+    if (!user) {
+      // Find from existing dares creator or acceptedBy
+      const matchingDare = dares.find(d => 
+        d.creator.id === identifier || 
+        d.creator.handle.toLowerCase() === identifier.toLowerCase() ||
+        d.creator.handle.toLowerCase() === cleanHandle.toLowerCase() ||
+        d.acceptedBy?.id === identifier ||
+        d.acceptedBy?.handle.toLowerCase() === identifier.toLowerCase() ||
+        d.acceptedBy?.handle.toLowerCase() === cleanHandle.toLowerCase()
+      );
+
+      if (matchingDare) {
+        const isCreator = matchingDare.creator.id === identifier || 
+                          matchingDare.creator.handle.toLowerCase() === identifier.toLowerCase() ||
+                          matchingDare.creator.handle.toLowerCase() === cleanHandle.toLowerCase();
+        const target = isCreator ? matchingDare.creator : matchingDare.acceptedBy!;
+        user = findOrCreateUser(target.id, {
+          name: target.name,
+          handle: target.handle,
+          avatar: target.avatar,
+          isPro: target.isPro,
+          proTier: target.proTier,
+        });
+      }
+    }
+
+    if (user) {
+      return res.json(user);
+    }
+    return res.status(404).json({ error: 'User not found' });
+  });
+
   // Update user profile (Username, Display Name, Profile Picture / Avatar)
   const handleProfileUpdate = (req: any, res: any) => {
     const userId = req.params.id || req.body.id || req.body.userId;

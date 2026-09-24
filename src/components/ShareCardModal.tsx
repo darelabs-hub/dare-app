@@ -262,7 +262,10 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     // 8. Creator info Footer
     ctx.font = 'bold 20px monospace';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`ISSUED BY @${dare.creator?.handle || 'DareMaster'}`, 65, 595);
+    const creatorHandleDisplay = dare.creator?.handle 
+      ? (dare.creator.handle.startsWith('@') ? dare.creator.handle : `@${dare.creator.handle}`)
+      : '@DARE_OPS';
+    ctx.fillText(`ISSUED BY ${creatorHandleDisplay}`, 65, 595);
 
     ctx.font = '16px monospace';
     ctx.fillStyle = activeTheme.primaryHex;
@@ -683,7 +686,9 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400">ISSUED BY:</span>
                   <span className={`font-bold ${activeTheme.accentText}`}>
-                    @{dare.creator?.handle || 'DareMaster'}
+                    {dare.creator?.handle 
+                      ? (dare.creator.handle.startsWith('@') ? dare.creator.handle : `@${dare.creator.handle}`)
+                      : '@DARE_OPS'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-slate-300">

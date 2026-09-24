@@ -830,6 +830,111 @@ export default function App() {
     playSound('notification');
   };
 
+  const handleOpenUserProfile = async (
+    userIdOrHandle: string, 
+    tab?: 'heatmap' | 'location-map' | 'completed' | 'created' | 'settings' | 'squad' | 'rivalry'
+  ) => {
+    if (!userIdOrHandle) return;
+    if (tab) setProfileModalTab(tab);
+
+    const cleanIdentifier = String(userIdOrHandle).trim();
+    const handleWithoutAt = cleanIdentifier.replace(/^@/, '').toLowerCase();
+    const handleWithAt = `@${handleWithoutAt}`;
+
+    // 1. If it's currentUser
+    if (
+      cleanIdentifier === currentUser.id ||
+      currentUser.handle.toLowerCase() === handleWithAt ||
+      currentUser.handle.toLowerCase() === handleWithoutAt ||
+      (currentUser.name && currentUser.name.toLowerCase() === cleanIdentifier.toLowerCase())
+    ) {
+      setProfileViewingUser(currentUser);
+      return;
+    }
+
+    // 2. Check in all loaded users
+    const foundInUsers = users.find((u) => 
+      u.id === cleanIdentifier ||
+      u.handle.toLowerCase() === handleWithAt ||
+      u.handle.toLowerCase() === handleWithoutAt ||
+      (u.name && u.name.toLowerCase() === cleanIdentifier.toLowerCase())
+    );
+
+    if (foundInUsers) {
+      setProfileViewingUser(foundInUsers);
+      return;
+    }
+
+    // 3. Check in active dares creators or acceptedBy
+    const matchingDare = dares.find((d) => 
+      d.creator.id === cleanIdentifier ||
+      d.creator.handle.toLowerCase() === handleWithAt ||
+      d.creator.handle.toLowerCase() === handleWithoutAt ||
+      d.creator.name.toLowerCase() === cleanIdentifier.toLowerCase() ||
+      d.acceptedBy?.id === cleanIdentifier ||
+      d.acceptedBy?.handle.toLowerCase() === handleWithAt ||
+      d.acceptedBy?.handle.toLowerCase() === handleWithoutAt
+    );
+
+    if (matchingDare) {
+      const isCreator = matchingDare.creator.id === cleanIdentifier ||
+        matchingDare.creator.handle.toLowerCase() === handleWithAt ||
+        matchingDare.creator.handle.toLowerCase() === handleWithoutAt ||
+        matchingDare.creator.name.toLowerCase() === cleanIdentifier.toLowerCase();
+
+      const target = isCreator ? matchingDare.creator : matchingDare.acceptedBy!;
+      const syntheticProfile: UserProfile = {
+        id: target.id || `u_${Date.now().toString(36)}`,
+        handle: target.handle?.startsWith('@') ? target.handle : `@${target.handle || 'operative'}`,
+        name: target.name || 'DARE Operative',
+        avatar: target.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        cred: 500,
+        xp: 850,
+        level: 4,
+        rank: target.isPro ? 'Syndicate Veteran' : 'Netrunner Operative',
+        completedDaresCount: dares.filter((d) => d.acceptedBy?.id === target.id && d.status === 'verified').length,
+        createdDaresCount: dares.filter((d) => d.creator.id === target.id).length || (isCreator ? 1 : 0),
+        streak: 5,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        badges: target.isPro ? ['⚡ Syndicate Overlord', '👑 Cyber Pioneer'] : ['⚡ Verified Operative'],
+        isPro: !!target.isPro,
+        proTier: target.proTier || (target.isPro ? 'ultra' : null),
+        inventory: [],
+        activeBoosters: [],
+        seasonPassLevel: 3,
+        seasonPassXp: 950,
+        seasonPassClaimedFree: [],
+        seasonPassClaimedElite: [],
+        activeStakes: [],
+        totalCredWonInStakes: 0,
+        squadFriends: [],
+        squadSentRequests: [],
+        squadReceivedRequests: [],
+        disableHelpBubbles: false,
+      };
+      setProfileViewingUser(syntheticProfile);
+    }
+
+    // 4. Also asynchronously try to fetch fresh from server
+    try {
+      const res = await fetch(`/api/users/${encodeURIComponent(cleanIdentifier)}`);
+      if (res.ok) {
+        const fetchedUser = await res.json();
+        if (fetchedUser) {
+          setProfileViewingUser(fetchedUser);
+          setUsers(prev => {
+            if (!prev.some(u => u.id === fetchedUser.id)) {
+              return [...prev, fetchedUser];
+            }
+            return prev.map(u => u.id === fetchedUser.id ? fetchedUser : u);
+          });
+        }
+      }
+    } catch (_err) {
+      // Handled gracefully
+    }
+  };
+
   const mapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (currentPath === '/privacy' || currentPath === '/privacy-policy') {
@@ -1103,10 +1208,7 @@ export default function App() {
                   onToggleComments={(d) => setCommentsViewingDare(d)}
                   onShare={handleDareShare}
                   onOpenProfile={(userId) => {
-                    const foundUser = users.find((u) => u.id === userId);
-                    if (foundUser) {
-                      setProfileViewingUser(foundUser);
-                    }
+                    handleOpenUserProfile(userId);
                   }}
                   isHighlighted={dare.id === highlightedDareId}
                 />
@@ -1296,10 +1398,10 @@ export default function App() {
               difficulty: 'Level 2 - Moderate',
               rewardCred: 60,
               creator: {
-                id: 'sys_dare_hq',
-                handle: '@dare_hq',
-                name: 'DARE HQ',
-                avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150',
+                id: 'u_dare_ops',
+                handle: '@DARE_OPS',
+                name: 'DARE_OPS',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
               },
               targetType: 'public',
               status: 'accepted',

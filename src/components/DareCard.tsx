@@ -470,10 +470,21 @@ export const DareCard: React.FC<DareCardProps> = ({
                   Public
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-md border border-pink-500/30 bg-pink-950/30 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-pink-300 shrink-0 max-w-[130px] truncate">
+                <button
+                  id={`card-target-user-${dare.id}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    playSound('click');
+                    if (dare.targetUserHandle) {
+                      onOpenProfile?.(dare.targetUserHandle);
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 rounded-md border border-pink-500/30 bg-pink-950/30 px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider text-pink-300 shrink-0 max-w-[130px] truncate hover:border-pink-400 hover:bg-pink-900/40 transition-colors cursor-pointer active:scale-95"
+                  title={`View ${dare.targetUserHandle}'s Profile`}
+                >
                   <Flame className="h-3 w-3 text-pink-400 shrink-0" />
                   <span className="truncate">For {dare.targetUserHandle || 'Peer'}</span>
-                </span>
+                </button>
               )}
 
               {/* Dynamic Difficulty Level Badge based on Reward Amount */}
@@ -710,23 +721,35 @@ export const DareCard: React.FC<DareCardProps> = ({
           {/* Creator & Challenger Row */}
           <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5 gap-2 min-w-0">
             <button
-              onClick={() => onOpenProfile?.(dare.creator.id)}
-              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer group/creator text-left min-w-0 truncate"
+              id={`card-creator-profile-${dare.id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                playSound('click');
+                onOpenProfile?.(dare.creator.id || dare.creator.handle);
+              }}
+              className="flex items-center gap-1.5 hover:opacity-100 transition-all cursor-pointer group/creator text-left min-w-0 truncate py-1 px-1.5 -ml-1 rounded-lg hover:bg-slate-800/60"
+              title={`View ${dare.creator.name || dare.creator.handle}'s Profile`}
             >
               <img
                 src={dare.creator.avatar}
                 alt={dare.creator.name}
-                className="h-5 w-5 rounded-full object-cover ring-1 ring-slate-700 group-hover/creator:ring-indigo-400 shrink-0"
+                className="h-5 w-5 rounded-full object-cover ring-1 ring-slate-700 group-hover/creator:ring-indigo-400 group-hover/creator:scale-110 transition-transform shrink-0"
               />
               <span className="font-mono text-[11px] text-slate-300 truncate">
-                by <span className="text-white font-semibold group-hover/creator:text-indigo-400">{dare.creator.handle}</span>
+                by <span className="text-white font-semibold group-hover/creator:text-indigo-400 group-hover/creator:underline">{dare.creator.handle}</span>
               </span>
             </button>
 
             {dare.acceptedBy ? (
               <button
-                onClick={() => onOpenProfile?.(dare.acceptedBy!.id)}
-                className="flex items-center gap-1 font-mono text-[10px] text-cyan-400 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-500/20 hover:border-cyan-400/50 transition-colors shrink-0 max-w-[130px] truncate"
+                id={`card-challenger-profile-${dare.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  playSound('click');
+                  onOpenProfile?.(dare.acceptedBy!.id || dare.acceptedBy!.handle);
+                }}
+                className="flex items-center gap-1 font-mono text-[10px] text-cyan-400 bg-cyan-950/30 px-2 py-0.5 rounded border border-cyan-500/20 hover:border-cyan-400/60 hover:bg-cyan-900/40 transition-all shrink-0 max-w-[130px] truncate cursor-pointer active:scale-95"
+                title={`View @${dare.acceptedBy.handle}'s Profile`}
               >
                 <UserCheck className="h-3 w-3 shrink-0" />
                 <span className="truncate">@{dare.acceptedBy.handle}</span>
