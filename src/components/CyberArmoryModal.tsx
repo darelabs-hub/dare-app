@@ -15,9 +15,7 @@ import {
   CheckCircle2, 
   AlertCircle,
   Coins,
-  RefreshCw,
-  Gift,
-  Tag
+  RefreshCw
 } from 'lucide-react';
 import { ArmoryItem, InventoryItem, ActiveBooster, UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -38,13 +36,12 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
   onUserUpdate,
   onOpenStipendOrPro,
 }) => {
-  const [activeTab, setActiveTab] = useState<'boosters' | 'cosmetics' | 'titles' | 'inventory' | 'merch'>('boosters');
+  const [activeTab, setActiveTab] = useState<'boosters' | 'cosmetics' | 'titles' | 'inventory'>('boosters');
   const [items, setItems] = useState<ArmoryItem[]>([]);
   const [jackpotPool, setJackpotPool] = useState<number>(14850);
   const [loading, setLoading] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-  const [redeemedTrackingCode, setRedeemedTrackingCode] = useState<{ name: string; code: string } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -97,9 +94,6 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
       } else {
         onUserUpdate(data.user);
         playSound('purchase');
-        if (data.trackingCode) {
-          setRedeemedTrackingCode({ name: item.name, code: data.trackingCode });
-        }
         setActionFeedback(`Requisitioned ${item.name}! Added to neural inventory.`);
         trackEvent({
           event: 'armory_purchase',
@@ -171,7 +165,6 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
   const boosters = items.filter(i => i.category === 'booster' || i.category === 'perk');
   const cosmetics = items.filter(i => i.category === 'cosmetic');
   const titles = items.filter(i => i.category === 'title');
-  const merchItems = items.filter(i => i.category === 'merch');
   const userInventory = currentUser.inventory || [];
   const activeBoosters = currentUser.activeBoosters || [];
 
@@ -208,7 +201,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Spend Cred on overclock boosters, holographic avatar frames, prestigious titles & physical gear.
+                Spend Cred on overclock boosters, holographic avatar frames, and prestigious titles.
               </p>
             </div>
           </div>
@@ -266,39 +259,6 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
           </div>
         )}
 
-        {/* Physical Swag Redemption Modal Overlay */}
-        {redeemedTrackingCode && (
-          <div className="mx-6 mt-3 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border border-purple-500/40 p-4 shadow-xl text-xs animate-in zoom-in-95">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <Gift className="h-5 w-5 text-purple-400" />
-                <h4 className="font-black text-white text-sm">Physical Item Requisition Confirmed!</h4>
-              </div>
-              <button 
-                onClick={() => setRedeemedTrackingCode(null)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-slate-300 mt-1">
-              You redeemed <strong className="text-purple-300">{redeemedTrackingCode.name}</strong>. Your decentralized NFC authentication code is:
-            </p>
-            <div className="mt-2 flex items-center gap-3 bg-black/50 border border-purple-500/30 rounded-lg p-2.5 font-mono text-sm font-bold text-purple-300 tracking-wider">
-              <span>{redeemedTrackingCode.code}</span>
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(redeemedTrackingCode.code);
-                  setActionFeedback('Tracking code copied to clipboard!');
-                }}
-                className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 underline font-sans"
-              >
-                Copy Code
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Tabs Bar */}
         <div className="flex items-center gap-1 border-b border-white/10 px-6 pt-3 overflow-x-auto no-scrollbar bg-slate-900/50">
           {[
@@ -306,7 +266,6 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
             { id: 'cosmetics', label: 'Holo-Frames', icon: Sparkles, count: cosmetics.length },
             { id: 'titles', label: 'Cyber Titles', icon: Crown, count: titles.length },
             { id: 'inventory', label: 'My Inventory', icon: Package, count: userInventory.length, badge: activeBoosters.length ? `${activeBoosters.length} Active` : undefined },
-            { id: 'merch', label: 'Real Swag & Vault', icon: Tag, count: merchItems.length },
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -707,69 +666,6 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
                         })}
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* --- PHYSICAL REAL SWAG & VAULT TAB --- */}
-              {activeTab === 'merch' && (
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 text-xs text-purple-200 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-white text-sm">Physical Cyber Swag Vault</h4>
-                      <p className="text-slate-400 mt-0.5">
-                        High-ranking Netrunners can redeem pure Cred for real limited-edition physical apparel embedded with profile NFC chips.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {merchItems.map(item => {
-                      const canAfford = currentUser.cred >= item.priceCred;
-                      const isPurchasing = purchasingId === item.id;
-
-                      return (
-                        <div
-                          key={item.id}
-                          className="rounded-2xl border border-purple-500/20 bg-slate-900/90 p-5 flex flex-col justify-between"
-                        >
-                          <div>
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-center gap-3">
-                                <span className="text-3xl">{item.icon}</span>
-                                <div>
-                                  <h3 className="font-bold text-white text-sm">{item.name}</h3>
-                                  <span className={`inline-block mt-0.5 rounded px-2 py-0.5 text-[10px] font-bold border ${getRarityBadge(item.rarity)} uppercase`}>
-                                    {item.rarity} Merch • {item.stock} left
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm font-black text-purple-300">
-                                  {item.priceCred.toLocaleString()} <span className="text-[10px] text-purple-500">CR</span>
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-xs text-slate-400 mt-2">{item.description}</p>
-                          </div>
-
-                          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
-                            <span className="text-[11px] text-purple-300 font-medium">Free Global Delivery</span>
-                            <button
-                              disabled={!canAfford || isPurchasing}
-                              onClick={() => handlePurchase(item)}
-                              className={`rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer ${
-                                canAfford
-                                  ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/30'
-                                  : 'bg-slate-800 text-slate-500 border border-slate-700/50 cursor-not-allowed'
-                              }`}
-                            >
-                              {isPurchasing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : 'Redeem with Cred'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               )}
