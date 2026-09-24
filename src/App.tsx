@@ -352,6 +352,9 @@ export default function App() {
           }));
         }
 
+        const isDareOpsAccount = user.email?.toLowerCase().includes('daredaylabs') || 
+          user.email?.toLowerCase() === 'daredaylabs@gmail.com';
+
         let savedData: UserProfile | null = null;
 
         // 1. Check if user profile is already saved in Firestore
@@ -364,17 +367,25 @@ export default function App() {
           console.warn('Firestore user profile lookup notice:', dbErr);
         }
 
-        const defaultHandle = user.email ? `@${user.email.split('@')[0]}` : `@${user.uid.slice(0, 8)}`;
-        const defaultAvatar = user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
-        const defaultName = user.displayName || 'DARE Operative';
+        const defaultHandle = isDareOpsAccount 
+          ? '@DARE_OPS' 
+          : (user.email ? `@${user.email.split('@')[0]}` : `@${user.uid.slice(0, 8)}`);
+        
+        const defaultAvatar = isDareOpsAccount 
+          ? '/logo.png' 
+          : (user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
+        
+        const defaultName = isDareOpsAccount 
+          ? 'DARE_OPS' 
+          : (user.displayName || 'DARE Operative');
 
         // Choose the best name, handle, and avatar prioritizing explicit user customizations over Google defaults
-        const isCustomLocalName = localCustom?.name && localCustom.name !== 'Guest Operative' && localCustom.name !== 'Active Operative';
-        const isCustomSavedName = savedData?.name && savedData.name !== 'Guest Operative' && savedData.name !== 'Active Operative' && savedData.name !== 'DARE Operative';
+        const isCustomLocalName = localCustom?.name && localCustom.name !== 'Guest Operative' && localCustom.name !== 'Active Operative' && localCustom.name !== 'jay';
+        const isCustomSavedName = savedData?.name && savedData.name !== 'Guest Operative' && savedData.name !== 'Active Operative' && savedData.name !== 'DARE Operative' && (isDareOpsAccount ? savedData.name !== 'jay' : true);
         const resolvedName = isCustomLocalName ? localCustom!.name! : (isCustomSavedName ? savedData!.name : defaultName);
 
-        const isCustomLocalHandle = localCustom?.handle && !localCustom.handle.startsWith('@guest_');
-        const isCustomSavedHandle = savedData?.handle && !savedData.handle.startsWith('@guest_');
+        const isCustomLocalHandle = localCustom?.handle && !localCustom.handle.startsWith('@guest_') && (isDareOpsAccount ? localCustom.handle !== '@daredaylabs' : true);
+        const isCustomSavedHandle = savedData?.handle && !savedData.handle.startsWith('@guest_') && (isDareOpsAccount ? savedData.handle !== '@daredaylabs' : true);
         const resolvedHandle = isCustomLocalHandle ? localCustom!.handle! : (isCustomSavedHandle ? savedData!.handle : defaultHandle);
 
         const isCustomLocalAvatar = localCustom?.avatar && !localCustom.avatar.includes('photo-1535713875002');
@@ -388,17 +399,17 @@ export default function App() {
           name: resolvedName,
           handle: resolvedHandle,
           avatar: resolvedAvatar,
-          cred: savedData?.cred !== undefined ? savedData.cred : (localCustom?.cred !== undefined ? localCustom.cred : 100),
-          xp: savedData?.xp || localCustom?.xp || 0,
-          level: savedData?.level || localCustom?.level || 1,
-          rank: savedData?.rank || localCustom?.rank || 'New Recruit',
+          cred: savedData?.cred !== undefined ? savedData.cred : (localCustom?.cred !== undefined ? localCustom.cred : (isDareOpsAccount ? 500 : 100)),
+          xp: savedData?.xp || localCustom?.xp || (isDareOpsAccount ? 1200 : 0),
+          level: savedData?.level || localCustom?.level || (isDareOpsAccount ? 5 : 1),
+          rank: savedData?.rank || localCustom?.rank || (isDareOpsAccount ? 'Syndicate Veteran' : 'New Recruit'),
           completedDaresCount: savedData?.completedDaresCount || localCustom?.completedDaresCount || 0,
           createdDaresCount: savedData?.createdDaresCount || localCustom?.createdDaresCount || 0,
-          streak: savedData?.streak || localCustom?.streak || 1,
+          streak: savedData?.streak || localCustom?.streak || (isDareOpsAccount ? 7 : 1),
           lastActiveDate: savedData?.lastActiveDate || new Date().toISOString().split('T')[0],
-          badges: savedData?.badges || localCustom?.badges || ['⚡ Active Operative'],
-          isPro: savedData?.isPro !== undefined ? savedData.isPro : (localCustom?.isPro || false),
-          proTier: savedData?.proTier || localCustom?.proTier || null,
+          badges: savedData?.badges || localCustom?.badges || (isDareOpsAccount ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : ['⚡ Active Operative']),
+          isPro: savedData?.isPro !== undefined ? savedData.isPro : (localCustom?.isPro !== undefined ? localCustom.isPro : isDareOpsAccount),
+          proTier: savedData?.proTier || localCustom?.proTier || (isDareOpsAccount ? 'ultra' : null),
           inventory: savedData?.inventory || localCustom?.inventory || [],
           activeBoosters: savedData?.activeBoosters || localCustom?.activeBoosters || [],
           seasonPassLevel: savedData?.seasonPassLevel || localCustom?.seasonPassLevel || 1,
@@ -430,7 +441,7 @@ export default function App() {
         const res = await fetch('/api/users/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...profileToSync, isExplicitUpdate: true }),
+          body: JSON.stringify(profileToSync),
         });
 
         if (res.ok && isMounted) {

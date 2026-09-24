@@ -55,6 +55,7 @@ import {
 } from '../utils/pushNotifications';
 
 export const CYBER_AVATAR_PRESETS = [
+  { id: 'preset_dare_logo', name: 'DARE Protocol Official Logo', url: '/logo.png' },
   { id: 'preset_1', name: 'Cyber Netrunner', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250&auto=format&fit=crop&q=80' },
   { id: 'preset_2', name: 'Tech Operative', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250&auto=format&fit=crop&q=80' },
   { id: 'preset_3', name: 'Neon Infiltrator', url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=250&auto=format&fit=crop&q=80' },

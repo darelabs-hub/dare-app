@@ -363,23 +363,43 @@ const initialUsers: UserProfile[] = [];
 
 function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> & { isExplicitUpdate?: boolean }): UserProfile {
   let user = initialUsers.find(u => u.id === userId);
+
+  const isDareOpsOwner = (userId && userId.includes('daredaylabs')) || 
+    defaultProfile?.handle?.toLowerCase() === '@daredaylabs' || 
+    defaultProfile?.handle?.toLowerCase() === '@dare_ops' ||
+    defaultProfile?.handle?.toLowerCase() === '@dareday' ||
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare ops') ||
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare_ops');
+
   if (!user) {
+    const initialHandle = defaultProfile?.handle && defaultProfile.handle !== '@daredaylabs' && defaultProfile.handle !== '@operative'
+      ? defaultProfile.handle 
+      : (isDareOpsOwner ? '@DARE_OPS' : (defaultProfile?.handle || '@operative'));
+
+    const initialName = defaultProfile?.name && defaultProfile.name !== 'jay' && defaultProfile.name !== 'Active Operative' && defaultProfile.name !== 'DARE Operative'
+      ? defaultProfile.name
+      : (isDareOpsOwner ? 'DARE_OPS' : (defaultProfile?.name || 'Active Operative'));
+
+    const initialAvatar = defaultProfile?.avatar && !defaultProfile.avatar.includes('photo-1535713875002')
+      ? defaultProfile.avatar
+      : (isDareOpsOwner ? '/logo.png' : (defaultProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'));
+
     user = {
       id: userId || `u_${Date.now().toString(36)}`,
-      handle: defaultProfile?.handle || '@operative',
-      name: defaultProfile?.name || 'Active Operative',
-      avatar: defaultProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      cred: defaultProfile?.cred !== undefined ? defaultProfile.cred : 100,
-      xp: defaultProfile?.xp || 0,
-      level: defaultProfile?.level || 1,
-      rank: defaultProfile?.rank || 'New Recruit',
+      handle: initialHandle,
+      name: initialName,
+      avatar: initialAvatar,
+      cred: defaultProfile?.cred !== undefined ? defaultProfile.cred : (isDareOpsOwner ? 500 : 100),
+      xp: defaultProfile?.xp || (isDareOpsOwner ? 1200 : 0),
+      level: defaultProfile?.level || (isDareOpsOwner ? 5 : 1),
+      rank: defaultProfile?.rank || (isDareOpsOwner ? 'Syndicate Veteran' : 'New Recruit'),
       completedDaresCount: defaultProfile?.completedDaresCount || 0,
       createdDaresCount: defaultProfile?.createdDaresCount || 0,
-      streak: defaultProfile?.streak || 1,
+      streak: defaultProfile?.streak || (isDareOpsOwner ? 7 : 1),
       lastActiveDate: defaultProfile?.lastActiveDate || new Date().toISOString().split('T')[0],
-      badges: defaultProfile?.badges || ['⚡ Active Operative'],
-      isPro: defaultProfile?.isPro || false,
-      proTier: defaultProfile?.proTier || null,
+      badges: defaultProfile?.badges || (isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : ['⚡ Active Operative']),
+      isPro: defaultProfile?.isPro !== undefined ? defaultProfile.isPro : isDareOpsOwner,
+      proTier: defaultProfile?.proTier || (isDareOpsOwner ? 'ultra' : null),
       inventory: defaultProfile?.inventory || [],
       activeBoosters: defaultProfile?.activeBoosters || [],
       seasonPassLevel: defaultProfile?.seasonPassLevel || 1,
@@ -403,9 +423,27 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       if (defaultProfile.handle) user.handle = defaultProfile.handle;
       if (defaultProfile.avatar) user.avatar = defaultProfile.avatar;
     } else {
-      if (!user.name && defaultProfile.name) user.name = defaultProfile.name;
-      if (!user.handle && defaultProfile.handle) user.handle = defaultProfile.handle;
-      if (!user.avatar && defaultProfile.avatar) user.avatar = defaultProfile.avatar;
+      // Non-explicit sync: only set if unset and not a fallback trying to overwrite custom identity
+      const isGoogleFallbackHandle = defaultProfile.handle?.toLowerCase() === '@daredaylabs';
+      const isGoogleFallbackName = defaultProfile.name?.toLowerCase() === 'jay' || defaultProfile.name === 'DARE Operative';
+      
+      if (isDareOpsOwner && (user.handle === '@daredaylabs' || user.handle === '@operative')) {
+        user.handle = '@DARE_OPS';
+      } else if (user.handle === '@operative' && defaultProfile.handle && !isGoogleFallbackHandle) {
+        user.handle = defaultProfile.handle;
+      }
+
+      if (isDareOpsOwner && (user.name === 'jay' || user.name === 'Active Operative' || user.name === 'DARE Operative')) {
+        user.name = 'DARE_OPS';
+      } else if (user.name === 'Active Operative' && defaultProfile.name && !isGoogleFallbackName) {
+        user.name = defaultProfile.name;
+      }
+
+      if (isDareOpsOwner && (!user.avatar || user.avatar.includes('photo-1535713875002'))) {
+        user.avatar = '/logo.png';
+      } else if (!user.avatar && defaultProfile.avatar) {
+        user.avatar = defaultProfile.avatar;
+      }
     }
     if (defaultProfile.cred !== undefined && defaultProfile.cred > user.cred) user.cred = defaultProfile.cred;
     if (defaultProfile.xp !== undefined && defaultProfile.xp > (user.xp || 0)) user.xp = defaultProfile.xp;
