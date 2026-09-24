@@ -27,7 +27,8 @@ import {
   Volume2,
   VolumeX,
   Radio,
-  Share2
+  Share2,
+  LogOut
 } from 'lucide-react';
 import { playSound } from '../utils/soundEffects';
 import { DareActivityHeatmap } from './DareActivityHeatmap';
@@ -52,6 +53,9 @@ interface UserProfileModalProps {
   dares: DareItem[];
   currentUser: UserProfile;
   allUsers: UserProfile[];
+  isAuthenticated?: boolean;
+  onSignIn?: () => void;
+  onSignOut?: () => void;
   onUpdateUser?: (updated: UserProfile) => void;
   onOpenUpgradeModal?: () => void;
   onOpenProofGallery?: () => void;
@@ -71,6 +75,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   dares,
   currentUser,
   allUsers,
+  isAuthenticated,
+  onSignIn,
+  onSignOut,
   onUpdateUser,
   onOpenUpgradeModal,
   onOpenProofGallery,
@@ -342,17 +349,49 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            aria-label="Close Profile"
-            onClick={() => {
-              playSound('click');
-              onClose();
-            }}
-            className="shrink-0 flex items-center justify-center h-10 w-10 sm:h-9 sm:w-9 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-200 hover:text-white hover:bg-slate-700 hover:border-indigo-500/50 transition-all cursor-pointer shadow-md active:scale-95"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {isOwnProfile && isAuthenticated && onSignOut && (
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  onSignOut();
+                  onClose();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-500/40 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:border-rose-400 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                title="Sign out of this account"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            )}
+
+            {isOwnProfile && !isAuthenticated && onSignIn && (
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  onSignIn();
+                  onClose();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:brightness-110 text-xs font-bold transition-all shadow-sm cursor-pointer"
+              >
+                <span>Sign In</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              aria-label="Close Profile"
+              onClick={() => {
+                playSound('click');
+                onClose();
+              }}
+              className="shrink-0 flex items-center justify-center h-10 w-10 sm:h-9 sm:w-9 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-200 hover:text-white hover:bg-slate-700 hover:border-indigo-500/50 transition-all cursor-pointer shadow-md active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body (Scrollable) */}
@@ -1248,10 +1287,53 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
                     <button
                       type="submit"
-                      className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 py-2.5 text-xs font-bold text-white transition-all shadow-md"
+                      className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 py-2.5 text-xs font-bold text-white transition-all shadow-md cursor-pointer"
                     >
                       Save Account Settings
                     </button>
+
+                    {/* Account Session Controls */}
+                    <div className="pt-4 border-t border-slate-800 space-y-3">
+                      <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+                        Account Session
+                      </h4>
+                      {isAuthenticated ? (
+                        <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-3.5 space-y-2.5">
+                          <p className="text-[11px] text-slate-300">
+                            Currently signed in as <span className="font-bold text-white">{user.name}</span> (<span className="text-indigo-300 font-mono">{user.handle}</span>).
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playSound('click');
+                              if (onSignOut) onSignOut();
+                              onClose();
+                            }}
+                            className="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-500/50 bg-rose-900/40 hover:bg-rose-900/70 text-rose-200 py-2.5 text-xs font-bold transition-all cursor-pointer"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            <span>Sign Out of this Device</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3.5 space-y-2.5">
+                          <p className="text-[11px] text-slate-300">
+                            You are using an isolated guest session. Sign in with Google to save your Cred and profile.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playSound('click');
+                              if (onSignIn) onSignIn();
+                              onClose();
+                            }}
+                            className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-500 text-white py-2.5 text-xs font-bold transition-all shadow-md hover:brightness-110 cursor-pointer"
+                          >
+                            <span>Sign In with Google</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </form>
                 ) : (
                   <div className="text-center py-6 text-xs text-slate-400 font-mono">

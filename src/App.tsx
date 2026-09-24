@@ -1156,9 +1156,9 @@ export default function App() {
               difficulty: 'Level 2 - Moderate',
               rewardCred: 60,
               creator: {
-                id: 'u_dareday',
-                handle: '@daredaylabs',
-                name: 'DARE Ops',
+                id: 'sys_dare_hq',
+                handle: '@dare_hq',
+                name: 'DARE HQ',
                 avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150',
               },
               targetType: 'public',
@@ -1180,6 +1180,9 @@ export default function App() {
         dares={dares}
         currentUser={currentUser}
         allUsers={users}
+        isAuthenticated={!!user}
+        onSignIn={signIn}
+        onSignOut={handleSignOut}
         initialTab={profileModalTab}
         onUpdateUser={(updated) => {
           setCurrentUser(updated);

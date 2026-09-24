@@ -1902,7 +1902,10 @@ Provide your response in strictly valid JSON with this structure:
   // --- NOTIFICATION TELEMETRY APIS ---
   // Get all notifications for user
   app.get('/api/notifications', (req, res) => {
-    const userId = (req.query.userId as string) || 'u_dareday';
+    const userId = req.query.userId as string;
+    if (!userId) {
+      return res.json({ notifications: [], unreadCount: 0 });
+    }
     const userNotifs = notifications.filter(n => n.userId === userId);
     const unreadCount = userNotifs.filter(n => !n.read).length;
     res.json({
@@ -2350,7 +2353,7 @@ Provide your response in strictly valid JSON with this structure:
   // Purchase Armory item with Cred
   app.post('/api/armory/purchase', (req, res) => {
     const { userId, itemId, quantity = 1 } = req.body;
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const item = armoryCatalog.find(i => i.id === itemId);
@@ -2434,7 +2437,7 @@ Provide your response in strictly valid JSON with this structure:
   // Equip / Unequip Cosmetic Frame or Cyber Title
   app.post('/api/armory/equip', (req, res) => {
     const { userId, itemId, type } = req.body; // type: 'frame' | 'title'
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (!user.inventory) user.inventory = [];
@@ -2474,7 +2477,7 @@ Provide your response in strictly valid JSON with this structure:
   // Use / Activate a Booster Item from Inventory
   app.post('/api/armory/use-booster', (req, res) => {
     const { userId, itemId } = req.body;
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (!user.inventory) user.inventory = [];
@@ -2529,7 +2532,7 @@ Provide your response in strictly valid JSON with this structure:
 
   // --- DAILY OPERATIONS MATRIX APIS ---
   app.get('/api/daily-contracts', (req, res) => {
-    const userId = (req.query.userId as string) || 'u_dareday';
+    const userId = (req.query.userId as string) || 'guest_user';
     const state = getDailyOpsForUser(userId);
     res.json(state);
   });
@@ -2537,7 +2540,7 @@ Provide your response in strictly valid JSON with this structure:
   // Claim Daily Trifecta Chest
   app.post('/api/daily-contracts/claim-trifecta', (req, res) => {
     const { userId } = req.body;
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const state = getDailyOpsForUser(user.id);
@@ -2588,8 +2591,8 @@ Provide your response in strictly valid JSON with this structure:
 
   // --- SEASON 1 BATTLE PASS APIS ---
   app.get('/api/season-pass', (req, res) => {
-    const userId = (req.query.userId as string) || 'u_dareday';
-    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId || 'u_active_user');
+    const userId = (req.query.userId as string) || 'guest_user';
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
 
     res.json({
       seasonName: 'Season 1: Neon Insurgency',
@@ -2606,7 +2609,7 @@ Provide your response in strictly valid JSON with this structure:
   // Claim Season Pass Tier Reward
   app.post('/api/season-pass/claim', (req, res) => {
     const { userId, level, track } = req.body; // track: 'free' | 'elite'
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const tier = seasonPassTiers.find(t => t.level === Number(level));
@@ -2662,7 +2665,7 @@ Provide your response in strictly valid JSON with this structure:
   // Upgrade / Unlock Cyber Elite Battle Pass
   app.post('/api/season-pass/upgrade-elite', (req, res) => {
     const { userId } = req.body;
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (user.hasElitePass || user.isPro) {
@@ -2711,7 +2714,7 @@ Provide your response in strictly valid JSON with this structure:
   // Place a Cred stake on an accepted dare
   app.post('/api/staking/wager', (req, res) => {
     const { userId, dareId, stakedCred } = req.body;
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const dare = dares.find(d => d.id === dareId);
@@ -2773,7 +2776,7 @@ Provide your response in strictly valid JSON with this structure:
   // Peer-to-Peer Cred Tip
   app.post('/api/tips/send', (req, res) => {
     const { fromUserId, toUserHandle, amountCred, dareId, note } = req.body;
-    const sender = initialUsers.find(u => u.id === (fromUserId || 'u_dareday'));
+    const sender = initialUsers.find(u => u.id === fromUserId) || findOrCreateUser(fromUserId);
     const recipient = initialUsers.find(u => u.handle.toLowerCase() === (toUserHandle || '').toLowerCase());
 
     if (!sender || !recipient) {
@@ -2859,7 +2862,7 @@ Provide your response in strictly valid JSON with this structure:
       return res.status(404).json({ error: 'Drop Zone beacon node not found' });
     }
 
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) {
       return res.status(404).json({ error: 'User profile not found' });
     }
@@ -2966,7 +2969,7 @@ Provide your response in strictly valid JSON with this structure:
       userId 
     } = req.body;
 
-    const user = initialUsers.find(u => u.id === (userId || 'u_dareday'));
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
