@@ -54,22 +54,6 @@ import {
   PushPreferences 
 } from '../utils/pushNotifications';
 
-export const CYBER_AVATAR_PRESETS = [
-  { id: 'preset_dare_logo', name: 'DARE Protocol Official Logo', url: '/logo.png' },
-  { id: 'preset_1', name: 'Cyber Netrunner', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_2', name: 'Tech Operative', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_3', name: 'Neon Infiltrator', url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_4', name: 'Hologram Spectre', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_5', name: 'Syndicate Boss', url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_6', name: 'Quantum Assassin', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_7', name: 'Apex Pilot', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_8', name: 'Cyber Valkyrie', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_9', name: 'Street Runner', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_10', name: 'Rogue Hacker', url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_11', name: 'Circuit Ninja', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=250&auto=format&fit=crop&q=80' },
-  { id: 'preset_12', name: 'Synth Specialist', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=250&auto=format&fit=crop&q=80' },
-];
-
 interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -192,13 +176,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   const isOwnProfile = user.id === currentUser.id;
 
-  // Handle local image file upload & compression
+  // Handle local image file upload & compression (JPEG / PNG)
   const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setSaveError('Uploaded image exceeds 5MB size limit.');
+    if (!file.type.startsWith('image/')) {
+      setSaveError('Please select a valid JPEG or PNG image file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setSaveError('Uploaded image exceeds 10MB size limit. Please choose a smaller photo.');
       return;
     }
 
@@ -210,7 +199,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_DIM = 256;
+        const MAX_DIM = 400;
         let width = img.width;
         let height = img.height;
         if (width > height) {
@@ -229,7 +218,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
           setEditAvatar(compressedDataUrl);
           playSound('click');
           setSaveError(null);
@@ -239,18 +228,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           setSaveError(null);
         }
       };
+      img.onerror = () => {
+        setSaveError('Failed to process image file. Please try another JPEG/PNG.');
+      };
       img.src = dataUrl;
     };
+    reader.onerror = () => {
+      setSaveError('Failed to read image file.');
+    };
     reader.readAsDataURL(file);
-  };
-
-  // Generate a random cybernetic bot avatar
-  const handleGenerateCyberBot = () => {
-    playSound('laser');
-    const randomSeed = Math.random().toString(36).substring(2, 9);
-    const botAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${randomSeed}&backgroundColor=0a0f1d,1e1b4b,0f172a`;
-    setEditAvatar(botAvatar);
-    setSaveError(null);
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -1501,18 +1487,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                           <ImageIcon className="h-3.5 w-3.5 text-indigo-400" />
-                          <span>Profile Picture / Hologram Avatar</span>
+                          <span>Profile Picture</span>
                         </label>
                         <span className="text-[10px] font-mono text-slate-500">Live Preview</span>
                       </div>
 
-                      {/* Live Avatar Preview Card */}
-                      <div className="flex flex-col sm:flex-row items-center gap-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                        <div className="relative shrink-0">
+                      {/* Live Avatar Preview Card & Upload Area */}
+                      <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="relative shrink-0 group">
                           <img
                             src={editAvatar || user.avatar}
                             alt="Avatar Preview"
-                            className={`h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover transition-all ${
+                            className={`h-20 w-20 sm:h-24 sm:w-24 rounded-full object-cover transition-all ${
                               user.equippedFrame === 'frame_neon_cyan' ? 'ring-2 ring-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.7)] animate-pulse' :
                               user.equippedFrame === 'frame_matrix_glitch' ? 'ring-2 ring-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.8)]' :
                               user.equippedFrame === 'frame_syndicate_gold' ? 'ring-2 ring-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.9)]' :
@@ -1521,7 +1507,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                             }`}
                             onError={(e) => {
                               // Fallback on broken image link
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250';
+                              (e.target as HTMLImageElement).src = '/logo.png';
                             }}
                           />
                           {user.isPro && (
@@ -1529,102 +1515,44 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                               <Crown className="h-3 w-3 text-white" />
                             </span>
                           )}
+                          <label className="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[10px] font-mono font-bold text-center p-1">
+                            <Camera className="h-5 w-5 mb-0.5 text-indigo-300" />
+                            <span>Change</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={handleAvatarFileUpload}
+                              className="hidden"
+                            />
+                          </label>
                         </div>
-                        <div className="flex-1 text-center sm:text-left space-y-1">
+
+                        <div className="flex-1 text-center sm:text-left space-y-2">
                           <div className="flex items-center justify-center sm:justify-start gap-2">
                             <span className="text-sm font-bold text-white">{editName || user.name}</span>
                             <span className="text-xs font-mono text-indigo-400 font-semibold">{editHandle.startsWith('@') ? editHandle : `@${editHandle}`}</span>
                           </div>
                           <p className="text-[11px] text-slate-400 font-mono">
-                            Select from cyber operative presets below, upload your own photo, or roll a custom cyber bot.
+                            Upload a standard JPEG or PNG photo from your device for your operative avatar.
                           </p>
+                          <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-indigo-500/50 bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95">
+                              <Upload className="h-3.5 w-3.5 text-indigo-400" />
+                              <span>Upload JPEG / PNG</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handleAvatarFileUpload}
+                                className="hidden"
+                              />
+                            </label>
+                            {editAvatar !== user.avatar && (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2 py-1 rounded-lg">
+                                <Check className="h-3 w-3" /> New Image Loaded
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-
-                      {/* Quick Avatar Actions */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* File Upload Button */}
-                        <label className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95">
-                          <Upload className="h-3.5 w-3.5 text-indigo-400" />
-                          <span>Upload Photo</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-
-                        {/* Roll Cyber Bot Generator */}
-                        <button
-                          type="button"
-                          onClick={handleGenerateCyberBot}
-                          className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95"
-                        >
-                          <RefreshCw className="h-3.5 w-3.5 text-cyan-400" />
-                          <span>Roll Cyber Bot</span>
-                        </button>
-                      </div>
-
-                      {/* Curated Cyberpunk Avatar Presets */}
-                      <div className="space-y-2 pt-1">
-                        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
-                          Curated Cyber Operative Presets
-                        </span>
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
-                          {CYBER_AVATAR_PRESETS.map((preset) => {
-                            const isSelected = editAvatar === preset.url;
-                            return (
-                              <button
-                                key={preset.id}
-                                type="button"
-                                onClick={() => {
-                                  playSound('click');
-                                  setEditAvatar(preset.url);
-                                  setSaveError(null);
-                                }}
-                                title={preset.name}
-                                className={`relative group p-1 rounded-xl border transition-all cursor-pointer flex flex-col items-center ${
-                                  isSelected 
-                                    ? 'border-cyan-400 bg-cyan-950/60 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.5)] scale-105' 
-                                    : 'border-slate-800 bg-slate-900/40 hover:border-indigo-500/60 hover:scale-105'
-                                }`}
-                              >
-                                <img
-                                  src={preset.url}
-                                  alt={preset.name}
-                                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover"
-                                />
-                                {isSelected && (
-                                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-slate-950 shadow-md">
-                                    <Check className="h-2.5 w-2.5 stroke-[3]" />
-                                  </span>
-                                )}
-                                <span className="text-[9px] font-mono text-slate-400 truncate max-w-full mt-1 group-hover:text-cyan-300">
-                                  {preset.name.split(' ')[0]}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Custom Avatar URL Field */}
-                      <div className="space-y-1.5 pt-1">
-                        <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-                          Custom Image URL
-                        </label>
-                        <input
-                          type="url"
-                          value={editAvatar}
-                          onChange={(e) => {
-                            setEditAvatar(e.target.value);
-                            setSaveError(null);
-                          }}
-                          placeholder="https://images.unsplash.com/..."
-                          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none font-mono"
-                          required
-                        />
                       </div>
                     </div>
 

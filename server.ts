@@ -364,12 +364,14 @@ const initialUsers: UserProfile[] = [];
 function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> & { isExplicitUpdate?: boolean }): UserProfile {
   let user = initialUsers.find(u => u.id === userId);
 
-  const isDareOpsOwner = (userId && userId.includes('daredaylabs')) || 
+  const isDareOpsOwner = Boolean(
+    (userId && userId.includes('daredaylabs')) || 
     defaultProfile?.handle?.toLowerCase() === '@daredaylabs' || 
     defaultProfile?.handle?.toLowerCase() === '@dare_ops' ||
     defaultProfile?.handle?.toLowerCase() === '@dareday' ||
     (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare ops') ||
-    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare_ops');
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare_ops')
+  );
 
   if (!user) {
     const initialHandle = defaultProfile?.handle && defaultProfile.handle !== '@daredaylabs' && defaultProfile.handle !== '@operative'
@@ -384,7 +386,7 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       ? defaultProfile.avatar
       : (isDareOpsOwner ? '/logo.png' : (defaultProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'));
 
-    user = {
+    const newUser: UserProfile = {
       id: userId || `u_${Date.now().toString(36)}`,
       handle: initialHandle,
       name: initialName,
@@ -398,7 +400,7 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       streak: defaultProfile?.streak || (isDareOpsOwner ? 7 : 1),
       lastActiveDate: defaultProfile?.lastActiveDate || new Date().toISOString().split('T')[0],
       badges: defaultProfile?.badges || (isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : ['⚡ Active Operative']),
-      isPro: defaultProfile?.isPro !== undefined ? defaultProfile.isPro : isDareOpsOwner,
+      isPro: defaultProfile?.isPro !== undefined ? Boolean(defaultProfile.isPro) : isDareOpsOwner,
       proTier: defaultProfile?.proTier || (isDareOpsOwner ? 'ultra' : null),
       inventory: defaultProfile?.inventory || [],
       activeBoosters: defaultProfile?.activeBoosters || [],
@@ -415,8 +417,9 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       referralCode: defaultProfile?.referralCode,
       referralCount: defaultProfile?.referralCount || 0,
     };
-    initialUsers.push(user);
-    saveUserToFirestore(user);
+    initialUsers.push(newUser);
+    saveUserToFirestore(newUser);
+    return newUser;
   } else if (defaultProfile) {
     if (defaultProfile.isExplicitUpdate) {
       if (defaultProfile.name) user.name = defaultProfile.name;
@@ -449,7 +452,7 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
     if (defaultProfile.xp !== undefined && defaultProfile.xp > (user.xp || 0)) user.xp = defaultProfile.xp;
     if (defaultProfile.level !== undefined && defaultProfile.level > (user.level || 1)) user.level = defaultProfile.level;
     if (defaultProfile.streak !== undefined && defaultProfile.streak > (user.streak || 1)) user.streak = defaultProfile.streak;
-    if (defaultProfile.isPro !== undefined) user.isPro = defaultProfile.isPro;
+    if (defaultProfile.isPro !== undefined) user.isPro = Boolean(defaultProfile.isPro);
     if (defaultProfile.proTier !== undefined) user.proTier = defaultProfile.proTier;
     if (defaultProfile.disableHelpBubbles !== undefined) user.disableHelpBubbles = defaultProfile.disableHelpBubbles;
     if (defaultProfile.inventory && defaultProfile.inventory.length > 0) user.inventory = defaultProfile.inventory;
@@ -740,7 +743,10 @@ async function startServer() {
     );
 
     if (!user && hasAdminCredentials) {
-      user = await getUserFromFirestore(identifier);
+      const firestoreUser = await getUserFromFirestore(identifier);
+      if (firestoreUser) {
+        user = firestoreUser;
+      }
     }
 
     if (!user) {
