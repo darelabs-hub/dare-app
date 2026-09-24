@@ -361,7 +361,7 @@ const seasonPassTiers: BattlePassTier[] = [
 // Active Users Store (relies solely on real active users)
 const initialUsers: UserProfile[] = [];
 
-function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile>): UserProfile {
+function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> & { isExplicitUpdate?: boolean }): UserProfile {
   let user = initialUsers.find(u => u.id === userId);
   if (!user) {
     user = {
@@ -376,7 +376,7 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile>)
       completedDaresCount: defaultProfile?.completedDaresCount || 0,
       createdDaresCount: defaultProfile?.createdDaresCount || 0,
       streak: defaultProfile?.streak || 1,
-      lastActiveDate: new Date().toISOString().split('T')[0],
+      lastActiveDate: defaultProfile?.lastActiveDate || new Date().toISOString().split('T')[0],
       badges: defaultProfile?.badges || ['⚡ Active Operative'],
       isPro: defaultProfile?.isPro || false,
       proTier: defaultProfile?.proTier || null,
@@ -391,15 +391,33 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile>)
       squadFriends: defaultProfile?.squadFriends || [],
       squadSentRequests: defaultProfile?.squadSentRequests || [],
       squadReceivedRequests: defaultProfile?.squadReceivedRequests || [],
+      disableHelpBubbles: defaultProfile?.disableHelpBubbles || false,
+      referralCode: defaultProfile?.referralCode,
+      referralCount: defaultProfile?.referralCount || 0,
     };
     initialUsers.push(user);
     saveUserToFirestore(user);
   } else if (defaultProfile) {
-    if (defaultProfile.name) user.name = defaultProfile.name;
-    if (defaultProfile.handle) user.handle = defaultProfile.handle;
-    if (defaultProfile.avatar) user.avatar = defaultProfile.avatar;
+    if (defaultProfile.isExplicitUpdate) {
+      if (defaultProfile.name) user.name = defaultProfile.name;
+      if (defaultProfile.handle) user.handle = defaultProfile.handle;
+      if (defaultProfile.avatar) user.avatar = defaultProfile.avatar;
+    } else {
+      if (!user.name && defaultProfile.name) user.name = defaultProfile.name;
+      if (!user.handle && defaultProfile.handle) user.handle = defaultProfile.handle;
+      if (!user.avatar && defaultProfile.avatar) user.avatar = defaultProfile.avatar;
+    }
+    if (defaultProfile.cred !== undefined && defaultProfile.cred > user.cred) user.cred = defaultProfile.cred;
+    if (defaultProfile.xp !== undefined && defaultProfile.xp > (user.xp || 0)) user.xp = defaultProfile.xp;
+    if (defaultProfile.level !== undefined && defaultProfile.level > (user.level || 1)) user.level = defaultProfile.level;
+    if (defaultProfile.streak !== undefined && defaultProfile.streak > (user.streak || 1)) user.streak = defaultProfile.streak;
     if (defaultProfile.isPro !== undefined) user.isPro = defaultProfile.isPro;
     if (defaultProfile.proTier !== undefined) user.proTier = defaultProfile.proTier;
+    if (defaultProfile.disableHelpBubbles !== undefined) user.disableHelpBubbles = defaultProfile.disableHelpBubbles;
+    if (defaultProfile.inventory && defaultProfile.inventory.length > 0) user.inventory = defaultProfile.inventory;
+    if (defaultProfile.badges && defaultProfile.badges.length > 0) {
+      user.badges = Array.from(new Set([...user.badges, ...defaultProfile.badges]));
+    }
     saveUserToFirestore(user);
   }
   return user;
@@ -780,16 +798,11 @@ async function startServer() {
 
   // Sync / Register active user profile
   app.post('/api/users/sync', (req, res) => {
-    const profile = req.body as Partial<UserProfile>;
+    const profile = req.body as Partial<UserProfile> & { isExplicitUpdate?: boolean };
     if (!profile || !profile.id) {
       return res.status(400).json({ error: 'User ID is required' });
     }
     const user = findOrCreateUser(profile.id, profile);
-    if (profile.name) user.name = profile.name;
-    if (profile.handle) user.handle = profile.handle;
-    if (profile.avatar) user.avatar = profile.avatar;
-    if (profile.isPro !== undefined) user.isPro = profile.isPro;
-    if (profile.proTier !== undefined) user.proTier = profile.proTier;
     res.json(user);
   });
 

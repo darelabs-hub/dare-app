@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import { playSound } from '../utils/soundEffects';
 import { DareActivityHeatmap } from './DareActivityHeatmap';
+import { db } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { HeatmapView } from './HeatmapView';
 import { QRCodeCanvas } from 'qrcode.react';
 import { SquadChat } from './SquadChat';
@@ -304,6 +306,23 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     };
 
     try {
+      if (!user.id.startsWith('guest_')) {
+        try {
+          await setDoc(
+            doc(db, 'users', user.id),
+            {
+              handle: formattedHandle,
+              name: trimmedName,
+              avatar: trimmedAvatar,
+              disableHelpBubbles: editDisableHelp,
+            },
+            { merge: true }
+          );
+        } catch (dbErr) {
+          console.warn('Firestore direct profile update notice:', dbErr);
+        }
+      }
+
       const res = await fetch(`/api/users/${user.id}/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

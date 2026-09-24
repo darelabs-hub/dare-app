@@ -42,7 +42,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { useAuth } from './hooks/useAuth';
 import { db } from './lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { DareItem, UserProfile, NotificationItem, CredTransaction } from './types';
 import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
@@ -287,37 +287,118 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (user) {
-      const handle = user.email ? `@${user.email.split('@')[0]}` : `@${user.uid.slice(0, 8)}`;
-      const profileToSync: Partial<UserProfile> = {
-        id: user.uid,
-        name: user.displayName || 'DARE Operative',
-        handle: handle,
-        avatar: user.photoURL || currentUser.avatar,
-      };
+    if (!user) return;
 
-      fetch('/api/users/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profileToSync),
-      })
-        .then(res => res.json())
-        .then((syncedUser: UserProfile) => {
+    let isMounted = true;
+    const syncUserProfile = async () => {
+      try {
+        let savedData: UserProfile | null = null;
+
+        // 1. Check if user profile is already saved in Firestore
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+          if (userDocSnap.exists()) {
+            savedData = userDocSnap.data() as UserProfile;
+          }
+        } catch (dbErr) {
+          console.warn('Firestore user profile lookup notice:', dbErr);
+        }
+
+        const defaultHandle = user.email ? `@${user.email.split('@')[0]}` : `@${user.uid.slice(0, 8)}`;
+        const defaultAvatar = user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+        const defaultName = user.displayName || 'DARE Operative';
+
+        let profileToSync: UserProfile;
+
+        if (savedData) {
+          // Preserve all user's custom saved attributes (custom handle, custom avatar, custom name, cred, etc.)
+          profileToSync = {
+            ...savedData,
+            id: user.uid,
+            name: savedData.name || defaultName,
+            handle: savedData.handle || defaultHandle,
+            avatar: savedData.avatar || defaultAvatar,
+            cred: savedData.cred !== undefined ? savedData.cred : 100,
+            xp: savedData.xp || 0,
+            level: savedData.level || 1,
+            rank: savedData.rank || 'New Recruit',
+            completedDaresCount: savedData.completedDaresCount || 0,
+            createdDaresCount: savedData.createdDaresCount || 0,
+            streak: savedData.streak || 1,
+            lastActiveDate: savedData.lastActiveDate || new Date().toISOString().split('T')[0],
+            badges: savedData.badges || ['⚡ Active Operative'],
+            isPro: savedData.isPro || false,
+            proTier: savedData.proTier || null,
+            inventory: savedData.inventory || [],
+            activeBoosters: savedData.activeBoosters || [],
+            seasonPassLevel: savedData.seasonPassLevel || 1,
+            seasonPassXp: savedData.seasonPassXp || 0,
+            disableHelpBubbles: savedData.disableHelpBubbles || false,
+            referralCode: savedData.referralCode,
+            referralCount: savedData.referralCount || 0,
+          };
+        } else {
+          // Create new persistent profile for first-time sign in
+          profileToSync = {
+            id: user.uid,
+            name: defaultName,
+            handle: defaultHandle,
+            avatar: defaultAvatar,
+            cred: 100,
+            xp: 0,
+            level: 1,
+            rank: 'New Recruit',
+            completedDaresCount: 0,
+            createdDaresCount: 0,
+            streak: 1,
+            lastActiveDate: new Date().toISOString().split('T')[0],
+            badges: ['⚡ Active Operative'],
+            isPro: false,
+            inventory: [],
+            activeBoosters: [],
+            seasonPassLevel: 1,
+            seasonPassXp: 0,
+            disableHelpBubbles: false,
+          };
+
+          // Save new profile to Firestore permanently
+          try {
+            await setDoc(doc(db, 'users', user.uid), profileToSync);
+          } catch (writeErr) {
+            console.warn('Firestore initial profile save warning:', writeErr);
+          }
+        }
+
+        // 2. Sync to Backend API
+        const res = await fetch('/api/users/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...profileToSync, isExplicitUpdate: true }),
+        });
+
+        if (res.ok && isMounted) {
+          const syncedUser = await res.json();
           if (syncedUser && syncedUser.id) {
             setCurrentUser(syncedUser);
           }
+        } else if (isMounted) {
+          setCurrentUser(profileToSync);
+        }
+
+        if (isMounted) {
           fetchUsers();
           fetchDailyMission();
-        })
-        .catch(err => console.error('Error syncing auth user:', err));
-
-      // Client-side Firestore sync with authenticated user credentials
-      try {
-        setDoc(doc(db, 'users', user.uid), profileToSync, { merge: true }).catch(() => {});
-      } catch (e) {
-        // Ignore fallback
+        }
+      } catch (err) {
+        console.error('Error syncing auth user:', err);
       }
-    }
+    };
+
+    syncUserProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   useEffect(() => {
@@ -1195,6 +1276,12 @@ export default function App() {
           if (updated.id.startsWith('guest_')) {
             try {
               localStorage.setItem('dareday_guest_session', JSON.stringify(updated));
+            } catch (_e) {}
+          } else if (user && (updated.id === user.uid || updated.id === currentUser.id)) {
+            try {
+              setDoc(doc(db, 'users', updated.id), updated, { merge: true }).catch((err) => {
+                console.warn('Firestore user update notice:', err);
+              });
             } catch (_e) {}
           }
           setDares((prevDares) =>
