@@ -352,12 +352,19 @@ export default function App() {
           }));
         }
 
-        const isDareOpsAccount = user.email?.toLowerCase().includes('daredaylabs') || 
-          user.email?.toLowerCase() === 'daredaylabs@gmail.com';
+        const isDareOpsAccount = Boolean(
+          user.email?.toLowerCase().includes('daredaylabs') || 
+          user.email?.toLowerCase().includes('daydare') ||
+          user.email?.toLowerCase().includes('dare_ops') ||
+          user.email?.toLowerCase().includes('dareday') ||
+          user.displayName?.toLowerCase().includes('dareday') ||
+          user.displayName?.toLowerCase().includes('daydare') ||
+          user.displayName?.toLowerCase().includes('dare ops')
+        );
 
         let savedData: UserProfile | null = null;
 
-        // 1. Check if user profile is already saved in Firestore
+        // 1. Check if user profile is already saved in Firestore (Cloud Source of Truth)
         try {
           const userDocSnap = await getDoc(doc(db, 'users', user.uid));
           if (userDocSnap.exists()) {
@@ -379,18 +386,48 @@ export default function App() {
           ? 'DARE_OPS' 
           : (user.displayName || 'DARE Operative');
 
-        // Choose the best name, handle, and avatar prioritizing explicit user customizations over Google defaults
-        const isCustomLocalName = localCustom?.name && localCustom.name !== 'Guest Operative' && localCustom.name !== 'Active Operative' && localCustom.name !== 'jay';
-        const isCustomSavedName = savedData?.name && savedData.name !== 'Guest Operative' && savedData.name !== 'Active Operative' && savedData.name !== 'DARE Operative' && (isDareOpsAccount ? savedData.name !== 'jay' : true);
-        const resolvedName = isCustomLocalName ? localCustom!.name! : (isCustomSavedName ? savedData!.name : defaultName);
+        // Check Firestore saved data first
+        const isSavedNameValid = savedData?.name && 
+          savedData.name !== 'Guest Operative' && 
+          savedData.name !== 'Active Operative' && 
+          savedData.name !== 'DARE Operative' && 
+          (isDareOpsAccount ? (savedData.name !== 'jay' && savedData.name !== 'daydarelabs' && savedData.name !== 'dareday labs') : true);
 
-        const isCustomLocalHandle = localCustom?.handle && !localCustom.handle.startsWith('@guest_') && (isDareOpsAccount ? localCustom.handle !== '@daredaylabs' : true);
-        const isCustomSavedHandle = savedData?.handle && !savedData.handle.startsWith('@guest_') && (isDareOpsAccount ? savedData.handle !== '@daredaylabs' : true);
-        const resolvedHandle = isCustomLocalHandle ? localCustom!.handle! : (isCustomSavedHandle ? savedData!.handle : defaultHandle);
+        const isLocalNameValid = localCustom?.name && 
+          localCustom.name !== 'Guest Operative' && 
+          localCustom.name !== 'Active Operative' && 
+          localCustom.name !== 'DARE Operative' && 
+          (isDareOpsAccount ? (localCustom.name !== 'jay' && localCustom.name !== 'daydarelabs' && localCustom.name !== 'dareday labs') : true);
 
-        const isCustomLocalAvatar = localCustom?.avatar && !localCustom.avatar.includes('photo-1535713875002');
-        const isCustomSavedAvatar = savedData?.avatar && !savedData.avatar.includes('photo-1535713875002');
-        const resolvedAvatar = isCustomLocalAvatar ? localCustom!.avatar! : (isCustomSavedAvatar ? savedData!.avatar : defaultAvatar);
+        const resolvedName = isSavedNameValid 
+          ? savedData!.name 
+          : (isLocalNameValid ? localCustom!.name! : defaultName);
+
+        const isSavedHandleValid = savedData?.handle && 
+          !savedData.handle.startsWith('@guest_') && 
+          savedData.handle !== '@operative' && 
+          (isDareOpsAccount ? (savedData.handle !== '@daredaylabs' && savedData.handle !== '@daydarelabs') : true);
+
+        const isLocalHandleValid = localCustom?.handle && 
+          !localCustom.handle.startsWith('@guest_') && 
+          localCustom.handle !== '@operative' && 
+          (isDareOpsAccount ? (localCustom.handle !== '@daredaylabs' && localCustom.handle !== '@daydarelabs') : true);
+
+        const resolvedHandle = isSavedHandleValid 
+          ? savedData!.handle 
+          : (isLocalHandleValid ? localCustom!.handle! : defaultHandle);
+
+        const isSavedAvatarValid = savedData?.avatar && 
+          !savedData.avatar.includes('photo-1535713875002') && 
+          (isDareOpsAccount ? !savedData.avatar.includes('googleusercontent.com') : true);
+
+        const isLocalAvatarValid = localCustom?.avatar && 
+          !localCustom.avatar.includes('photo-1535713875002') && 
+          (isDareOpsAccount ? !localCustom.avatar.includes('googleusercontent.com') : true);
+
+        const resolvedAvatar = isSavedAvatarValid 
+          ? savedData!.avatar 
+          : (isLocalAvatarValid ? localCustom!.avatar! : defaultAvatar);
 
         const profileToSync: UserProfile = {
           ...(savedData || {}),
@@ -441,13 +478,18 @@ export default function App() {
         const res = await fetch('/api/users/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(profileToSync),
+          body: JSON.stringify({ ...profileToSync, isExplicitUpdate: true, email: user.email }),
         });
 
         if (res.ok && isMounted) {
           const syncedUser = await res.json();
           if (syncedUser && syncedUser.id) {
-            setCurrentUser(syncedUser);
+            setCurrentUser(prev => ({
+              ...syncedUser,
+              name: resolvedName,
+              handle: resolvedHandle,
+              avatar: resolvedAvatar,
+            }));
           }
         }
 

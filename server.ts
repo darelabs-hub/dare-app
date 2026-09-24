@@ -361,30 +361,38 @@ const seasonPassTiers: BattlePassTier[] = [
 // Active Users Store (relies solely on real active users)
 const initialUsers: UserProfile[] = [];
 
-function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> & { isExplicitUpdate?: boolean }): UserProfile {
+function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> & { isExplicitUpdate?: boolean; email?: string }): UserProfile {
   let user = initialUsers.find(u => u.id === userId);
 
   const isDareOpsOwner = Boolean(
-    (userId && userId.includes('daredaylabs')) || 
+    (userId && (userId.includes('daredaylabs') || userId.includes('dare_ops') || userId.includes('daydare'))) || 
+    (defaultProfile && (defaultProfile as any).email?.toLowerCase()?.includes('daredaylabs')) ||
+    (defaultProfile && (defaultProfile as any).email?.toLowerCase()?.includes('daydare')) ||
     defaultProfile?.handle?.toLowerCase() === '@daredaylabs' || 
+    defaultProfile?.handle?.toLowerCase() === '@daydarelabs' ||
     defaultProfile?.handle?.toLowerCase() === '@dare_ops' ||
     defaultProfile?.handle?.toLowerCase() === '@dareday' ||
     (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare ops') ||
-    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare_ops')
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dare_ops') ||
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'daydarelabs') ||
+    (defaultProfile?.name && defaultProfile.name.toLowerCase() === 'dareday labs')
   );
 
   if (!user) {
-    const initialHandle = defaultProfile?.handle && defaultProfile.handle !== '@daredaylabs' && defaultProfile.handle !== '@operative'
-      ? defaultProfile.handle 
-      : (isDareOpsOwner ? '@DARE_OPS' : (defaultProfile?.handle || '@operative'));
+    let initialHandle = defaultProfile?.handle;
+    if (!initialHandle || initialHandle === '@operative' || (isDareOpsOwner && (initialHandle === '@daredaylabs' || initialHandle === '@daydarelabs'))) {
+      initialHandle = isDareOpsOwner ? '@DARE_OPS' : (initialHandle || '@operative');
+    }
 
-    const initialName = defaultProfile?.name && defaultProfile.name !== 'jay' && defaultProfile.name !== 'Active Operative' && defaultProfile.name !== 'DARE Operative'
-      ? defaultProfile.name
-      : (isDareOpsOwner ? 'DARE_OPS' : (defaultProfile?.name || 'Active Operative'));
+    let initialName = defaultProfile?.name;
+    if (!initialName || initialName === 'Active Operative' || initialName === 'DARE Operative' || (isDareOpsOwner && (initialName === 'jay' || initialName === 'daydarelabs' || initialName === 'dareday labs'))) {
+      initialName = isDareOpsOwner ? 'DARE_OPS' : (initialName || 'Active Operative');
+    }
 
-    const initialAvatar = defaultProfile?.avatar && !defaultProfile.avatar.includes('photo-1535713875002')
-      ? defaultProfile.avatar
-      : (isDareOpsOwner ? '/logo.png' : (defaultProfile?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'));
+    let initialAvatar = defaultProfile?.avatar;
+    if (!initialAvatar || (isDareOpsOwner && (initialAvatar.includes('photo-1535713875002') || initialAvatar.includes('googleusercontent.com')))) {
+      initialAvatar = isDareOpsOwner ? '/logo.png' : (initialAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
+    }
 
     const newUser: UserProfile = {
       id: userId || `u_${Date.now().toString(36)}`,
@@ -421,30 +429,24 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
     saveUserToFirestore(newUser);
     return newUser;
   } else if (defaultProfile) {
-    if (defaultProfile.isExplicitUpdate) {
-      if (defaultProfile.name) user.name = defaultProfile.name;
-      if (defaultProfile.handle) user.handle = defaultProfile.handle;
-      if (defaultProfile.avatar) user.avatar = defaultProfile.avatar;
-    } else {
-      // Non-explicit sync: only set if unset and not a fallback trying to overwrite custom identity
-      const isGoogleFallbackHandle = defaultProfile.handle?.toLowerCase() === '@daredaylabs';
-      const isGoogleFallbackName = defaultProfile.name?.toLowerCase() === 'jay' || defaultProfile.name === 'DARE Operative';
-      
-      if (isDareOpsOwner && (user.handle === '@daredaylabs' || user.handle === '@operative')) {
+    if (defaultProfile.handle) {
+      if (isDareOpsOwner && (defaultProfile.handle === '@daredaylabs' || defaultProfile.handle === '@daydarelabs' || defaultProfile.handle === '@operative')) {
         user.handle = '@DARE_OPS';
-      } else if (user.handle === '@operative' && defaultProfile.handle && !isGoogleFallbackHandle) {
+      } else {
         user.handle = defaultProfile.handle;
       }
-
-      if (isDareOpsOwner && (user.name === 'jay' || user.name === 'Active Operative' || user.name === 'DARE Operative')) {
+    }
+    if (defaultProfile.name) {
+      if (isDareOpsOwner && (defaultProfile.name === 'jay' || defaultProfile.name === 'Active Operative' || defaultProfile.name === 'DARE Operative' || defaultProfile.name === 'daydarelabs' || defaultProfile.name === 'dareday labs')) {
         user.name = 'DARE_OPS';
-      } else if (user.name === 'Active Operative' && defaultProfile.name && !isGoogleFallbackName) {
+      } else {
         user.name = defaultProfile.name;
       }
-
-      if (isDareOpsOwner && (!user.avatar || user.avatar.includes('photo-1535713875002'))) {
-        user.avatar = '/logo.png';
-      } else if (!user.avatar && defaultProfile.avatar) {
+    }
+    if (defaultProfile.avatar) {
+      if (isDareOpsOwner && (defaultProfile.avatar.includes('photo-1535713875002') || defaultProfile.avatar.includes('googleusercontent.com'))) {
+        user.avatar = (user.avatar && user.avatar !== '/logo.png' && !user.avatar.includes('photo-1535713875002') && !user.avatar.includes('googleusercontent.com')) ? user.avatar : '/logo.png';
+      } else {
         user.avatar = defaultProfile.avatar;
       }
     }

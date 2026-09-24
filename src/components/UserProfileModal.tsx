@@ -298,10 +298,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           await setDoc(
             doc(db, 'users', user.id),
             {
+              ...updatedUserObj,
               handle: formattedHandle,
               name: trimmedName,
               avatar: trimmedAvatar,
               disableHelpBubbles: editDisableHelp,
+              updatedAt: new Date().toISOString(),
             },
             { merge: true }
           );
