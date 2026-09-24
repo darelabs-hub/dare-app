@@ -32,6 +32,7 @@ import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   currentUser?: UserProfile;
+  isAuthenticated?: boolean;
   allUsers: UserProfile[];
   onSelectUser: (user: UserProfile) => void;
   onOpenCreateModal: () => void;
@@ -70,6 +71,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
+  isAuthenticated = false,
   allUsers,
   onSelectUser,
   onOpenCreateModal,
@@ -282,7 +284,27 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Prominent User Profile & Account Dropdown Trigger */}
           <div className="relative shrink-0" ref={userDropdownRef}>
-            {currentUser ? (
+            {!isAuthenticated ? (
+              <button
+                id="navbar-signin-btn"
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  if (onSignIn) onSignIn();
+                }}
+                className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-indigo-500/50 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 px-3 py-1.5 text-xs font-bold text-white hover:from-indigo-500 hover:to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer shrink-0 active:scale-95"
+                title="Sign In with Google"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span className="hidden xs:inline">Sign In</span>
+                <span className="xs:hidden">Login</span>
+              </button>
+            ) : currentUser ? (
               <button
                 id="user-profile-menu-btn"
                 type="button"
@@ -328,14 +350,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
               </button>
-            ) : (
-              <button
-                onClick={() => onSignIn && onSignIn()}
-                className="rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-3 py-1.5 text-xs font-bold text-indigo-200 hover:border-indigo-400 hover:bg-indigo-500/20 transition-all cursor-pointer"
-              >
-                Sign In
-              </button>
-            )}
+            ) : null}
 
             {/* Persona Switcher & Account Menu Dropdown */}
             {userDropdownOpen && currentUser && (
@@ -674,59 +689,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <X className="h-4 w-4 text-rose-400" />
                     <span>Sign Out</span>
                   </button>
-                </div>
-
-                {/* Switch Persona / Accounts */}
-                <div className="mt-2.5 pt-2 border-t border-slate-800">
-                  <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                    <span className="flex items-center gap-1.5">
-                      <Users className="h-3 w-3 text-slate-400" />
-                      <span>Switch Active Persona</span>
-                    </span>
-                    <span className="text-[9px] text-slate-500">
-                      {(allUsers && allUsers.length > 0 ? allUsers : [currentUser]).length} profiles
-                    </span>
-                  </div>
-                  <div className="mt-1 space-y-1 max-h-36 overflow-y-auto pr-1">
-                    {(allUsers && allUsers.length > 0 ? allUsers : [currentUser]).map((user) => (
-                      <button
-                        key={user.id}
-                        id={`switch-persona-${user.id}`}
-                        type="button"
-                        onClick={() => {
-                          onSelectUser(user);
-                          setUserDropdownOpen(false);
-                          playSound('click');
-                        }}
-                        className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-xs transition-colors cursor-pointer ${
-                          user.id === currentUser?.id
-                            ? 'bg-indigo-950/70 border border-indigo-500/40 text-indigo-200 shadow-sm'
-                            : 'hover:bg-slate-800/70 text-slate-300'
-                        }`}
-                      >
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="h-7 w-7 rounded-full object-cover ring-1 ring-slate-700 shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className="font-semibold truncate text-white text-xs">{user.handle}</span>
-                            {user.isPro && (
-                              <span className="inline-flex items-center gap-0.5 rounded px-1 py-0.2 border border-amber-500/30 bg-amber-500/10 text-[8px] font-bold font-mono tracking-wider text-amber-400 shrink-0 scale-90">
-                                <Crown className="h-2 w-2 text-amber-400" />
-                                <span>PRO</span>
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[10px] text-slate-400 font-mono">{user.cred} Cred • {user.rank}</div>
-                        </div>
-                        {user.id === currentUser?.id && (
-                          <div className="h-2 w-2 rounded-full bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Footer System Quick Links */}

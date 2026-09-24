@@ -105,13 +105,13 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
           event: 'armory_purchase',
           category: 'economy',
           label: item.name,
-          value: item.cost,
+          value: item.priceCred,
           userId: currentUser.id,
           userHandle: currentUser.handle,
           metadata: {
             itemId: item.id,
             category: item.category,
-            cost: item.cost,
+            cost: item.priceCred,
           },
         });
       }

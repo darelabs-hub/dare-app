@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
-import * as admin from 'firebase-admin';
+import { getApps, initializeApp, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { 
   DareItem, 
@@ -28,8 +28,6 @@ import {
 } from './src/types.js';
 import { initialTournaments } from './src/data/tournaments';
 import { initialLiveDuels } from './src/data/liveDuels';
-import * as admin from 'firebase-admin';
-import { getFirestore } from 'firebase-admin/firestore';
 import { initialDares } from './src/data/initialDares';
 import { initialDropZones } from './src/data/dropZones';
 import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog';
@@ -40,15 +38,16 @@ dotenv.config();
 import firebaseConfig from './firebase-applet-config.json';
 let db: any = null;
 try {
-  let app;
-  if (!admin.apps || admin.apps.length === 0) {
-    app = admin.initializeApp({
+  let app: any;
+  const existingApps = getApps();
+  if (!existingApps || existingApps.length === 0) {
+    app = initializeApp({
       projectId: firebaseConfig.projectId,
     });
   } else {
-    app = admin.app();
+    app = getApp();
   }
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+  db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 } catch (e) {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
@@ -3192,21 +3191,10 @@ Provide your response in strictly valid JSON with this structure:
         mode: isSubscription ? 'subscription' : 'payment',
         line_items: [
           {
-            price_data: {
-              currency: 'gbp',
-              product_data: {
-                name: matchingProduct.name,
-                description: matchingProduct.description,
-                tax_code: 'txcd_10000000',
-                images: ['https://placehold.co/400x400/png'],
-              },
-              unit_amount: matchingProduct.amount,
-              recurring: isSubscription && matchingProduct.interval ? { interval: matchingProduct.interval } : undefined,
-            },
+            price: targetPriceId,
             quantity: 1,
           },
         ],
-        managed_payments: { enabled: false },
         client_reference_id: userId || 'u_active_user',
         customer_email: userEmail,
         metadata: {

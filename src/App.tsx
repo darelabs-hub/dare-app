@@ -57,7 +57,8 @@ export default function App() {
     initAnalytics();
 
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname.toLowerCase());
+      const path = window.location.pathname.toLowerCase();
+      setCurrentPath(path);
       trackEvent({
         event: 'page_view',
         category: 'navigation',
@@ -72,20 +73,57 @@ export default function App() {
     window.history.pushState({}, '', path);
     setCurrentPath(path.toLowerCase());
   };
+  const getLocalGuestUser = (): UserProfile => {
+    try {
+      const saved = localStorage.getItem('dareday_guest_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id && parsed.id.startsWith('guest_')) {
+          return parsed;
+        }
+      }
+    } catch (_e) {}
+
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    const guest: UserProfile = {
+      id: `guest_${randomSuffix}`,
+      handle: `@guest_${randomNum}`,
+      name: 'Guest Operative',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      cred: 100,
+      xp: 0,
+      level: 1,
+      rank: 'New Recruit',
+      completedDaresCount: 0,
+      createdDaresCount: 0,
+      streak: 1,
+      badges: ['⚡ New Recruit'],
+      isPro: false,
+      inventory: [],
+      activeBoosters: [],
+      seasonPassLevel: 1,
+      seasonPassXp: 0,
+    };
+    try {
+      localStorage.setItem('dareday_guest_session', JSON.stringify(guest));
+    } catch (_e) {}
+    return guest;
+  };
+
   const { user, signIn, logout } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [currentUser, setCurrentUser] = useState<UserProfile>({
-    id: 'u_dareday',
-    handle: '@daredaylabs',
-    name: 'DARE Ops',
-    avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
-    cred: 4250,
-    rank: 'Overclock Master',
-    completedDaresCount: 14,
-    createdDaresCount: 19,
-    streak: 6,
-    badges: ['👑 Core Founder', '💎 Circuit Breaker (5-Day)', '⚡ Spark Netrunner', '🔥 10x Streak'],
-  });
+  const [currentUser, setCurrentUser] = useState<UserProfile>(getLocalGuestUser);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.warn('Sign out error:', e);
+    }
+    const guest = getLocalGuestUser();
+    setCurrentUser(guest);
+  };
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -282,16 +320,7 @@ export default function App() {
   }, [user]);
 
   useEffect(() => {
-    // Sync current user with server on launch
-    fetch('/api/users/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentUser),
-    }).then(() => {
-      fetchUsers();
-      fetchDailyMission();
-    }).catch(err => console.error('Error syncing user:', err));
-
+    fetchUsers();
     fetchStats();
     fetchDailyMission();
     fetchTransactions();
@@ -691,11 +720,12 @@ export default function App() {
       
       {/* Navbar */}
       <Navbar
-        currentUser={user ? currentUser : undefined}
+        currentUser={currentUser}
+        isAuthenticated={!!user}
         allUsers={users}
         onSelectUser={(u) => setCurrentUser(u)}
         onSignIn={signIn}
-        onSignOut={logout}
+        onSignOut={handleSignOut}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         onOpenTournaments={() => setIsTournamentsOpen(true)}
@@ -1004,7 +1034,7 @@ export default function App() {
             metadata: {
               dareId: updated.id,
               status: updated.status,
-              hasProofMedia: !!(updated.proofMedia || updated.proofText),
+              hasProofMedia: !!(updated.proof?.mediaUrl || (updated as any).proofMedia || (updated as any).proofText),
             },
           });
           if (updated.status === 'verified') {
@@ -1437,6 +1467,9 @@ export default function App() {
           setProfileViewingUser(currentUser);
         }}
         currentUser={currentUser}
+        isAuthenticated={!!user}
+        onSignIn={signIn}
+        onSignOut={handleSignOut}
       />
 
       <Footer

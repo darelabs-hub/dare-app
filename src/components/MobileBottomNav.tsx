@@ -35,6 +35,9 @@ interface MobileBottomNavProps {
   onOpenProUpgrade?: () => void;
   onOpenEventsMerch?: () => void;
   currentUser: UserProfile;
+  isAuthenticated?: boolean;
+  onSignIn?: () => void;
+  onSignOut?: () => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
@@ -52,6 +55,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenProUpgrade,
   onOpenEventsMerch,
   currentUser,
+  isAuthenticated = false,
+  onSignIn,
+  onSignOut,
 }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -86,46 +92,75 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             id="mobile-profile-dropdown-sheet"
             className="fixed bottom-[64px] left-3 right-3 z-50 md:hidden max-w-sm mx-auto rounded-3xl border border-indigo-500/40 bg-[#0a0f1d]/98 p-4 shadow-[0_-15px_40px_rgba(0,0,0,0.9),0_0_30px_rgba(99,102,241,0.25)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 duration-200"
           >
-            {/* Header / Current User Summary */}
-            <div className="flex items-center justify-between border-b border-indigo-500/20 pb-3 mb-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="relative shrink-0">
-                  <img
-                    src={currentUser.avatar}
-                    alt={currentUser.name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-indigo-400"
-                  />
-                  {currentUser.isPro && (
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-slate-950 ring-1 ring-slate-900">
-                      <Crown className="h-2 w-2" />
-                    </span>
-                  )}
+            {/* Header / Current User Summary or Guest Callout */}
+            {!isAuthenticated ? (
+              <div className="p-3.5 rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-950/80 to-slate-900/90 mb-3 text-center">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                  <span className="text-xs font-bold text-indigo-200">Guest Operative ({currentUser.handle})</span>
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm text-white truncate">{currentUser.name}</span>
+                <p className="text-[11px] text-slate-300 mb-3">
+                  Sign in with Google to save your Cred, create challenges, and climb the ranks.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    playSound('click');
+                    if (onSignIn) onSignIn();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 px-4 py-2.5 text-xs font-bold text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>Sign In with Google</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between border-b border-indigo-500/20 pb-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative shrink-0">
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      className="h-10 w-10 rounded-full object-cover ring-2 ring-indigo-400"
+                    />
                     {currentUser.isPro && (
-                      <span className="text-[8px] font-mono font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-1 py-0.5 rounded">
-                        PRO
+                      <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-slate-950 ring-1 ring-slate-900">
+                        <Crown className="h-2 w-2" />
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-                    <span className="text-indigo-300">{currentUser.handle}</span>
-                    <span>•</span>
-                    <span className="text-amber-400 font-bold">{currentUser.cred} CR</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-sm text-white truncate">{currentUser.name}</span>
+                      {currentUser.isPro && (
+                        <span className="text-[8px] font-mono font-black text-amber-300 bg-amber-500/20 border border-amber-500/40 px-1 py-0.5 rounded">
+                          PRO
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                      <span className="text-indigo-300">{currentUser.handle}</span>
+                      <span>•</span>
+                      <span className="text-amber-400 font-bold">{currentUser.cred} CR</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => setIsProfileMenuOpen(false)}
-                className="rounded-full p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                aria-label="Close menu"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+                <button
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="rounded-full p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
 
             {/* Quick Action Shortcuts Grid */}
             <div className="space-y-1.5">
@@ -156,7 +191,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 <span className="text-[10px] font-mono text-cyan-400 font-bold">Open →</span>
               </button>
 
-              {/* 1. Cyber Armory (Moved to Dropdown with High Prominence) */}
+              {/* 1. Cyber Armory */}
               <button
                 type="button"
                 onClick={() => {
@@ -198,6 +233,24 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 </div>
                 <span className="text-[10px] font-mono text-indigo-400">View →</span>
               </button>
+
+              {/* Sign Out Button if Authenticated */}
+              {isAuthenticated && onSignOut && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    playSound('click');
+                    onSignOut();
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/40 transition-colors text-left border border-rose-500/30 mt-2"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <X className="h-4 w-4 text-rose-400" />
+                    <span>Sign Out</span>
+                  </div>
+                </button>
+              )}
 
               {/* Geofenced Drop Zones & AR Beacons */}
               {onOpenDropZones && (
@@ -392,25 +445,31 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             aria-label="Toggle Profile Menu"
           >
             <div className="relative">
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className={`h-6 w-6 rounded-full object-cover transition-all ${
-                  isProfileMenuOpen 
-                    ? 'ring-2 ring-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.8)]' 
-                    : currentUser.equippedFrame === 'frame_neon_cyan' ? 'ring-1.5 ring-cyan-400' :
-                      currentUser.equippedFrame === 'frame_matrix_glitch' ? 'ring-1.5 ring-emerald-400' :
-                      currentUser.equippedFrame === 'frame_syndicate_gold' ? 'ring-1.5 ring-amber-400' :
-                      currentUser.equippedFrame === 'frame_quantum_void' ? 'ring-1.5 ring-fuchsia-500' :
-                      'ring-1.5 ring-slate-600'
-                }`}
-              />
+              {isAuthenticated ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className={`h-6 w-6 rounded-full object-cover transition-all ${
+                    isProfileMenuOpen 
+                      ? 'ring-2 ring-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.8)]' 
+                      : currentUser.equippedFrame === 'frame_neon_cyan' ? 'ring-1.5 ring-cyan-400' :
+                        currentUser.equippedFrame === 'frame_matrix_glitch' ? 'ring-1.5 ring-emerald-400' :
+                        currentUser.equippedFrame === 'frame_syndicate_gold' ? 'ring-1.5 ring-amber-400' :
+                        currentUser.equippedFrame === 'frame_quantum_void' ? 'ring-1.5 ring-fuchsia-500' :
+                        'ring-1.5 ring-slate-600'
+                  }`}
+                />
+              ) : (
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-900/60 border border-indigo-400/50 text-indigo-300">
+                  <User className="h-3.5 w-3.5" />
+                </div>
+              )}
               <span className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-indigo-600 text-[8px] text-white">
                 <ChevronUp className={`h-2.5 w-2.5 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </span>
             </div>
             <span className="text-[10px] font-bold tracking-tight mt-1 truncate max-w-[54px]">
-              Profile
+              {isAuthenticated ? 'Profile' : 'Account'}
             </span>
           </button>
 
