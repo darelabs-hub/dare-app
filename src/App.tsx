@@ -47,13 +47,22 @@ import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { initAnalytics, trackEvent } from './utils/analytics';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname.toLowerCase());
 
   useEffect(() => {
+    // Initialize external analytics (GA4, etc.) and pageview tracking
+    initAnalytics();
+
     const handlePopState = () => {
       setCurrentPath(window.location.pathname.toLowerCase());
+      trackEvent({
+        event: 'page_view',
+        category: 'navigation',
+        label: window.location.pathname,
+      });
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -946,6 +955,20 @@ export default function App() {
           setDares((prev) => [newDare, ...prev]);
           fetchStats();
           fetchUsers();
+          trackEvent({
+            event: 'dare_created',
+            category: 'dares',
+            label: newDare.title,
+            value: newDare.credReward,
+            userId: currentUser?.id,
+            userHandle: currentUser?.handle,
+            metadata: {
+              category: newDare.category,
+              credReward: newDare.credReward,
+              targetType: newDare.targetType,
+              dareId: newDare.id,
+            },
+          });
         }}
       />
 
@@ -959,6 +982,18 @@ export default function App() {
           setProofViewingDare(updated);
           fetchStats();
           fetchUsers();
+          trackEvent({
+            event: 'proof_submitted',
+            category: 'dares',
+            label: updated.title,
+            userId: currentUser?.id,
+            userHandle: currentUser?.handle,
+            metadata: {
+              dareId: updated.id,
+              status: updated.status,
+              hasProofMedia: !!(updated.proofMedia || updated.proofText),
+            },
+          });
           if (updated.status === 'verified') {
             triggerConfetti();
           }

@@ -606,6 +606,64 @@ async function startServer() {
     res.json({ status: 'ok', service: 'DARE Core Engine', time: new Date().toISOString() });
   });
 
+  // --- REAL-TIME TELEMETRY / ANALYTICS CAPTURE ---
+  const telemetryEvents: any[] = [];
+  const MAX_TELEMETRY_LOGS = 500;
+
+  // Ingest client event
+  app.post('/api/analytics/event', (req, res) => {
+    try {
+      const eventData = req.body || {};
+      if (!eventData.event) {
+        return res.status(400).json({ error: 'event name required' });
+      }
+
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+      const eventRecord = {
+        id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        event: eventData.event,
+        category: eventData.category || 'general',
+        label: eventData.label || null,
+        value: eventData.value !== undefined ? eventData.value : null,
+        metadata: eventData.metadata || {},
+        userId: eventData.userId || null,
+        userHandle: eventData.userHandle || null,
+        path: eventData.path || '/',
+        timestamp: eventData.timestamp || new Date().toISOString(),
+        clientIp: clientIp.replace(/:\d+$/, ''), // Masked/sanitized
+        userAgent: req.headers['user-agent']?.substring(0, 150) || 'unknown',
+      };
+
+      telemetryEvents.unshift(eventRecord);
+      if (telemetryEvents.length > MAX_TELEMETRY_LOGS) {
+        telemetryEvents.pop();
+      }
+
+      res.status(202).json({ success: true, eventId: eventRecord.id });
+    } catch (_err) {
+      res.status(200).json({ success: false }); // Non-blocking
+    }
+  });
+
+  // Query recent telemetry events & high-level stats
+  app.get('/api/analytics/events', (req, res) => {
+    const limit = Math.min(parseInt((req.query.limit as string) || '100', 10), MAX_TELEMETRY_LOGS);
+    const categoryCounts: Record<string, number> = {};
+    const eventCounts: Record<string, number> = {};
+
+    telemetryEvents.forEach((evt) => {
+      categoryCounts[evt.category] = (categoryCounts[evt.category] || 0) + 1;
+      eventCounts[evt.event] = (eventCounts[evt.event] || 0) + 1;
+    });
+
+    res.json({
+      totalRecorded: telemetryEvents.length,
+      categoryCounts,
+      topEvents: eventCounts,
+      recentEvents: telemetryEvents.slice(0, limit),
+    });
+  });
+
   // Get current users / leaderboard
   app.get('/api/users', (req, res) => {
     const sorted = [...initialUsers].sort((a, b) => b.cred - a.cred);

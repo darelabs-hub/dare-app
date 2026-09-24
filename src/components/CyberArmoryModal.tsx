@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ArmoryItem, InventoryItem, ActiveBooster, UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
+import { trackEvent } from '../utils/analytics';
 
 interface CyberArmoryModalProps {
   isOpen: boolean;
@@ -100,6 +101,19 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
           setRedeemedTrackingCode({ name: item.name, code: data.trackingCode });
         }
         setActionFeedback(`Requisitioned ${item.name}! Added to neural inventory.`);
+        trackEvent({
+          event: 'armory_purchase',
+          category: 'economy',
+          label: item.name,
+          value: item.cost,
+          userId: currentUser.id,
+          userHandle: currentUser.handle,
+          metadata: {
+            itemId: item.id,
+            category: item.category,
+            cost: item.cost,
+          },
+        });
       }
     } catch (err) {
       setActionFeedback('Network uplink failed');
