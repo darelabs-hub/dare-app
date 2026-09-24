@@ -56,8 +56,9 @@ export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
         capture_pageview: true,
         capture_pageleave: true,
         autocapture: true,
+        capture_performance: false,
         session_recording: {
-          recordCrossOriginIframes: true,
+          recordCrossOriginIframes: false,
           maskAllInputs: false,
         },
         loaded: (ph) => {
