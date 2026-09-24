@@ -1,10 +1,11 @@
 /**
  * DARE Unified Analytics & Event Tracking Engine
  * Supports:
- * 1. Google Analytics 4 (GA4) via gtag
- * 2. PostHog / Plausible if configured
- * 3. Server-side event stream (/api/analytics/event) for instant real-time telemetry
+ * 1. PostHog EU (Session Replays, Heatmaps, Autocapture, Conversion Funnels)
+ * 2. Google Analytics 4 (GA4) via gtag
+ * 3. Server-side event stream (/api/analytics/event)
  */
+import posthog from 'posthog-js';
 
 declare global {
   interface Window {
@@ -12,10 +13,15 @@ declare global {
     gtag?: (...args: any[]) => void;
     posthog?: any;
     DARE_GA_ID?: string;
+    DARE_POSTHOG_KEY?: string;
   }
 }
 
 let isInitialized = false;
+
+// Default configured PostHog EU API Key
+const DEFAULT_POSTHOG_KEY = 'phc_umBihDRVL5X4FvUdYgNWUY3CFbickbDNmGB6oLQqdSJ4';
+const POSTHOG_HOST = 'https://eu.i.posthog.com';
 
 export interface AnalyticsEvent {
   event: string;
@@ -28,12 +34,43 @@ export interface AnalyticsEvent {
 }
 
 /**
- * Initialize Analytics tags (Google Analytics 4 & external scripts)
+ * Initialize Analytics tags (PostHog & Google Analytics 4)
  */
-export function initAnalytics(customGaId?: string) {
+export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
   if (isInitialized || typeof window === 'undefined') return;
   isInitialized = true;
 
+  // 1. Initialize PostHog EU
+  const phKey = 
+    customPosthogKey || 
+    (import.meta.env.VITE_POSTHOG_KEY as string) || 
+    window.DARE_POSTHOG_KEY || 
+    DEFAULT_POSTHOG_KEY;
+
+  if (phKey && phKey.startsWith('phc_')) {
+    try {
+      posthog.init(phKey, {
+        api_host: POSTHOG_HOST,
+        ui_host: 'https://eu.posthog.com',
+        person_profiles: 'always',
+        capture_pageview: true,
+        capture_pageleave: true,
+        autocapture: true,
+        session_recording: {
+          recordCrossOriginIframes: true,
+          maskAllInputs: false,
+        },
+        loaded: (ph) => {
+          console.log('🦔 PostHog telemetry & session recording initialized on EU instance');
+        },
+      });
+      window.posthog = posthog;
+    } catch (e) {
+      console.warn('Could not initialize PostHog:', e);
+    }
+  }
+
+  // 2. Initialize Google Analytics 4 (if configured)
   const gaId = 
     customGaId || 
     (import.meta.env.VITE_GA_MEASUREMENT_ID as string) || 
@@ -61,7 +98,7 @@ export function initAnalytics(customGaId?: string) {
     }
   }
 
-  // Track initial page view
+  // 3. Track initial page view in server telemetry
   trackEvent({
     event: 'page_view',
     category: 'navigation',
@@ -71,6 +108,21 @@ export function initAnalytics(customGaId?: string) {
       screen: `${window.innerWidth}x${window.innerHeight}`,
     },
   });
+}
+
+/**
+ * Identify the logged in user for PostHog profile tracking & replays
+ */
+export function identifyUser(userId: string, traits?: Record<string, any>) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (posthog && typeof posthog.identify === 'function') {
+      posthog.identify(userId, traits);
+    }
+  } catch (_e) {
+    // Non-blocking
+  }
 }
 
 /**
@@ -85,26 +137,28 @@ export function trackEvent(params: AnalyticsEvent) {
     timestamp: new Date().toISOString(),
   };
 
-  // 1. Send to Google Analytics 4 (if configured)
+  // 1. Send to PostHog
+  try {
+    if (posthog && typeof posthog.capture === 'function') {
+      posthog.capture(params.event, {
+        category: params.category || 'general',
+        label: params.label,
+        value: params.value,
+        userId: params.userId,
+        userHandle: params.userHandle,
+        ...params.metadata,
+      });
+    }
+  } catch (_e) {
+    // Safe fallback
+  }
+
+  // 2. Send to Google Analytics 4 (if configured)
   if (typeof window.gtag === 'function') {
     try {
       window.gtag('event', params.event, {
         event_category: params.category || 'general',
         event_label: params.label,
-        value: params.value,
-        ...params.metadata,
-      });
-    } catch (_e) {
-      // Safe fallback
-    }
-  }
-
-  // 2. Send to PostHog (if configured)
-  if (typeof window.posthog?.capture === 'function') {
-    try {
-      window.posthog.capture(params.event, {
-        category: params.category,
-        label: params.label,
         value: params.value,
         ...params.metadata,
       });

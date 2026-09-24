@@ -47,13 +47,13 @@ import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
-import { initAnalytics, trackEvent } from './utils/analytics';
+import { initAnalytics, trackEvent, identifyUser } from './utils/analytics';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname.toLowerCase());
 
   useEffect(() => {
-    // Initialize external analytics (GA4, etc.) and pageview tracking
+    // Initialize external analytics (PostHog EU, GA4, etc.) and pageview tracking
     initAnalytics();
 
     const handlePopState = () => {
@@ -86,6 +86,19 @@ export default function App() {
     streak: 6,
     badges: ['👑 Core Founder', '💎 Circuit Breaker (5-Day)', '⚡ Spark Netrunner', '🔥 10x Streak'],
   });
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      identifyUser(currentUser.id, {
+        name: currentUser.name,
+        handle: currentUser.handle,
+        cred: currentUser.cred,
+        isPro: currentUser.isPro || false,
+        rank: currentUser.rank,
+        streak: currentUser.streak,
+      });
+    }
+  }, [currentUser]);
 
   const [dares, setDares] = useState<DareItem[]>([]);
   const [stats, setStats] = useState<{
