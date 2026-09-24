@@ -22,10 +22,25 @@ const STORAGE_KEY_PREFS = 'dareday_push_preferences';
 const STORAGE_KEY_DISMISSED_BANNER = 'dareday_push_banner_dismissed';
 
 /**
- * Checks if browser supports Web Notifications
+ * Checks if browser environment supports Web Notifications
  */
 export function isPushNotificationSupported(): boolean {
-  return typeof window !== 'undefined' && 'Notification' in window;
+  try {
+    return typeof window !== 'undefined' && 'Notification' in window;
+  } catch (_e) {
+    return false;
+  }
+}
+
+/**
+ * Checks if running inside an iframe
+ */
+export function isRunningInIframe(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch (_e) {
+    return true;
+  }
 }
 
 /**
@@ -33,24 +48,50 @@ export function isPushNotificationSupported(): boolean {
  */
 export function getPushPermissionStatus(): NotificationPermission | 'unsupported' {
   if (!isPushNotificationSupported()) return 'unsupported';
-  return Notification.permission;
+  try {
+    return Notification.permission;
+  } catch (_e) {
+    return 'unsupported';
+  }
 }
 
 /**
- * Requests Notification permission from browser
+ * Comprehensive Protocol Diagnostics State
+ */
+export function getPushProtocolState(): {
+  status: NotificationPermission | 'unsupported';
+  isNativeSupported: boolean;
+  isInIframe: boolean;
+  isInAppHudActive: boolean;
+} {
+  const isSupported = isPushNotificationSupported();
+  const inIframe = isRunningInIframe();
+  const status = getPushPermissionStatus();
+
+  return {
+    status,
+    isNativeSupported: isSupported,
+    isInIframe: inIframe,
+    isInAppHudActive: true, // In-App Cyber HUD Telemetry is always active and guaranteed
+  };
+}
+
+/**
+ * Requests Notification permission from browser safely
  */
 export async function requestPushNotificationPermission(): Promise<NotificationPermission | 'unsupported'> {
   if (!isPushNotificationSupported()) return 'unsupported';
 
   try {
+    // If in iframe, some browsers deny Notification.requestPermission()
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       playSound('levelUp');
     }
     return permission;
   } catch (err) {
-    console.error('Error requesting notification permission:', err);
-    return Notification.permission;
+    console.warn('Notification permission request notice (falling back to In-App Cyber HUD Telemetry):', err);
+    return getPushPermissionStatus();
   }
 }
 
@@ -102,7 +143,7 @@ export function dismissPushBanner(): void {
 }
 
 /**
- * Options for dispatching a local browser notification
+ * Options for dispatching a system notification
  */
 export interface LocalPushOptions {
   title: string;
@@ -112,67 +153,113 @@ export interface LocalPushOptions {
   tag?: string;
   data?: any;
   dareId?: string;
+  userId?: string;
   onClick?: () => void;
 }
 
 /**
- * Dispatches a system notification if permission is granted
+ * Dispatches a system alert across both In-App Holographic HUD and Native Browser Web Push
  */
-export async function dispatchSystemNotification(options: LocalPushOptions): Promise<boolean> {
-  if (!isPushNotificationSupported()) return false;
-  if (Notification.permission !== 'granted') return false;
-
+export async function dispatchSystemNotification(options: LocalPushOptions): Promise<{
+  success: boolean;
+  nativeDelivered: boolean;
+  hudDelivered: boolean;
+}> {
   const prefs = getStoredPushPreferences();
+
+  // 1. Trigger acoustic telemetry sound if enabled
   if (prefs.soundEnabled) {
     playSound('notification');
   }
 
-  const iconUrl = options.icon || '/favicon.ico';
-  const notificationOptions: NotificationOptions = {
-    body: options.body,
-    icon: iconUrl,
-    badge: options.badge || iconUrl,
-    tag: options.tag || `dare-notif-${Date.now()}`,
-    data: {
-      url: window.location.href,
-      dareId: options.dareId,
-      ...options.data,
-    },
-    // Vibration pattern (ms): vibrate - pause - vibrate
-    // @ts-ignore
-    vibrate: [200, 100, 200],
-    silent: !prefs.soundEnabled,
-  };
-
+  // 2. ALWAYS dispatch in-app Cyber System Alert HUD event
+  let hudDelivered = false;
   try {
-    // 1. Try via active Service Worker if available for reliable background execution
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (registration && registration.showNotification) {
-        await registration.showNotification(options.title, notificationOptions);
-        return true;
-      }
-    }
-
-    // 2. Fallback to standard Window Notification API
-    const notification = new Notification(options.title, notificationOptions);
-    notification.onclick = (event) => {
-      event.preventDefault();
-      window.focus();
-      notification.close();
-      if (options.onClick) {
-        options.onClick();
-      } else if (options.dareId) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('dare', options.dareId);
-        window.history.pushState({}, '', url.toString());
-        window.dispatchEvent(new CustomEvent('dare:open-dare', { detail: { dareId: options.dareId } }));
-      }
-    };
-
-    return true;
-  } catch (err) {
-    console.error('Failed to trigger native notification:', err);
-    return false;
+    window.dispatchEvent(
+      new CustomEvent('dare:system-alert', {
+        detail: {
+          title: options.title,
+          body: options.body,
+          tag: options.tag || 'SYSTEM TRANSMISSION',
+          dareId: options.dareId,
+          data: options.data,
+          onClick: options.onClick,
+        },
+      })
+    );
+    hudDelivered = true;
+  } catch (e) {
+    console.warn('HUD event dispatch error:', e);
   }
+
+  // 3. Optional backend sync if userId provided
+  if (options.userId) {
+    fetch('/api/push/dispatch-test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: options.userId,
+        title: options.title,
+        body: options.body,
+        dareId: options.dareId,
+      }),
+    }).catch(() => {});
+  }
+
+  // 4. Attempt Native Web Notification if supported and granted
+  let nativeDelivered = false;
+  if (isPushNotificationSupported() && Notification.permission === 'granted') {
+    try {
+      const iconUrl = options.icon || '/favicon.ico';
+      const notificationOptions: NotificationOptions = {
+        body: options.body,
+        icon: iconUrl,
+        badge: options.badge || iconUrl,
+        tag: options.tag || `dare-notif-${Date.now()}`,
+        data: {
+          url: window.location.href,
+          dareId: options.dareId,
+          ...options.data,
+        },
+        // @ts-ignore
+        vibrate: [200, 100, 200],
+        silent: !prefs.soundEnabled,
+      };
+
+      // Try Service Worker showNotification if active
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration().catch(() => null);
+        if (registration && registration.showNotification) {
+          await registration.showNotification(options.title, notificationOptions);
+          nativeDelivered = true;
+        }
+      }
+
+      if (!nativeDelivered) {
+        const notification = new Notification(options.title, notificationOptions);
+        notification.onclick = (event) => {
+          event.preventDefault();
+          window.focus();
+          notification.close();
+          if (options.onClick) {
+            options.onClick();
+          } else if (options.dareId) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('dare', options.dareId);
+            window.history.pushState({}, '', url.toString());
+            window.dispatchEvent(new CustomEvent('dare:open-dare', { detail: { dareId: options.dareId } }));
+          }
+        };
+        nativeDelivered = true;
+      }
+    } catch (nativeErr) {
+      console.warn('Native notification dispatch notice:', nativeErr);
+    }
+  }
+
+  return {
+    success: hudDelivered || nativeDelivered,
+    nativeDelivered,
+    hudDelivered,
+  };
 }

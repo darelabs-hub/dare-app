@@ -67,7 +67,8 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       await dispatchSystemNotification({
         title: '⚡ DARE Uplink Connected!',
         body: 'You will now receive real-time alerts for direct challenge bounties, staking pools, and proximity drop zones.',
-        tag: 'dare-welcome',
+        tag: 'TRANSMISSION // ACTIVE',
+        userId,
       });
 
       setTimeout(() => {

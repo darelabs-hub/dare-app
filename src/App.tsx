@@ -31,6 +31,7 @@ import { LiveDuelsArenaModal } from './components/LiveDuelsArenaModal';
 import { DropZonesModal } from './components/DropZonesModal';
 import { ShareCardModal } from './components/ShareCardModal';
 import { PushNotificationBanner } from './components/PushNotificationBanner';
+import { CyberSystemAlertHUD } from './components/CyberSystemAlertHUD';
 import { HelpBubbleSystem } from './components/HelpBubbleSystem';
 import { Footer } from './components/Footer';
 import { DareCoachModal } from './components/DareCoachModal';
@@ -1137,6 +1138,9 @@ export default function App() {
         onDismiss={() => setShareToast(null)}
       />
 
+      {/* Cyber In-App Telemetry & Push System Alert HUD */}
+      <CyberSystemAlertHUD />
+
       {/* Cyber Expiry Reminder Push Toast */}
       <ExpiryNotificationToast
         toast={expiryReminderToast}
@@ -1188,6 +1192,36 @@ export default function App() {
           setCurrentUser(updated);
           setUsers((prev) => prev.map((u) => u.id === updated.id ? updated : u));
           setProfileViewingUser(updated);
+          if (updated.id.startsWith('guest_')) {
+            try {
+              localStorage.setItem('dareday_guest_session', JSON.stringify(updated));
+            } catch (_e) {}
+          }
+          setDares((prevDares) =>
+            prevDares.map((d) => {
+              let modified = false;
+              const copy = { ...d };
+              if (copy.creator && copy.creator.id === updated.id) {
+                copy.creator = {
+                  ...copy.creator,
+                  handle: updated.handle,
+                  name: updated.name,
+                  avatar: updated.avatar,
+                };
+                modified = true;
+              }
+              if (copy.acceptedBy && copy.acceptedBy.id === updated.id) {
+                copy.acceptedBy = {
+                  ...copy.acceptedBy,
+                  handle: updated.handle,
+                  name: updated.name,
+                  avatar: updated.avatar,
+                };
+                modified = true;
+              }
+              return modified ? copy : d;
+            })
+          );
         }}
         onOpenUpgradeModal={() => setIsProUpgradeOpen(true)}
         onOpenProofGallery={() => setIsProofGalleryOpen(true)}

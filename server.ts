@@ -669,6 +669,115 @@ async function startServer() {
     res.json(sorted);
   });
 
+  // Update user profile (Username, Display Name, Profile Picture / Avatar)
+  const handleProfileUpdate = (req: any, res: any) => {
+    const userId = req.params.id || req.body.id || req.body.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const { handle, name, avatar, disableHelpBubbles } = req.body;
+    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
+
+    const oldHandle = user.handle;
+    const oldName = user.name;
+    const oldAvatar = user.avatar;
+
+    // Validate and format handle / username if provided
+    if (handle !== undefined) {
+      let formattedHandle = String(handle).trim();
+      if (!formattedHandle.startsWith('@')) {
+        formattedHandle = `@${formattedHandle}`;
+      }
+
+      // Check handle length & alphanumeric format (3 to 24 chars including @)
+      const handleRegex = /^@[a-zA-Z0-9_]{3,24}$/;
+      if (!handleRegex.test(formattedHandle)) {
+        return res.status(400).json({ 
+          error: 'Username must be 3-24 characters and contain only letters, numbers, and underscores (e.g. @cyber_runner).' 
+        });
+      }
+
+      // Check if handle is taken by another user
+      const isTaken = initialUsers.some(u => 
+        u.id !== userId && u.handle.toLowerCase() === formattedHandle.toLowerCase()
+      );
+      if (isTaken) {
+        return res.status(400).json({ 
+          error: `Username ${formattedHandle} is already claimed by another operative on the Grid. Please choose a different handle.` 
+        });
+      }
+
+      user.handle = formattedHandle;
+    }
+
+    // Validate and update display name if provided
+    if (name !== undefined) {
+      const trimmedName = String(name).trim();
+      if (!trimmedName || trimmedName.length < 1 || trimmedName.length > 50) {
+        return res.status(400).json({ error: 'Display Name must be between 1 and 50 characters.' });
+      }
+      user.name = trimmedName;
+    }
+
+    // Validate and update avatar if provided
+    if (avatar !== undefined) {
+      const avatarStr = String(avatar).trim();
+      if (avatarStr) {
+        user.avatar = avatarStr;
+      }
+    }
+
+    if (disableHelpBubbles !== undefined) {
+      user.disableHelpBubbles = Boolean(disableHelpBubbles);
+    }
+
+    // Cascade username / name / avatar changes to user's created and accepted dares
+    if (user.handle !== oldHandle || user.name !== oldName || user.avatar !== oldAvatar) {
+      dares.forEach(d => {
+        if (d.creator && d.creator.id === user.id) {
+          d.creator.handle = user.handle;
+          d.creator.name = user.name;
+          d.creator.avatar = user.avatar;
+        }
+        if (d.acceptedBy && d.acceptedBy.id === user.id) {
+          d.acceptedBy.handle = user.handle;
+          d.acceptedBy.name = user.name;
+          d.acceptedBy.avatar = user.avatar;
+        }
+        if (d.comments && d.comments.length > 0) {
+          d.comments.forEach(c => {
+            if (c.userHandle === oldHandle) {
+              c.userHandle = user.handle;
+              c.userName = user.name;
+              c.avatar = user.avatar;
+            }
+          });
+        }
+      });
+
+      // Also cascade to tournaments if participating
+      tournaments.forEach(t => {
+        if (t.squadA && t.squadA.members.includes(oldHandle)) {
+          t.squadA.members = t.squadA.members.map(m => m === oldHandle ? user.handle : m);
+        }
+        if (t.squadB && t.squadB.members.includes(oldHandle)) {
+          t.squadB.members = t.squadB.members.map(m => m === oldHandle ? user.handle : m);
+        }
+      });
+    }
+
+    // Persist to Firestore
+    saveUserToFirestore(user);
+
+    return res.json({ success: true, user });
+  };
+
+  app.put('/api/users/:id/profile', handleProfileUpdate);
+  app.post('/api/users/:id/profile', handleProfileUpdate);
+  app.put('/api/users/profile', handleProfileUpdate);
+  app.post('/api/users/profile', handleProfileUpdate);
+
   // Sync / Register active user profile
   app.post('/api/users/sync', (req, res) => {
     const profile = req.body as Partial<UserProfile>;
@@ -2339,6 +2448,48 @@ Provide your response in strictly valid JSON with this structure:
     });
 
     res.json(user);
+  });
+
+  // --- WEB PUSH & SYSTEM TELEMETRY APIS ---
+  const userPushPreferences: Record<string, any> = {};
+
+  app.get('/api/push/preferences/:userId', (req, res) => {
+    const { userId } = req.params;
+    res.json(userPushPreferences[userId] || {
+      directDares: true,
+      stakes: true,
+      proofVotes: true,
+      dropZones: true,
+      dailyOps: true,
+      soundEnabled: true,
+    });
+  });
+
+  app.post('/api/push/preferences/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { preferences } = req.body;
+    if (preferences) {
+      userPushPreferences[userId] = preferences;
+    }
+    res.json({ success: true, preferences: userPushPreferences[userId] });
+  });
+
+  app.post('/api/push/dispatch-test', (req, res) => {
+    const { userId, title, body, dareId } = req.body;
+    if (userId) {
+      addNotification({
+        userId,
+        type: 'social',
+        title: title || '⚡ DARE Telemetry Signal',
+        message: body || 'Direct uplink operational! Live challenge active on the Grid.',
+        dareId: dareId || '',
+        actorHandle: '@dare_hq',
+        actorName: 'DARE HQ',
+        actorAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150',
+        read: false,
+      });
+    }
+    res.json({ success: true, dispatchedAt: new Date().toISOString() });
   });
 
   // --- CYBERPUNK ARMORY & REWARDS STORE APIS ---

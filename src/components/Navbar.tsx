@@ -20,7 +20,8 @@ import {
   Map,
   Swords,
   Target,
-  Compass
+  Compass,
+  Edit3
 } from 'lucide-react';
 import { UserProfile, NotificationItem } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -409,6 +410,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span>View My Profile & Stats</span>
                       </div>
                       <span className="text-[10px] font-mono opacity-80">Open →</span>
+                    </button>
+                  )}
+
+                  {onOpenProfile && (
+                    <button
+                      id="menu-edit-profile-btn"
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenProfile(currentUser, 'settings');
+                        playSound('click');
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Edit3 className="h-4 w-4 text-cyan-400" />
+                        <span>Edit Username & Avatar</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400 font-bold">Studio →</span>
                     </button>
                   )}
 

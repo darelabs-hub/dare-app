@@ -476,17 +476,17 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                   playSound('laser');
                   const perm = getPushPermissionStatus();
                   if (perm !== 'granted') {
-                    const req = await requestPushNotificationPermission();
-                    if (req !== 'granted') return;
+                    await requestPushNotificationPermission().catch(() => {});
                   }
                   await dispatchSystemNotification({
                     title: '⚡ DARE Transmission Alert',
                     body: 'Incoming challenge transmission from Grid Sector 7 (+100 Cred)!',
-                    tag: 'dare-stream-push',
+                    tag: 'TRANSMISSION // ACTIVE',
+                    userId: currentUser?.id,
                   });
                 }}
                 className="flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-950/40 px-2 py-1 text-[10px] font-mono font-bold text-indigo-300 hover:border-indigo-400 hover:bg-indigo-900/50 transition-all cursor-pointer"
-                title="Send native browser system notification"
+                title="Send system notification and telemetry pulse"
               >
                 <BellRing className="h-3 w-3 text-indigo-400" />
                 <span>Push Alert</span>

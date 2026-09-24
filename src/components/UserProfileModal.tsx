@@ -28,7 +28,13 @@ import {
   VolumeX,
   Radio,
   Share2,
-  LogOut
+  LogOut,
+  Edit3,
+  Upload,
+  RefreshCw,
+  Check,
+  AlertCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { playSound } from '../utils/soundEffects';
 import { DareActivityHeatmap } from './DareActivityHeatmap';
@@ -45,6 +51,21 @@ import {
   dispatchSystemNotification,
   PushPreferences 
 } from '../utils/pushNotifications';
+
+export const CYBER_AVATAR_PRESETS = [
+  { id: 'preset_1', name: 'Cyber Netrunner', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_2', name: 'Tech Operative', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_3', name: 'Neon Infiltrator', url: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_4', name: 'Hologram Spectre', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_5', name: 'Syndicate Boss', url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_6', name: 'Quantum Assassin', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_7', name: 'Apex Pilot', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_8', name: 'Cyber Valkyrie', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_9', name: 'Street Runner', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_10', name: 'Rogue Hacker', url: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_11', name: 'Circuit Ninja', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=250&auto=format&fit=crop&q=80' },
+  { id: 'preset_12', name: 'Synth Specialist', url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=250&auto=format&fit=crop&q=80' },
+];
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -92,10 +113,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [activeTab, setActiveTab] = useState<'heatmap' | 'location-map' | 'completed' | 'created' | 'settings' | 'squad' | 'rivalry'>(initialTab);
   const [activating, setActivating] = useState(false);
 
+  const [editHandle, setEditHandle] = useState(user?.handle || '');
   const [editName, setEditName] = useState(user?.name || '');
   const [editAvatar, setEditAvatar] = useState(user?.avatar || '');
   const [editDisableHelp, setEditDisableHelp] = useState(user?.disableHelpBubbles || false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [squadSearchQuery, setSquadSearchQuery] = useState('');
 
   const [pushStatus, setPushStatus] = useState<NotificationPermission | 'unsupported'>('unsupported');
@@ -126,11 +150,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     playSound('laser');
     setTestPushSent(true);
     await dispatchSystemNotification({
-      title: '⚡ DARE Telemetry Signal',
-      body: `Direct uplink operational for @${user?.handle || 'Agent'}! +150 Cred challenge active on the Grid.`,
-      tag: 'dare-test-push',
+      title: '⚡ DARE Telemetry Uplink Established',
+      body: `Direct neural challenge signal received for ${user?.name || 'Operative'} (${user?.handle || '@agent'})! +250 Cred Bounty active on the Grid.`,
+      tag: 'TRANSMISSION // ACTIVE',
+      userId: user?.id,
     });
-    setTimeout(() => setTestPushSent(false), 3000);
+    setTimeout(() => setTestPushSent(false), 3500);
   };
 
   React.useEffect(() => {
@@ -141,9 +166,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   React.useEffect(() => {
     if (user) {
-      setEditName(user.name);
-      setEditAvatar(user.avatar);
+      setEditHandle(user.handle || '');
+      setEditName(user.name || '');
+      setEditAvatar(user.avatar || '');
       setEditDisableHelp(user.disableHelpBubbles || false);
+      setSaveError(null);
+      setSaveMessage(null);
     }
   }, [user]);
 
@@ -161,21 +189,155 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   const isOwnProfile = user.id === currentUser.id;
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  // Handle local image file upload & compression
+  const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setSaveError('Uploaded image exceeds 5MB size limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (!dataUrl) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_DIM = 256;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setEditAvatar(compressedDataUrl);
+          playSound('click');
+          setSaveError(null);
+        } else {
+          setEditAvatar(dataUrl);
+          playSound('click');
+          setSaveError(null);
+        }
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Generate a random cybernetic bot avatar
+  const handleGenerateCyberBot = () => {
+    playSound('laser');
+    const randomSeed = Math.random().toString(36).substring(2, 9);
+    const botAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${randomSeed}&backgroundColor=0a0f1d,1e1b4b,0f172a`;
+    setEditAvatar(botAvatar);
+    setSaveError(null);
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !onUpdateUser) return;
+    if (!user) return;
+    setSaveError(null);
+    setSaveMessage(null);
+    setIsSaving(true);
     playSound('click');
-    const updated: UserProfile = {
+
+    let formattedHandle = editHandle.trim();
+    if (!formattedHandle.startsWith('@')) {
+      formattedHandle = `@${formattedHandle}`;
+    }
+
+    // Format & validate handle
+    const handleRegex = /^@[a-zA-Z0-9_]{3,24}$/;
+    if (!handleRegex.test(formattedHandle)) {
+      setSaveError('Username must be 3-24 characters using letters, numbers, and underscores (e.g. @cyber_runner).');
+      setIsSaving(false);
+      return;
+    }
+
+    // Check uniqueness across other users
+    const isTaken = allUsers.some(
+      (u) => u.id !== user.id && u.handle.toLowerCase() === formattedHandle.toLowerCase()
+    );
+    if (isTaken) {
+      setSaveError(`Username ${formattedHandle} is already claimed by another operative on the Grid.`);
+      setIsSaving(false);
+      return;
+    }
+
+    const trimmedName = editName.trim();
+    if (!trimmedName || trimmedName.length < 1) {
+      setSaveError('Please provide a valid Display Name.');
+      setIsSaving(false);
+      return;
+    }
+
+    const trimmedAvatar = editAvatar.trim();
+    if (!trimmedAvatar) {
+      setSaveError('Please select or provide an avatar image.');
+      setIsSaving(false);
+      return;
+    }
+
+    const updatedUserObj: UserProfile = {
       ...user,
-      name: editName,
-      avatar: editAvatar,
+      handle: formattedHandle,
+      name: trimmedName,
+      avatar: trimmedAvatar,
       disableHelpBubbles: editDisableHelp,
     };
-    setTimeout(() => {
-      onUpdateUser(updated);
-    }, 0);
-    setSaveMessage('Account settings updated successfully!');
-    setTimeout(() => setSaveMessage(null), 3000);
+
+    try {
+      const res = await fetch(`/api/users/${user.id}/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          handle: formattedHandle,
+          name: trimmedName,
+          avatar: trimmedAvatar,
+          disableHelpBubbles: editDisableHelp,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const savedUser = data.user || updatedUserObj;
+        if (onUpdateUser) {
+          onUpdateUser(savedUser);
+        }
+        playSound('oracle');
+        setSaveMessage('Operative identity & profile picture successfully updated on the Grid!');
+        setTimeout(() => setSaveMessage(null), 4000);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setSaveError(errData.error || 'Failed to update profile telemetry.');
+      }
+    } catch (err: any) {
+      console.warn('Profile update fallback:', err);
+      if (onUpdateUser) {
+        onUpdateUser(updatedUserObj);
+      }
+      setSaveMessage('Profile changes saved locally.');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Find dares completed by this user
@@ -291,7 +453,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         {/* Header Block */}
         <div className="relative flex items-start justify-between px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-slate-800/60 z-10 gap-3">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 group">
               <img
                 src={user.avatar}
                 alt={user.name}
@@ -303,8 +465,25 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   'ring-2 ring-indigo-500/40'
                 }`}
               />
+
+              {/* Edit Avatar Hover Badge for Own Profile */}
+              {isOwnProfile && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('click');
+                    setActiveTab('settings');
+                  }}
+                  title="Change your profile picture & avatar"
+                  className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer backdrop-blur-[2px]"
+                >
+                  <Camera className="h-5 w-5 text-cyan-400 drop-shadow" />
+                  <span className="text-[9px] font-mono font-bold text-cyan-200 mt-0.5">Edit</span>
+                </button>
+              )}
+
               {user.isPro && (
-                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-amber-500 border-2 border-[#0a0f1d] shadow-md">
+                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-amber-500 border-2 border-[#0a0f1d] shadow-md z-10">
                   <Crown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white" />
                 </span>
               )}
@@ -323,13 +502,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs sm:text-sm font-mono text-indigo-400 truncate">{user.handle}</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs sm:text-sm font-mono text-indigo-400 truncate font-semibold">{user.handle}</span>
                 {user.isPro && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.2 sm:py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-[8px] sm:text-[9px] font-bold font-mono tracking-wider text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)] uppercase shrink-0">
                     <Crown className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-amber-400 fill-amber-400/15" />
                     <span>PRO</span>
                   </span>
+                )}
+                {isOwnProfile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound('click');
+                      setActiveTab('settings');
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/15 hover:bg-indigo-500/30 border border-indigo-500/30 text-[10px] font-mono font-bold text-indigo-300 transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="h-2.5 w-2.5 text-indigo-400" />
+                    <span>Edit Profile</span>
+                  </button>
                 )}
               </div>
               <div className="flex items-center gap-2 mt-1 text-[11px] sm:text-xs text-slate-400 flex-wrap">
@@ -743,13 +935,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 playSound('click');
                 setActiveTab('settings');
               }}
-              className={`flex-1 py-2.5 text-xs font-bold font-mono tracking-wider uppercase border-b-2 transition-all ${
+              className={`flex-1 py-2.5 text-xs font-bold font-mono tracking-wider uppercase border-b-2 transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'settings'
                   ? 'border-indigo-500 text-white'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              Settings & Analytics
+              <Edit3 className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Identity & Settings</span>
             </button>
           </div>
 
@@ -1118,50 +1311,67 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
                 {/* Web Push & System Telemetry Notifications Hub */}
                 {isOwnProfile && (
-                  <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/10 p-4 space-y-4">
+                  <div className="rounded-2xl border border-cyan-500/40 bg-cyan-950/20 p-5 space-y-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-400 bg-cyan-950/60 text-cyan-400">
-                          <BellRing className="h-4 w-4" />
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-400 bg-cyan-950/80 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]">
+                          <BellRing className="h-4.5 w-4.5 animate-pulse" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
-                            Web Push & System Alerts Protocol
+                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                            <span>Web Push & System Alerts Protocol</span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
                           </h4>
                           <span className="text-[10px] text-slate-400 font-mono">
-                            Native device push notifications & instant telemetry
+                            Multi-channel push alerts, in-app holographic HUD & acoustic telemetry
                           </span>
                         </div>
                       </div>
 
                       {/* Push Permission Indicator & Button */}
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold uppercase border ${
                           pushStatus === 'granted'
-                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                             : pushStatus === 'denied'
                             ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
-                            : 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                            : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
                         }`}>
-                          <Radio className="h-2.5 w-2.5 animate-pulse" />
-                          <span>Status: {pushStatus}</span>
+                          <Radio className="h-3 w-3 animate-pulse text-cyan-400" />
+                          <span>{pushStatus === 'granted' ? 'Native Push: Active' : 'In-App HUD: Active'}</span>
                         </span>
 
                         {pushStatus !== 'granted' && (
                           <button
                             type="button"
                             onClick={handleRequestPush}
-                            className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-tech text-xs font-bold uppercase transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
+                            className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-600 to-indigo-600 hover:brightness-110 text-white font-mono text-xs font-bold uppercase transition-all shadow-[0_0_12px_rgba(6,182,212,0.4)] cursor-pointer active:scale-95"
                           >
-                            Grant Permission
+                            Grant Native OS Push
                           </button>
                         )}
                       </div>
                     </div>
 
+                    {/* Protocol Diagnostic Status Banner */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] font-mono">
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                        <span>In-App HUD Alert: <strong className="text-emerald-400">Online</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.8)]" />
+                        <span>Acoustic Audio: <strong className="text-cyan-400">{pushPrefs.soundEnabled ? 'Active' : 'Muted'}</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-300">
+                        <span className={`h-2 w-2 rounded-full ${pushStatus === 'granted' ? 'bg-emerald-400' : 'bg-amber-400'} shadow-[0_0_6px_rgba(251,191,36,0.8)]`} />
+                        <span>Browser Push: <strong className={pushStatus === 'granted' ? 'text-emerald-400' : 'text-amber-400'}>{pushStatus === 'granted' ? 'Enabled' : 'In-App Telemetry'}</strong></span>
+                      </div>
+                    </div>
+
                     {/* Preference Toggles Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-mono">
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-cyan-500/40 transition-colors">
                         <span className="text-slate-300">Direct Challenge Targets</span>
                         <input
                           type="checkbox"
@@ -1171,7 +1381,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-cyan-500/40 transition-colors">
                         <span className="text-slate-300">High-Roller Stakes & Wagers</span>
                         <input
                           type="checkbox"
@@ -1181,7 +1391,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-cyan-500/40 transition-colors">
                         <span className="text-slate-300">AR Drop Zone Proximity</span>
                         <input
                           type="checkbox"
@@ -1191,7 +1401,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         />
                       </label>
 
-                      <label className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-cyan-500/40 transition-colors">
                         <span className="text-slate-300">Daily Mission Drops & Streaks</span>
                         <input
                           type="checkbox"
@@ -1200,64 +1410,254 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                           className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-400"
                         />
                       </label>
+
+                      <label className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 cursor-pointer hover:border-cyan-500/40 transition-colors sm:col-span-2">
+                        <span className="text-slate-300">Acoustic Audio Chime on Alert Dispatch</span>
+                        <input
+                          type="checkbox"
+                          checked={pushPrefs.soundEnabled}
+                          onChange={() => handleTogglePushPref('soundEnabled')}
+                          className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-400"
+                        />
+                      </label>
                     </div>
 
                     {/* Test Push Button */}
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        Verify system notification dispatch and acoustic telemetry
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1 border-t border-slate-800/80">
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        Dispatches instant live holographic HUD alert & acoustic pulse
                       </span>
                       <button
                         type="button"
                         id="test-push-notification-btn"
                         onClick={handleSendTestPush}
                         disabled={testPushSent}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 font-mono text-xs font-bold transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-cyan-400/60 bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-300 font-mono text-xs font-bold uppercase transition-all cursor-pointer shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-60 active:scale-95"
                       >
-                        <Bell className="h-3.5 w-3.5 text-cyan-400" />
-                        <span>{testPushSent ? 'Signal Dispatched!' : 'Send Test Web Push'}</span>
+                        <Bell className="h-4 w-4 text-cyan-400 animate-bounce" />
+                        <span>{testPushSent ? '⚡ Signal Transmitted to HUD!' : 'Transmit Test Alert Pulse'}</span>
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Account Settings Form */}
+                {/* Account Identity & Profile Customization Form */}
                 {isOwnProfile ? (
-                  <form onSubmit={handleSaveSettings} className="rounded-xl border border-slate-800 bg-slate-900/20 p-4 space-y-4">
-                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-cyan-400" />
-                      <span>Account Settings & Profile Customization</span>
-                    </h4>
+                  <form onSubmit={handleSaveSettings} className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5 space-y-6">
+                    <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-cyan-400" />
+                        <span>Operative Identity & Profile Picture Studio</span>
+                      </h4>
+                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                        Neural Uplink Config
+                      </span>
+                    </div>
 
-                    {saveMessage && (
-                      <div className="p-2 rounded bg-emerald-950/40 border border-emerald-500/30 text-xs text-emerald-300 font-mono">
-                        {saveMessage}
+                    {saveError && (
+                      <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-200 font-mono flex items-start gap-2 animate-in fade-in">
+                        <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                        <span>{saveError}</span>
                       </div>
                     )}
 
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Display Name</label>
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
-                        required
-                      />
+                    {saveMessage && (
+                      <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-200 font-mono flex items-start gap-2 animate-in fade-in">
+                        <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{saveMessage}</span>
+                      </div>
+                    )}
+
+                    {/* Section 1: Profile Picture Studio */}
+                    <div className="space-y-4 rounded-xl border border-slate-800/80 bg-slate-950/60 p-4">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <ImageIcon className="h-3.5 w-3.5 text-indigo-400" />
+                          <span>Profile Picture / Hologram Avatar</span>
+                        </label>
+                        <span className="text-[10px] font-mono text-slate-500">Live Preview</span>
+                      </div>
+
+                      {/* Live Avatar Preview Card */}
+                      <div className="flex flex-col sm:flex-row items-center gap-4 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="relative shrink-0">
+                          <img
+                            src={editAvatar || user.avatar}
+                            alt="Avatar Preview"
+                            className={`h-16 w-16 sm:h-20 sm:w-20 rounded-full object-cover transition-all ${
+                              user.equippedFrame === 'frame_neon_cyan' ? 'ring-2 ring-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.7)] animate-pulse' :
+                              user.equippedFrame === 'frame_matrix_glitch' ? 'ring-2 ring-emerald-400 shadow-[0_0_18px_rgba(16,185,129,0.8)]' :
+                              user.equippedFrame === 'frame_syndicate_gold' ? 'ring-2 ring-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.9)]' :
+                              user.equippedFrame === 'frame_quantum_void' ? 'ring-2 ring-fuchsia-500 shadow-[0_0_25px_rgba(217,70,239,0.9)] animate-pulse' :
+                              'ring-2 ring-indigo-500/50'
+                            }`}
+                            onError={(e) => {
+                              // Fallback on broken image link
+                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250';
+                            }}
+                          />
+                          {user.isPro && (
+                            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 border border-[#0a0f1d] shadow-sm">
+                              <Crown className="h-3 w-3 text-white" />
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex-1 text-center sm:text-left space-y-1">
+                          <div className="flex items-center justify-center sm:justify-start gap-2">
+                            <span className="text-sm font-bold text-white">{editName || user.name}</span>
+                            <span className="text-xs font-mono text-indigo-400 font-semibold">{editHandle.startsWith('@') ? editHandle : `@${editHandle}`}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 font-mono">
+                            Select from cyber operative presets below, upload your own photo, or roll a custom cyber bot.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Quick Avatar Actions */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* File Upload Button */}
+                        <label className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95">
+                          <Upload className="h-3.5 w-3.5 text-indigo-400" />
+                          <span>Upload Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {/* Roll Cyber Bot Generator */}
+                        <button
+                          type="button"
+                          onClick={handleGenerateCyberBot}
+                          className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5 text-cyan-400" />
+                          <span>Roll Cyber Bot</span>
+                        </button>
+                      </div>
+
+                      {/* Curated Cyberpunk Avatar Presets */}
+                      <div className="space-y-2 pt-1">
+                        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">
+                          Curated Cyber Operative Presets
+                        </span>
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+                          {CYBER_AVATAR_PRESETS.map((preset) => {
+                            const isSelected = editAvatar === preset.url;
+                            return (
+                              <button
+                                key={preset.id}
+                                type="button"
+                                onClick={() => {
+                                  playSound('click');
+                                  setEditAvatar(preset.url);
+                                  setSaveError(null);
+                                }}
+                                title={preset.name}
+                                className={`relative group p-1 rounded-xl border transition-all cursor-pointer flex flex-col items-center ${
+                                  isSelected 
+                                    ? 'border-cyan-400 bg-cyan-950/60 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.5)] scale-105' 
+                                    : 'border-slate-800 bg-slate-900/40 hover:border-indigo-500/60 hover:scale-105'
+                                }`}
+                              >
+                                <img
+                                  src={preset.url}
+                                  alt={preset.name}
+                                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover"
+                                />
+                                {isSelected && (
+                                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-400 text-slate-950 shadow-md">
+                                    <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                  </span>
+                                )}
+                                <span className="text-[9px] font-mono text-slate-400 truncate max-w-full mt-1 group-hover:text-cyan-300">
+                                  {preset.name.split(' ')[0]}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Custom Avatar URL Field */}
+                      <div className="space-y-1.5 pt-1">
+                        <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                          Custom Image URL
+                        </label>
+                        <input
+                          type="url"
+                          value={editAvatar}
+                          onChange={(e) => {
+                            setEditAvatar(e.target.value);
+                            setSaveError(null);
+                          }}
+                          placeholder="https://images.unsplash.com/..."
+                          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none font-mono"
+                          required
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Avatar Image URL</label>
-                      <input
-                        type="url"
-                        value={editAvatar}
-                        onChange={(e) => setEditAvatar(e.target.value)}
-                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none"
-                        required
-                      />
+                    {/* Section 2: Username & Display Name */}
+                    <div className="space-y-4 rounded-xl border border-slate-800/80 bg-slate-950/60 p-4">
+                      {/* Username (@handle) Field */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>Username (@handle)</span>
+                          </label>
+                          <span className="text-[10px] font-mono text-indigo-400 font-bold">Grid Identifier</span>
+                        </div>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3 font-mono text-xs font-bold text-indigo-400 pointer-events-none">
+                            @
+                          </span>
+                          <input
+                            type="text"
+                            value={editHandle.startsWith('@') ? editHandle.substring(1) : editHandle}
+                            onChange={(e) => {
+                              const cleaned = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
+                              setEditHandle(`@${cleaned}`);
+                              setSaveError(null);
+                            }}
+                            placeholder="username_operative"
+                            maxLength={24}
+                            className="w-full rounded-lg border border-slate-800 bg-slate-950 pl-7 pr-3 py-2 text-xs font-mono text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+                            required
+                          />
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-mono">
+                          Must be 3-24 alphanumeric characters and underscores. Used for direct dares, notifications, and squad invites.
+                        </p>
+                      </div>
+
+                      {/* Display Name Field */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+                            Display Name
+                          </label>
+                          <span className="text-[10px] font-mono text-slate-500">Public Name</span>
+                        </div>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => {
+                            setEditName(e.target.value);
+                            setSaveError(null);
+                          }}
+                          placeholder="Agent Name"
+                          maxLength={40}
+                          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+                          required
+                        />
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-950/60">
+                    {/* Navigation Help Bubbles Toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-950/60">
                       <div className="flex flex-col">
                         <label htmlFor="disable-help-bubbles-toggle" className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wide cursor-pointer">
                           Disable Navigation Help Bubbles
@@ -1273,23 +1673,36 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       />
                     </div>
 
+                    {/* Interactive Tour Trigger */}
                     <button
                       type="button"
                       onClick={() => {
                         onClose();
                         window.dispatchEvent(new CustomEvent('start-dareday-tour'));
                       }}
-                      className="w-full flex items-center justify-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/50 py-2.5 text-xs font-bold text-indigo-200 transition-all shadow-sm cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 hover:bg-indigo-900/50 py-2.5 text-xs font-bold text-indigo-200 transition-all shadow-sm cursor-pointer"
                     >
                       <Compass className="h-4 w-4 text-indigo-400" />
                       <span>Launch Interactive Platform Tour</span>
                     </button>
 
+                    {/* Submit Button */}
                     <button
                       type="submit"
-                      className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 py-2.5 text-xs font-bold text-white transition-all shadow-md cursor-pointer"
+                      disabled={isSaving}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:brightness-110 py-3 text-xs font-bold font-mono uppercase tracking-wider text-white transition-all shadow-lg shadow-indigo-500/20 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
                     >
-                      Save Account Settings
+                      {isSaving ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin text-white" />
+                          <span>Saving Operative Identity...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4 text-white" />
+                          <span>Save Identity & Profile Changes</span>
+                        </>
+                      )}
                     </button>
 
                     {/* Account Session Controls */}
