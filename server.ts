@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
@@ -82,7 +83,7 @@ async function getUserFromFirestore(userId: string): Promise<UserProfile | null>
   return null;
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Lazy initialization for Stripe SDK
 let stripeClient: Stripe | null = null;
@@ -652,6 +653,55 @@ async function startServer() {
     res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
     next();
   });
+
+  // --- POSTHOG REVERSE PROXY (/ingest) ---
+  // Mount BEFORE express.json() to stream unconsumed raw bytes (events, session recordings)
+  // Maps /ingest/* -> PostHog EU ingestion (https://eu.i.posthog.com/*) and assets (https://eu-assets.i.posthog.com/*)
+  const posthogHost = (process.env.POSTHOG_HOST || 'https://eu.i.posthog.com').replace(/\/$/, '');
+  const isEuRegion = posthogHost.includes('eu.');
+  const posthogAssetHost = (process.env.POSTHOG_ASSET_HOST || (isEuRegion ? 'https://eu-assets.i.posthog.com' : 'https://us-assets.i.posthog.com')).replace(/\/$/, '');
+
+  const posthogProxy = createProxyMiddleware({
+    target: posthogHost,
+    changeOrigin: true,
+    router: (req) => {
+      const url = req.url || '';
+      if (url.startsWith('/static/') || url.startsWith('/array/')) {
+        return posthogAssetHost;
+      }
+      return posthogHost;
+    },
+    on: {
+      proxyReq: (proxyReq, req, _res) => {
+        // Forward client real IP for accurate geolocation in PostHog
+        const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+        if (clientIp) {
+          const existingXff = req.headers['x-forwarded-for'];
+          proxyReq.setHeader('x-forwarded-for', existingXff ? `${existingXff}, ${clientIp}` : clientIp);
+          proxyReq.setHeader('x-real-ip', clientIp);
+        }
+        if (req.headers.host) {
+          proxyReq.setHeader('x-forwarded-host', req.headers.host);
+        }
+        // Strip site cookies and authorization to protect user privacy
+        if (proxyReq.getHeader('cookie')) {
+          proxyReq.removeHeader('cookie');
+        }
+        if (proxyReq.getHeader('authorization')) {
+          proxyReq.removeHeader('authorization');
+        }
+      },
+      error: (err, _req, res: any) => {
+        console.error('PostHog reverse proxy encountered an upstream error:', err.message);
+        if (!res.headersSent) {
+          res.status(502).json({ error: 'PostHog upstream service temporarily unavailable' });
+        }
+      }
+    }
+  });
+
+  app.use('/ingest', posthogProxy);
+
   app.use(express.json({ 
     limit: '12mb',
     verify: (req: any, _res, buf) => {

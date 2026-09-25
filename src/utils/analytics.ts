@@ -21,7 +21,9 @@ let isInitialized = false;
 
 // Default configured PostHog EU API Key
 const DEFAULT_POSTHOG_KEY = 'phc_umBihDRVL5X4FvUdYgNWUY3CFbickbDNmGB6oLQqdSJ4';
-const POSTHOG_HOST = 'https://eu.i.posthog.com';
+// Reverse proxy endpoint hosted on the same domain (dare.me.uk/ingest/)
+const POSTHOG_PROXY_HOST = (import.meta.env.VITE_POSTHOG_HOST as string) || '/ingest';
+const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 
 export interface AnalyticsEvent {
   event: string;
@@ -40,7 +42,7 @@ export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
   if (isInitialized || typeof window === 'undefined') return;
   isInitialized = true;
 
-  // 1. Initialize PostHog EU
+  // 1. Initialize PostHog EU via /ingest reverse proxy
   const phKey = 
     customPosthogKey || 
     (import.meta.env.VITE_POSTHOG_KEY as string) || 
@@ -50,8 +52,8 @@ export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
   if (phKey && phKey.startsWith('phc_')) {
     try {
       posthog.init(phKey, {
-        api_host: POSTHOG_HOST,
-        ui_host: 'https://eu.posthog.com',
+        api_host: POSTHOG_PROXY_HOST,
+        ui_host: POSTHOG_UI_HOST,
         person_profiles: 'always',
         capture_pageview: true,
         capture_pageleave: true,
@@ -62,7 +64,7 @@ export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
           maskAllInputs: false,
         },
         loaded: (ph) => {
-          console.log('🦔 PostHog telemetry & session recording initialized on EU instance');
+          console.log('🦔 PostHog telemetry & session recording initialized via reverse proxy (/ingest) on EU instance');
         },
       });
       window.posthog = posthog;
