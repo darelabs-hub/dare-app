@@ -103,6 +103,16 @@ export const Footer: React.FC<FooterProps> = ({
               </button>
             </li>
             <li>
+              <button 
+                onClick={() => {
+                  window.location.href = "mailto:daredaylabs@gmail.com?subject=Technical%20Support%20Inquiry%20-%20DARE";
+                }} 
+                className="flex items-center gap-2 hover:text-cyan-400 transition-colors text-slate-400 text-left font-medium"
+              >
+                <HelpCircle className="h-3.5 w-3.5 text-cyan-400" /> Experiencing Technical Issues?
+              </button>
+            </li>
+            <li>
               <a 
                 href="/privacy" 
                 onClick={(e) => {
