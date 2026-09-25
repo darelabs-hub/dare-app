@@ -478,6 +478,10 @@ export interface DropZone {
   itemDrop?: ArmoryItem;
   passcodeHint?: string;
   requiresArScan?: boolean;
+  distanceMeters?: number;
+  bearingDegrees?: number;
+  cardinalHeading?: string;
+  inGeofence?: boolean;
 }
 
 export interface ARBeaconScanResult {

@@ -29,6 +29,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { SquadTournamentsModal } from './components/SquadTournamentsModal';
 import { LiveDuelsArenaModal } from './components/LiveDuelsArenaModal';
 import { DropZonesModal } from './components/DropZonesModal';
+import { DropZonesSection } from './components/DropZonesSection';
 import { ShareCardModal } from './components/ShareCardModal';
 import { PushNotificationBanner } from './components/PushNotificationBanner';
 import { CyberSystemAlertHUD } from './components/CyberSystemAlertHUD';
@@ -43,7 +44,7 @@ import { APIProvider } from '@vis.gl/react-google-maps';
 import { useAuth } from './hooks/useAuth';
 import { db } from './lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { DareItem, UserProfile, NotificationItem, CredTransaction } from './types';
+import { DareItem, UserProfile, NotificationItem, CredTransaction, DropZone } from './types';
 import { isSoundEnabled, toggleSound, playSound } from './utils/soundEffects';
 import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, FileText, Lock, Mail, Link2 } from 'lucide-react';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
@@ -187,6 +188,14 @@ export default function App() {
   const [isTournamentsOpen, setIsTournamentsOpen] = useState(false);
   const [isLiveDuelsOpen, setIsLiveDuelsOpen] = useState(false);
   const [isDropZonesOpen, setIsDropZonesOpen] = useState(false);
+  const [dropZonesInitialTab, setDropZonesInitialTab] = useState<'radar' | 'ar_scanner' | 'deploy'>('radar');
+  const [dropZonesTargetZone, setDropZonesTargetZone] = useState<DropZone | null>(null);
+
+  const handleOpenDropZones = (tab: 'radar' | 'ar_scanner' | 'deploy' = 'radar', targetZone?: DropZone) => {
+    setDropZonesInitialTab(tab);
+    setDropZonesTargetZone(targetZone || null);
+    setIsDropZonesOpen(true);
+  };
   const [shareCardDare, setShareCardDare] = useState<DareItem | null>(null);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
   const [proofSubmissionDare, setProofSubmissionDare] = useState<DareItem | null>(null);
@@ -1027,7 +1036,7 @@ export default function App() {
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         onOpenTournaments={() => setIsTournamentsOpen(true)}
         onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-        onOpenDropZones={() => setIsDropZonesOpen(true)}
+        onOpenDropZones={() => handleOpenDropZones('radar')}
         onOpenLegalModal={(tab) => setLegalModalTab(tab || 'faq')}
         onOpenCredLog={() => setIsCredLogOpen(true)}
         onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
@@ -1066,7 +1075,7 @@ export default function App() {
         onSearchChange={setSearchQuery}
         onTriggerOracle={() => setIsOracleSurpriseOpen(true)}
         onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-        onOpenDropZones={() => setIsDropZonesOpen(true)}
+        onOpenDropZones={() => handleOpenDropZones('radar')}
         dailyMission={dailyMission}
         onStartMission={async (dare) => {
           setSearchQuery('');
@@ -1124,6 +1133,12 @@ export default function App() {
               setActiveTab('all');
             }
           }}
+        />
+
+        {/* Real-World Geofenced Drop Zones & AR Beacons Hub Section */}
+        <DropZonesSection
+          currentUser={currentUser}
+          onOpenDropZonesModal={handleOpenDropZones}
         />
 
         {/* Direct Targeted Dare Notice for Current User if any exist */}
@@ -1775,6 +1790,8 @@ export default function App() {
         isOpen={isDropZonesOpen}
         onClose={() => setIsDropZonesOpen(false)}
         currentUser={currentUser}
+        initialTab={dropZonesInitialTab}
+        initialZone={dropZonesTargetZone}
         onUserUpdate={(updated) => {
           setCurrentUser(updated);
           setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
@@ -1798,7 +1815,7 @@ export default function App() {
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
         onOpenTournaments={() => setIsTournamentsOpen(true)}
         onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-        onOpenDropZones={() => setIsDropZonesOpen(true)}
+        onOpenDropZones={() => handleOpenDropZones('radar')}
         onOpenCredLog={() => setIsCredLogOpen(true)}
         onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
         onOpenEventsMerch={() => setIsEventsMerchOpen(true)}

@@ -613,6 +613,22 @@ function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2:
   return Math.round(R * c);
 }
 
+function calculateBearingDegrees(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+  return Math.round(((θ * 180) / Math.PI + 360) % 360);
+}
+
+function getCardinalDirection(bearing: number): string {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(bearing / 45) % 8;
+  return directions[index];
+}
+
 // In-Memory Notifications Store
 const notifications: NotificationItem[] = [];
 
@@ -3149,12 +3165,109 @@ Provide your response in strictly valid JSON with this structure:
       const userLat = Number(lat);
       const userLng = Number(lng);
 
+      // Check if any beacons exist within 15km of this user's position
+      const nearbyExisting = dropZones.filter(z => 
+        calculateDistanceMeters(userLat, userLng, z.coordinates.lat, z.coordinates.lng) < 15000
+      );
+
+      // If no beacons exist near user's current GPS location, dynamically spawn 3 local neighborhood beacons
+      if (nearbyExisting.length === 0) {
+        const localTemplates: Array<Partial<DropZone> & { latOffset: number; lngOffset: number }> = [
+          {
+            name: 'Local Sector Quantum Vault',
+            code: `NODE-LOC-${Math.floor(10 + Math.random() * 89)}`,
+            category: 'cyber',
+            latOffset: 0.0011,
+            lngOffset: 0.0009,
+            radiusMeters: 180,
+            bountyCred: 350,
+            bountyXp: 500,
+            lootRarity: 'legendary',
+            activeDareTitle: 'Neural Proximity Lock',
+            activeDareDescription: 'Engage the AR viewfinder and align your optical sensor with the local electromagnetic pulse node.',
+            arBeaconType: 'quantum_vault',
+            arObjectIcon: '💠',
+            passcodeHint: 'Align viewfinder 45° North-East within 150m radius',
+          },
+          {
+            name: 'High-Frequency Neural Cache',
+            code: `CACHE-LOC-${Math.floor(10 + Math.random() * 89)}`,
+            category: 'tech',
+            latOffset: -0.0009,
+            lngOffset: 0.0014,
+            radiusMeters: 220,
+            bountyCred: 260,
+            bountyXp: 380,
+            lootRarity: 'epic',
+            activeDareTitle: 'Street Grid Decryption',
+            activeDareDescription: 'Maintain a 10-second continuous lock on the floating neural node hovering at 12m altitude.',
+            arBeaconType: 'neural_node',
+            arObjectIcon: '🔮',
+            passcodeHint: 'Point lens toward the highest street light fixture',
+          },
+          {
+            name: 'Guerrilla Stealth Crate',
+            code: `CRATE-LOC-${Math.floor(10 + Math.random() * 89)}`,
+            category: 'physical',
+            latOffset: 0.0014,
+            lngOffset: -0.0012,
+            radiusMeters: 250,
+            bountyCred: 200,
+            bountyXp: 300,
+            lootRarity: 'rare',
+            activeDareTitle: 'Local Perimeter Sprint',
+            activeDareDescription: 'Approach within 80m of the geofence perimeter and scan the military supply crate payload.',
+            arBeaconType: 'stealth_crate',
+            arObjectIcon: '📦',
+            passcodeHint: 'Approach from the western sidewalk approach',
+          }
+        ];
+
+        localTemplates.forEach((t, i) => {
+          const newZ: DropZone = {
+            id: `zone_dyn_${Date.now()}_${i}`,
+            name: t.name!,
+            code: t.code!,
+            category: t.category as any,
+            coordinates: {
+              lat: +(userLat + (t as any).latOffset).toFixed(6),
+              lng: +(userLng + (t as any).lngOffset).toFixed(6),
+            },
+            radiusMeters: t.radiusMeters || 200,
+            city: 'Active Sector',
+            country: 'Global Grid',
+            bountyCred: t.bountyCred || 250,
+            bountyXp: t.bountyXp || 350,
+            lootRarity: t.lootRarity as any,
+            activeDareTitle: t.activeDareTitle!,
+            activeDareDescription: t.activeDareDescription!,
+            beaconSignalStrength: 95 - i * 4,
+            arBeaconType: t.arBeaconType as any,
+            arObjectIcon: t.arObjectIcon || '💠',
+            claimedByCount: Math.floor(Math.random() * 12) + 1,
+            claimedUserIds: [],
+            deployedByHandle: 'grid_sentinel',
+            deployedByName: 'Grid Sentinel',
+            deployedByAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=256',
+            expiresAt: new Date(Date.now() + 86400000 * 7).toISOString(),
+            createdAt: new Date().toISOString(),
+            passcodeHint: t.passcodeHint,
+            requiresArScan: true,
+          };
+          dropZones.push(newZ);
+          results.push(newZ);
+        });
+      }
+
       const enriched = results.map(zone => {
         const distance = calculateDistanceMeters(userLat, userLng, zone.coordinates.lat, zone.coordinates.lng);
+        const bearing = calculateBearingDegrees(userLat, userLng, zone.coordinates.lat, zone.coordinates.lng);
         const inGeofence = distance <= zone.radiusMeters;
         return {
           ...zone,
           distanceMeters: distance,
+          bearingDegrees: bearing,
+          cardinalHeading: getCardinalDirection(bearing),
           inGeofence,
         };
       });
