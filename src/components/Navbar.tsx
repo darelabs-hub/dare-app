@@ -30,6 +30,8 @@ import { LegalTab } from './LegalAndFaqModal';
 import { NotificationsMenu } from './NotificationsMenu';
 import { DareDayLogo } from './DareDayLogo';
 import { PWAInstallButton } from './PWAInstallButton';
+import { LanguageSelector } from './LanguageSelector';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
   currentUser?: UserProfile;
@@ -104,6 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   setSearchQuery,
 }) => {
+  const { t } = useLanguage();
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
   const [recentSearchesOpen, setRecentSearchesOpen] = React.useState(false);
   const [recentSearches, setRecentSearches] = React.useState<string[]>([]);
@@ -156,19 +159,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="hidden 2xl:flex items-center gap-4 rounded-full border border-slate-800 bg-slate-900/60 px-4 py-1 text-xs">
             <div className="flex items-center gap-1.5 text-slate-300">
               <Flame className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-slate-400">Pool:</span>
+              <span className="text-slate-400">{t('credPool')}</span>
               <span className="font-mono font-bold text-amber-300">{stats.totalCredPool} Cred</span>
             </div>
             <div className="h-3 w-px bg-slate-800" />
             <div className="flex items-center gap-1.5 text-slate-300">
               <Coins className="h-3.5 w-3.5 text-indigo-400" />
-              <span className="text-slate-400">Active:</span>
+              <span className="text-slate-400">{t('active')}</span>
               <span className="font-mono font-bold text-indigo-300">{stats.totalDares}</span>
             </div>
             <div className="h-3 w-px bg-slate-800" />
             <div className="flex items-center gap-1.5 text-slate-300">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-slate-400">Verified:</span>
+              <span className="text-slate-400">{t('verified')}</span>
               <span className="font-mono font-bold text-emerald-300">{stats.verifiedDares}</span>
             </div>
           </div>
@@ -176,6 +179,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Actions Cluster (Compact & Responsive) */}
         <div className="flex items-center shrink-0 gap-1 sm:gap-2">
+
+          {/* EU Language Selector (Header Primary Dropdown) */}
+          <LanguageSelector />
+
+          {/* Quick PWA App Download Button */}
+          <PWAInstallButton className="hidden sm:inline-flex" />
 
           {/* Cyber Armory & Rewards Shop Button (Desktop/Tablet) */}
           {onOpenArmory && (
@@ -189,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Cyber Armory & Boosters Store"
             >
               <ShoppingBag className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Armory</span>
+              <span>{t('armory')}</span>
             </button>
           )}
 
@@ -205,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Season 1 Battle Pass"
             >
               <Zap className="h-3.5 w-3.5 text-purple-400" />
-              <span>Pass</span>
+              <span>{t('pass')}</span>
               <span className="rounded bg-purple-500/30 px-1 py-0.2 text-[9px] font-mono text-purple-300">
                 LVL {currentUser?.seasonPassLevel || 1}
               </span>
@@ -224,7 +233,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Geofenced Drop Zones & AR Beacons"
             >
               <Compass className="h-3.5 w-3.5 text-emerald-400 animate-spin-slow" />
-              <span>Drop Zones</span>
+              <span>{t('dropZones')}</span>
               <span className="rounded bg-emerald-500/30 px-1 py-0.2 text-[9px] font-mono text-emerald-300">
                 AR
               </span>
@@ -243,7 +252,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Squad vs. Squad Tournaments Arena"
             >
               <Swords className="h-3.5 w-3.5 text-pink-400" />
-              <span>Squad Wars</span>
+              <span>{t('squadWars')}</span>
             </button>
           )}
 
@@ -263,7 +272,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={currentUser?.isPro ? 'PRO Active Subscription' : 'Upgrade to PRO'}
             >
               <Crown className="h-3.5 w-3.5 text-amber-400" />
-              <span>{currentUser?.isPro ? 'PRO Active' : 'Upgrade to PRO'}</span>
+              <span>{currentUser?.isPro ? t('proActive') : t('proUpgrade')}</span>
             </button>
           )}
 
@@ -302,8 +311,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
-                <span className="hidden xs:inline">Sign In</span>
-                <span className="xs:hidden">Login</span>
+                <span className="hidden xs:inline">{t('signIn')}</span>
+                <span className="xs:hidden">{t('login')}</span>
               </button>
             ) : currentUser ? (
               <button

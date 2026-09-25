@@ -49,8 +49,10 @@ import { AlertCircle, Flame, Plus, ShieldCheck, Sparkles, Terminal, HelpCircle, 
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { initAnalytics, trackEvent, identifyUser } from './utils/analytics';
+import { useLanguage } from './context/LanguageContext';
 
 export default function App() {
+  const { t } = useLanguage();
   const [currentPath, setCurrentPath] = useState<string>(() => window.location.pathname.toLowerCase());
 
   useEffect(() => {
@@ -1134,10 +1136,10 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="font-tech text-base font-bold text-white tracking-wide">
-                    DIRECT CHALLENGES PENDING FOR {currentUser.handle}!
+                    {t('directPendingTitle')}
                   </h3>
                   <p className="text-xs text-pink-200">
-                    A peer has targeted you specifically with a high-voltage dare. Accept the challenge to claim the Cred bounty.
+                    {t('directPendingDesc')}
                   </p>
                 </div>
               </div>
@@ -1148,7 +1150,7 @@ export default function App() {
                 }}
                 className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-pink-400 bg-pink-500/30 px-3.5 py-1.5 text-xs font-mono font-bold text-pink-200 hover:bg-pink-500/40 transition-colors"
               >
-                Filter My Dares →
+                {t('viewDirectDares')} →
               </button>
             </div>
           </div>

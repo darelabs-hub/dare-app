@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DareCategory, DareItem } from '../types';
 import { playSound } from '../utils/soundEffects';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroBannerProps {
   activeTab: string;
@@ -60,6 +61,17 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   dailyMission,
   onStartMission,
 }) => {
+  const { t } = useLanguage();
+
+  const categoriesList = [
+    { id: 'all', label: t('allChallenges'), icon: <Terminal className="h-3.5 w-3.5" /> },
+    { id: 'tech', label: t('techCode'), icon: <Code2 className="h-3.5 w-3.5" /> },
+    { id: 'physical', label: t('fitnessOutdoors'), icon: <Dumbbell className="h-3.5 w-3.5" /> },
+    { id: 'social', label: t('socialFun'), icon: <MessageSquare className="h-3.5 w-3.5" /> },
+    { id: 'creative', label: t('artCreative'), icon: <Palette className="h-3.5 w-3.5" /> },
+    { id: 'absurd', label: t('wildUnusual'), icon: <Skull className="h-3.5 w-3.5" /> },
+  ];
+
   return (
     <div className="relative overflow-hidden border-b border-indigo-500/10 bg-gradient-to-b from-[#0f172a] via-[#0f172a]/95 to-[#0b0f19] pt-6 pb-6 cyber-bg">
       {/* Decorative subtle ambient glows */}
@@ -72,17 +84,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-950/40 px-3 py-1 text-xs font-mono text-indigo-300 mb-2">
               <span className="h-2 w-2 rounded-full bg-indigo-400 animate-ping" />
-              <span>ACTIVE COMMUNITY DARES // ENGAGED</span>
+              <span>{t('communityStatus')}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
-              DARE YOUR FRIENDS. <br className="hidden sm:inline" />
+              {t('heroTitle1')} <br className="hidden sm:inline" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-indigo-300">
-                CHALLENGE YOUR CIRCLE.
+                {t('heroTitle2')}
               </span>
             </h1>
             <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl">
-              Challenge specific handles directly or post open bounties for the wider public.
-              Submit photo or video proof, get evaluated by our fun AI judge, and earn Cred.
+              {t('heroSubtitle')}
             </p>
           </div>
 
@@ -108,9 +119,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
               <div className="text-left">
                 <div className="text-xs text-cyan-400 font-mono tracking-wider uppercase flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  Daily Ops
+                  {t('dailyOps')}
                 </div>
-                <div className="font-semibold text-sm text-white">Daily Missions</div>
+                <div className="font-semibold text-sm text-white">{t('dailyMissions')}</div>
               </div>
             </button>
 
@@ -130,9 +141,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 <div className="text-left">
                   <div className="text-xs text-emerald-400 font-mono tracking-wider uppercase flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    GPS Bounties
+                    AR Radar
                   </div>
-                  <div className="font-semibold text-sm text-white">AR Drop Zones</div>
+                  <div className="font-semibold text-sm text-white">{t('dropZones')}</div>
                 </div>
               </button>
             )}
@@ -152,9 +163,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 <div className="text-left">
                   <div className="text-xs text-pink-400 font-mono tracking-wider uppercase flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-ping" />
-                    Live 1v1 Arena
+                    1v1 Arena
                   </div>
-                  <div className="font-semibold text-sm text-white">Head-to-Head Blitz</div>
+                  <div className="font-semibold text-sm text-white">{t('liveDuels')}</div>
                 </div>
               </button>
             )}
@@ -173,7 +184,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
               </div>
               <div className="text-left">
                 <div className="text-xs text-indigo-400 font-mono tracking-wider uppercase">AI Oracle</div>
-                <div className="font-semibold text-sm text-white">Generate Custom Dare</div>
+                <div className="font-semibold text-sm text-white">{t('askAiOracle')}</div>
               </div>
             </button>
           </div>
@@ -200,7 +211,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 }`}
               >
                 <Radio className="h-3.5 w-3.5" />
-                <span>All Feeds</span>
+                <span>{t('filterAll')}</span>
               </button>
               
               <button
@@ -216,7 +227,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
-                <span>Public Bounties</span>
+                <span>{t('filterPublic')}</span>
               </button>
 
               <button
@@ -232,20 +243,18 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 }`}
               >
                 <Flame className="h-3.5 w-3.5 text-pink-400" />
-                <span>Direct Peer Dares</span>
+                <span>{t('filterDirect')}</span>
               </button>
             </div>
 
             {/* Status Pills */}
             <div className="flex items-center overflow-x-auto gap-1.5 py-1 text-xs">
               {[
-                { id: 'all', label: 'All Statuses', dot: null },
-                { id: 'friends', label: 'Squad Only', dot: 'bg-indigo-400' },
-                { id: 'trending', label: 'Trending', dot: 'bg-pink-400' },
-                { id: 'open', label: 'Open Bounty', dot: 'bg-cyan-400' },
-                { id: 'active', label: 'In Progress', dot: 'bg-amber-400' },
-                { id: 'review', label: 'Awaiting Verdict', dot: 'bg-purple-400' },
-                { id: 'verified', label: 'Completed', dot: 'bg-emerald-400' },
+                { id: 'all', label: t('tabFeed'), dot: null },
+                { id: 'friends', label: t('squadWars'), dot: 'bg-indigo-400' },
+                { id: 'open', label: t('tabBounties'), dot: 'bg-cyan-400' },
+                { id: 'review', label: t('tabReview'), dot: 'bg-purple-400' },
+                { id: 'verified', label: t('tabVerified'), dot: 'bg-emerald-400' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -276,7 +285,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search challenges or @handles..."
+                placeholder={t('searchPlaceholder')}
                 className="w-full rounded-xl border border-slate-800 bg-[#0c1017] pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
               />
               {searchQuery && (
@@ -293,7 +302,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
           {/* Sector / Category Filter Chips */}
           <div className="flex items-center overflow-x-auto gap-2 pt-1 pb-1">
-            {CATEGORIES.map((cat) => {
+            {categoriesList.map((cat) => {
               const isActive = activeCategory === cat.id;
               return (
                 <button

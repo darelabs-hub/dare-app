@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Download, Smartphone, Share2, PlusSquare, X, Check, ShieldCheck } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import { playSound } from '../utils/soundEffects';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PWAInstallButtonProps {
   className?: string;
@@ -13,6 +14,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   variant = 'button'
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const { t } = useLanguage();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -48,8 +50,8 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                     <ShieldCheck className="h-3 w-3" /> PWA Ready
                   </span>
                 </div>
-                <h4 className="text-sm font-bold text-white mt-0.5">Install DARE directly on your Phone or Desktop</h4>
-                <p className="text-xs text-slate-400 mt-0.5">Instant launch, offline caching, and full-screen experience without App Store downloads.</p>
+                <h4 className="text-sm font-bold text-white mt-0.5">{t('pwaTitle')}</h4>
+                <p className="text-xs text-slate-400 mt-0.5">{t('pwaSubtitle')}</p>
               </div>
             </div>
 
@@ -60,7 +62,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
               >
                 <Download className="h-4 w-4" />
-                <span>Install App</span>
+                <span>{t('pwaInstallBtn')}</span>
               </button>
               <button
                 type="button"
@@ -153,7 +155,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         title="Install DARE on your device"
       >
         <Download className="h-3.5 w-3.5 text-indigo-400" />
-        <span className="hidden sm:inline">Install App</span>
+        <span className="hidden sm:inline">{t('installApp')}</span>
       </button>
 
       {/* iOS / General Safari Install Guide Modal */}
