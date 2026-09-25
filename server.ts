@@ -649,6 +649,8 @@ let dares: DareItem[] = [...initialDares];
 
 async function startServer() {
   const app = express();
+  // Enable 1-hop proxy trust for Render load balancer so req.ip and X-Forwarded headers are validated
+  app.set('trust proxy', 1);
   app.use((_req, res, next) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
     next();
@@ -674,11 +676,17 @@ async function startServer() {
     on: {
       proxyReq: (proxyReq, req, _res) => {
         // Forward client real IP for accurate geolocation in PostHog
-        const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+        // On Render, the edge load-balancer provides verified X-Real-IP and appends to X-Forwarded-For.
+        // With 'trust proxy 1', req.ip provides the verified client IP, preventing client header spoofing.
+        const clientIp = (req.headers['x-real-ip'] as string)?.trim() || (req as any).ip || req.socket.remoteAddress || '';
         if (clientIp) {
-          const existingXff = req.headers['x-forwarded-for'];
-          proxyReq.setHeader('x-forwarded-for', existingXff ? `${existingXff}, ${clientIp}` : clientIp);
           proxyReq.setHeader('x-real-ip', clientIp);
+          const existingXff = req.headers['x-forwarded-for'] as string;
+          if (existingXff) {
+            proxyReq.setHeader('x-forwarded-for', existingXff);
+          } else {
+            proxyReq.setHeader('x-forwarded-for', clientIp);
+          }
         }
         if (req.headers.host) {
           proxyReq.setHeader('x-forwarded-host', req.headers.host);
@@ -728,7 +736,7 @@ async function startServer() {
         return res.status(400).json({ error: 'event name required' });
       }
 
-      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+      const clientIp = (req.headers['x-real-ip'] as string)?.trim() || (req as any).ip || req.socket.remoteAddress || 'unknown';
       const eventRecord = {
         id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         event: eventData.event,

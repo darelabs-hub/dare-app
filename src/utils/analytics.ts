@@ -22,7 +22,8 @@ let isInitialized = false;
 // Default configured PostHog EU API Key
 const DEFAULT_POSTHOG_KEY = 'phc_umBihDRVL5X4FvUdYgNWUY3CFbickbDNmGB6oLQqdSJ4';
 // Reverse proxy endpoint hosted on the same domain (dare.me.uk/ingest/)
-const POSTHOG_PROXY_HOST = (import.meta.env.VITE_POSTHOG_HOST as string) || '/ingest';
+const rawHost = (import.meta.env.VITE_POSTHOG_HOST as string) || '/ingest';
+const POSTHOG_PROXY_HOST = rawHost.endsWith('/') && rawHost.length > 1 ? rawHost.slice(0, -1) : rawHost;
 const POSTHOG_UI_HOST = 'https://eu.posthog.com';
 
 export interface AnalyticsEvent {
