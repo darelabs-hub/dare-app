@@ -1809,6 +1809,7 @@ async function startServer() {
       targetType,
       targetUserHandle,
       creatorId,
+      creator: clientCreator,
       expiresInHours,
     } = req.body;
 
@@ -1820,7 +1821,14 @@ async function startServer() {
     }
 
     const parsedReward = Math.min(10000, Math.max(1, Number(rewardCred) || 50));
-    const creator = initialUsers.find(u => u.id === creatorId) || findOrCreateUser(creatorId || 'u_active_user');
+    const effectiveId = creatorId || clientCreator?.id || 'u_active_user';
+    let creator = initialUsers.find(u => u.id === effectiveId) || findOrCreateUser(effectiveId, clientCreator);
+    if (clientCreator) {
+      if (clientCreator.handle) creator.handle = clientCreator.handle;
+      if (clientCreator.name) creator.name = clientCreator.name;
+      if (clientCreator.avatar) creator.avatar = clientCreator.avatar;
+      if (typeof clientCreator.isPro === 'boolean') creator.isPro = clientCreator.isPro;
+    }
     const durationHours = Math.min(168, Math.max(1, Number(expiresInHours) || 48));
 
     const newDare: DareItem = {

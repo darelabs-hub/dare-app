@@ -275,6 +275,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
           targetType,
           targetUserHandle: targetType === 'direct' ? targetUserHandle.trim() : undefined,
           creatorId: currentUser.id,
+          creator: currentUser,
           expiresInHours,
         }),
       });
