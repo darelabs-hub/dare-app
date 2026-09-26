@@ -21,19 +21,74 @@ interface LocationNode {
 
 // Inner component that safely uses Google Maps
 const GoogleMapsOverlayView: React.FC<{ allNodes: LocationNode[] }> = ({ allNodes }) => {
+  const [center, setCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // technical initialization fallback
+  const [zoom, setZoom] = useState(3);
+  const [locStatus, setLocStatus] = useState<'requesting' | 'granted' | 'denied' | 'unavailable' | 'timeout'>('requesting');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocStatus('unavailable');
+      setErrorMessage('Geolocation is not supported by your browser environment.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setCenter({ lat, lng });
+        setZoom(14);
+        setLocStatus('granted');
+        setErrorMessage(null);
+      },
+      (err) => {
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            setLocStatus('denied');
+            setErrorMessage('Location access is disabled. Enable location permission to center the map on you.');
+            break;
+          case err.POSITION_UNAVAILABLE:
+            setLocStatus('unavailable');
+            setErrorMessage('Your location is currently unavailable.');
+            break;
+          case err.TIMEOUT:
+            setLocStatus('timeout');
+            setErrorMessage('Location request timed out. Try again.');
+            break;
+          default:
+            setLocStatus('unavailable');
+            setErrorMessage('Unable to retrieve device location.');
+            break;
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
+    );
+  }, []);
+
   return (
-    <Map
-      mapId="DEMO_MAP_ID"
-      defaultCenter={{ lat: 37.7749, lng: -122.4194 }}
-      defaultZoom={3}
-      internalUsageAttributionIds={["gmp_mcp_codeassist_v1_aistudio"]}
-      className="w-full h-full"
-    >
-      {allNodes.map(node => (
-        // Render simple markers or pins if needed
-        null
-      ))}
-    </Map>
+    <div className="relative w-full h-full">
+      <Map
+        mapId="DEMO_MAP_ID"
+        center={center}
+        zoom={zoom}
+        onCameraChanged={(ev) => {
+          setCenter(ev.detail.center);
+          setZoom(ev.detail.zoom);
+        }}
+        internalUsageAttributionIds={["gmp_mcp_codeassist_v1_aistudio"]}
+        className="w-full h-full"
+      >
+        {allNodes.map(node => null)}
+      </Map>
+
+      {locStatus !== 'granted' && errorMessage && (
+        <div className="absolute top-3 left-3 right-3 sm:left-3 sm:right-auto sm:max-w-sm bg-slate-950/90 border border-amber-500/40 text-amber-200 text-xs font-mono p-2.5 rounded-xl backdrop-blur-md shadow-xl z-10 flex items-center gap-2">
+          <span className="text-amber-400 shrink-0">⚠️</span>
+          <span>{errorMessage}</span>
+        </div>
+      )}
+    </div>
   );
 };
 
