@@ -1098,6 +1098,7 @@ export default function App() {
         )}
 
         {/* Dares Grid */}
+        <div id="dare-feed-section">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400 bg-cyan-950/40 glow-cyan">
@@ -1212,6 +1213,7 @@ export default function App() {
             </div>
           </div>
         )}
+        </div>
 
       </main>
 
