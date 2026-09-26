@@ -1001,6 +1001,7 @@ export default function App() {
         onTriggerOracle={() => setIsOracleSurpriseOpen(true)}
         onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
         onOpenDropZones={() => handleOpenDropZones('radar')}
+        onOpenCreateModal={() => setIsCreateModalOpen(true)}
         dailyMission={dailyMission}
         onStartMission={async (dare) => {
           setSearchQuery('');

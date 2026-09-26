@@ -379,7 +379,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
                 }`}
               >
                 <Users className="h-4 w-4" />
-                <span>Wider Public (Open Bounty)</span>
+                <span>🌍 Public Dare (Open Bounty)</span>
               </button>
 
               <button
@@ -396,7 +396,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
                 }`}
               >
                 <Target className="h-4 w-4" />
-                <span>Direct Friend / Peer</span>
+                <span>🔥 Dare a Friend (Direct)</span>
               </button>
             </div>
           </div>

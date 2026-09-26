@@ -35,6 +35,7 @@ interface HeroBannerProps {
   onOpenDropZones?: () => void;
   dailyMission?: any;
   onStartMission: (dare: DareItem) => void;
+  onOpenCreateModal?: () => void;
 }
 
 const CATEGORIES: { id: DareCategory | 'all'; label: string; icon: React.ReactNode; color: string }[] = [
@@ -60,6 +61,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onOpenDropZones,
   dailyMission,
   onStartMission,
+  onOpenCreateModal,
 }) => {
   const { t } = useLanguage();
 
@@ -95,6 +97,37 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl">
               {t('heroSubtitle')}
             </p>
+
+            {/* Primary Product Action CTAs */}
+            <div className="mt-4 flex items-center gap-3 flex-wrap">
+              {onOpenCreateModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('pop');
+                    onOpenCreateModal();
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 px-5 py-3 text-sm font-bold text-slate-950 hover:from-indigo-400 hover:to-cyan-400 glow-cyan transition-all cursor-pointer shadow-[0_0_25px_rgba(6,182,212,0.3)] active:scale-95"
+                >
+                  <Sparkles className="h-4 w-4 text-slate-950" />
+                  <span>🔥 Dare Someone</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  const el = document.getElementById('dare-feed-section') || document.querySelector('.dare-feed');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl border border-indigo-500/40 bg-indigo-950/40 px-5 py-3 text-sm font-bold text-indigo-200 hover:border-indigo-400 hover:bg-indigo-900/50 transition-all cursor-pointer active:scale-95"
+              >
+                <Compass className="h-4 w-4 text-indigo-400" />
+                <span>🎯 Find a Dare</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Action Triggers */}
