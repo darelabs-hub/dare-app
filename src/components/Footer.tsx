@@ -143,9 +143,9 @@ export const Footer: React.FC<FooterProps> = ({
           </ul>
         </div>
       </div>
-      <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
+      <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-white gap-4">
         <div>
-          &copy; 2026 DARE DAY LABS. ALL RIGHTS RESERVED. ALL DARES ARE UNDERTAKEN VOLUNTARILY AND AT PARTICIPANT RISK.
+          &copy; 2026 DARE LABS. ALL RIGHTS RESERVED. ALL DARES ARE UNDERTAKEN VOLUNTARILY AND AT PARTICIPANT RISK.
         </div>
         <div className="flex items-center gap-4 text-xs font-medium">
           <a 
