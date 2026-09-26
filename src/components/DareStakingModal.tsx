@@ -204,7 +204,7 @@ export const DareStakingModal: React.FC<DareStakingModalProps> = ({
               <Trophy className="h-4 w-4 text-amber-400" />
               <span className="text-slate-400">Community Jackpot Pool:</span>
             </div>
-            <span className="font-black text-amber-300">{jackpotData?.jackpotPool.toLocaleString() || '14,850'} CR</span>
+            <span className="font-black text-amber-300">{(jackpotData?.jackpotPool ?? 0).toLocaleString()} CR</span>
           </div>
 
           {/* Feedback */}

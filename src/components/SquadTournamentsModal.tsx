@@ -195,6 +195,12 @@ export const SquadTournamentsModal: React.FC<SquadTournamentsModalProps> = ({
               <div className="py-12 text-center text-xs font-mono text-slate-400">
                 Synchronizing battle brackets...
               </div>
+            ) : tournaments.length === 0 ? (
+              <div className="py-12 text-center text-xs font-mono text-slate-400 rounded-xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col items-center justify-center space-y-2">
+                <Trophy className="h-8 w-8 text-slate-600 mb-1" />
+                <p className="font-bold text-sm text-slate-300">NO TOURNAMENTS AVAILABLE</p>
+                <p className="text-[11px] text-slate-500 max-w-xs">Check back soon for new squad wars and official battle brackets.</p>
+              </div>
             ) : (
               <div className="space-y-2.5">
                 {tournaments.map((t) => {
@@ -513,7 +519,7 @@ export const SquadTournamentsModal: React.FC<SquadTournamentsModalProps> = ({
               </div>
             ) : (
               <div className="py-20 text-center text-slate-400 font-mono text-xs">
-                Select a tournament to view live bracket standings
+                {tournaments.length === 0 ? 'No tournaments currently scheduled.' : 'Select a tournament to view live bracket standings'}
               </div>
             )}
           </div>

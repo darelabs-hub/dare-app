@@ -264,7 +264,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     ctx.fillStyle = '#94a3b8';
     const creatorHandleDisplay = dare.creator?.handle 
       ? (dare.creator.handle.startsWith('@') ? dare.creator.handle : `@${dare.creator.handle}`)
-      : '@DARE_OPS';
+      : (dare.creator?.name || 'COMMUNITY');
     ctx.fillText(`ISSUED BY ${creatorHandleDisplay}`, 65, 595);
 
     ctx.font = '16px monospace';
@@ -688,7 +688,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
                   <span className={`font-bold ${activeTheme.accentText}`}>
                     {dare.creator?.handle 
                       ? (dare.creator.handle.startsWith('@') ? dare.creator.handle : `@${dare.creator.handle}`)
-                      : '@DARE_OPS'}
+                      : (dare.creator?.name || 'COMMUNITY')}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-slate-300">

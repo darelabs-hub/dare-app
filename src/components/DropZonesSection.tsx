@@ -116,8 +116,19 @@ export const DropZonesSection: React.FC<DropZonesSectionProps> = ({
       <div className="pt-6 relative z-10 space-y-5">
         
         {/* Active Beacons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {dropZones.map((zone) => {
+        {dropZones.length === 0 ? (
+          <div className="py-12 text-center text-xs font-mono text-slate-400 rounded-2xl border border-white/10 bg-slate-900/40 p-8 flex flex-col items-center justify-center space-y-2">
+            <Radio className="h-8 w-8 text-cyan-500/50 animate-pulse mb-1" />
+            <p className="font-bold text-sm text-slate-300">
+              No drop zones or AR beacons deployed in this area yet.
+            </p>
+            <p className="text-[11px] text-slate-500 max-w-sm">
+              Operatives have not dropped any geofenced bounties here. Deploy a new zone below to initiate grid telemetry.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {dropZones.map((zone) => {
             const isClaimed = zone.claimedUserIds?.includes(currentUser.id);
 
             return (
@@ -194,6 +205,7 @@ export const DropZonesSection: React.FC<DropZonesSectionProps> = ({
             );
           })}
         </div>
+        )}
 
         {/* Bottom CTA Launch Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-slate-950/80 border border-white/5 text-xs font-mono">

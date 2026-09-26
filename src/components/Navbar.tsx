@@ -61,8 +61,6 @@ interface NavbarProps {
   onDeleteNotification: (id: string) => void;
   onClearAllNotifications: () => void;
   onNavigateToDare: (dareId: string) => void;
-  onSimulateNotification?: () => void;
-  onSimulateExpiryNotification?: () => void;
   stats?: {
     totalDares: number;
     totalCredPool: number;
@@ -100,8 +98,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onDeleteNotification,
   onClearAllNotifications,
   onNavigateToDare,
-  onSimulateNotification,
-  onSimulateExpiryNotification,
   stats,
   searchQuery,
   setSearchQuery,
@@ -287,8 +283,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               onDeleteNotification={onDeleteNotification}
               onClearAll={onClearAllNotifications}
               onNavigateToDare={onNavigateToDare}
-              onSimulateNotification={onSimulateNotification}
-              onSimulateExpiryNotification={onSimulateExpiryNotification}
             />
           </div>
 

@@ -197,9 +197,11 @@ export const DailyMissionWidget: React.FC<DailyMissionWidgetProps> = ({
                 <span className="text-purple-300 font-bold">
                   +{mission.rewardCred * 2} XP
                 </span>
-                <span className="text-slate-400 text-[11px]">
-                  Created by {mission.creator?.handle || '@grid_arbiter'}
-                </span>
+                {mission.creator?.handle && (
+                  <span className="text-slate-400 text-[11px]">
+                    Created by {mission.creator.handle}
+                  </span>
+                )}
               </div>
             </div>
 

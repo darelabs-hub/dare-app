@@ -38,7 +38,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'boosters' | 'cosmetics' | 'titles' | 'inventory'>('boosters');
   const [items, setItems] = useState<ArmoryItem[]>([]);
-  const [jackpotPool, setJackpotPool] = useState<number>(14850);
+  const [jackpotPool, setJackpotPool] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -56,7 +56,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
       if (res.ok) {
         const data = await res.json();
         setItems(data.items || []);
-        if (data.jackpotPool) setJackpotPool(data.jackpotPool);
+        if (typeof data.jackpotPool === 'number') setJackpotPool(data.jackpotPool);
       }
     } catch (err) {
       console.error('Failed to load armory items', err);

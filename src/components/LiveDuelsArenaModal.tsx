@@ -130,45 +130,6 @@ export const LiveDuelsArenaModal: React.FC<LiveDuelsArenaModalProps> = ({
     return () => clearInterval(interval);
   }, [activeDuel]);
 
-  // Simulated AI Opponent progress in live match
-  useEffect(() => {
-    if (!activeDuel || activeDuel.status !== 'in_progress') return;
-
-    const simInterval = setInterval(() => {
-      setActiveDuel((prev) => {
-        if (!prev || prev.status !== 'in_progress') return prev;
-
-        const isUserChallenger = prev.challenger.id === currentUser.id;
-        const opponent = isUserChallenger ? prev.opponent : prev.challenger;
-
-        if (opponent.progressPercent < 95 && Math.random() > 0.4) {
-          const increment = Math.floor(Math.random() * 8) + 4;
-          const newProgress = Math.min(95, opponent.progressPercent + increment);
-          
-          const actions = [
-            'Executing syntax analysis...',
-            'Compiling binary artifacts...',
-            'Validating test assertion 3/4...',
-            'Preparing live camera verification...',
-            'Rendering telemetry frame...'
-          ];
-          const newAction = actions[Math.floor(Math.random() * actions.length)];
-
-          return {
-            ...prev,
-            [isUserChallenger ? 'opponent' : 'challenger']: {
-              ...opponent,
-              progressPercent: newProgress,
-              recentAction: newAction,
-            },
-          };
-        }
-        return prev;
-      });
-    }, 3500);
-
-    return () => clearInterval(simInterval);
-  }, [activeDuel, currentUser.id]);
 
   const handleTimeExpired = async () => {
     if (!activeDuel) return;
@@ -281,8 +242,8 @@ export const LiveDuelsArenaModal: React.FC<LiveDuelsArenaModalProps> = ({
       setIsSubmittingProof(true);
       playSound('laser');
 
-      const mediaUrl = proofMediaUrl.trim() || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80';
-      const note = proofNote.trim() || 'Live speed proof submitted and verified on terminal clock.';
+      const mediaUrl = proofMediaUrl.trim();
+      const note = proofNote.trim();
 
       const res = await fetch(`/api/duels/${activeDuel.id}/submit-proof`, {
         method: 'POST',
@@ -487,6 +448,12 @@ export const LiveDuelsArenaModal: React.FC<LiveDuelsArenaModalProps> = ({
               {loading ? (
                 <div className="py-16 text-center text-xs font-mono text-slate-400">
                   Synchronizing quantum duel streams...
+                </div>
+              ) : duels.length === 0 ? (
+                <div className="py-16 text-center text-xs font-mono text-slate-400 rounded-2xl border border-slate-800 bg-slate-900/40 p-8 flex flex-col items-center justify-center space-y-2">
+                  <Swords className="h-8 w-8 text-pink-500/50 mb-1" />
+                  <p className="font-bold text-sm text-slate-300">NO ACTIVE DUELS IN ARENA</p>
+                  <p className="text-[11px] text-slate-500 max-w-sm">Deploy a 1v1 challenge above to invite rival operatives into the arena.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

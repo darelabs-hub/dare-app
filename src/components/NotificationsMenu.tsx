@@ -35,8 +35,6 @@ interface NotificationsMenuProps {
   onDeleteNotification: (id: string) => void;
   onClearAll: () => void;
   onNavigateToDare: (dareId: string) => void;
-  onSimulateNotification?: () => void;
-  onSimulateExpiryNotification?: () => void;
 }
 
 export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
@@ -48,8 +46,6 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
   onDeleteNotification,
   onClearAll,
   onNavigateToDare,
-  onSimulateNotification,
-  onSimulateExpiryNotification,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filterTab, setFilterTab] = useState<'all' | 'social' | 'consensus'>('all');
@@ -491,34 +487,6 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
                 <BellRing className="h-3 w-3 text-indigo-400" />
                 <span>Push Alert</span>
               </button>
-
-              {onSimulateExpiryNotification && (
-                <button
-                  type="button"
-                  id="simulate-expiry-notification-btn"
-                  onClick={() => {
-                    onSimulateExpiryNotification();
-                  }}
-                  className="flex items-center gap-1 rounded-lg border border-pink-500/30 bg-pink-950/40 px-2 py-1 text-[10px] font-mono font-bold text-pink-300 hover:border-pink-400 hover:bg-pink-900/50 transition-all cursor-pointer"
-                >
-                  <Clock className="h-3 w-3 text-pink-400" />
-                  <span>Simulate Expiry</span>
-                </button>
-              )}
-
-              {onSimulateNotification && (
-                <button
-                  type="button"
-                  id="simulate-notification-btn"
-                  onClick={() => {
-                    onSimulateNotification();
-                  }}
-                  className="flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-950/40 px-2 py-1 text-[10px] font-mono font-bold text-cyan-300 hover:border-cyan-400 hover:bg-cyan-900/50 transition-all cursor-pointer"
-                >
-                  <Sparkles className="h-3 w-3 text-cyan-400" />
-                  <span>Simulate Event</span>
-                </button>
-              )}
             </div>
           </div>
         </div>

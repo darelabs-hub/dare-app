@@ -65,26 +65,8 @@ export const ProofGalleryModal: React.FC<ProofGalleryModalProps> = ({
         console.error(err);
       }
       
-      // Fallback synthetic dare wrapper to view telemetry
-      const fallbackDare: DareItem = {
-        id: proofItem.dareId,
-        title: proofItem.dareTitle,
-        description: proofItem.caption,
-        proofRequirement: 'Verified execution telemetry',
-        category: 'creative',
-        difficulty: 'Level 2 - Moderate',
-        rewardCred: proofItem.rewardCred || 50,
-        creator: { id: 'u_dare_ops', handle: '@DARE_OPS', name: 'DARE_OPS', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
-        targetType: 'public',
-        status: 'verified',
-        createdAt: proofItem.submittedAt,
-        likes: 0,
-        likedUserIds: [],
-        comments: [],
-        proof: proofItem,
-      };
-      onClose();
-      onSelectProofDare(fallbackDare);
+      // Dare not found in active records
+      alert('This challenge record is no longer available in the active directory.');
     }
   };
 

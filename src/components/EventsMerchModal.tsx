@@ -50,90 +50,7 @@ interface EventItemWithDares extends EventItem {
   dares: ProposedDare[];
 }
 
-const MOCK_EVENTS_WITH_DARES: EventItemWithDares[] = [
-  { 
-    id: 'e1', 
-    title: 'Cyber-Sprint 2077', 
-    date: 'Oct 15, 2026', 
-    location: 'Neo-Tokyo Sector 7', 
-    description: 'Annual high-speed tech-run through the digital slums. Assemble your crew, calibrate your bio-telemetry, and challenge the grid!',
-    dares: [
-      {
-        id: 'pd1',
-        title: 'Neon Dash Midnight Run',
-        category: 'Athletics & Cardio',
-        difficulty: 'HARD',
-        author: '@sprint_boss',
-        description: 'Complete a continuous 5K run under midnight neon lights with biometrics uploaded to the feed.',
-        image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=600&auto=format&fit=crop&q=80',
-        credReward: 450,
-        detailedRequirements: [
-          'Run must take place after 10:00 PM local time.',
-          'Upload screenshot of map trace with speed metrics.',
-          'Must keep active neon gear/reflective strip visible in validation proof.'
-        ],
-        initialVotes: 242
-      },
-      {
-        id: 'pd2',
-        title: 'Vertical Stair Gauntlet',
-        category: 'Stamina Gauntlet',
-        difficulty: 'MEDIUM',
-        author: '@apex_climb',
-        description: 'Climb a minimum of 40 flights of stairs in a single workout block to secure maximum altitude gains.',
-        image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80',
-        credReward: 300,
-        detailedRequirements: [
-          'Climb 40 continuous levels or stairmaster equivalent.',
-          'Prove completion via smartband data displaying height meters gained.',
-          'No resting allowed for more than 45 seconds between levels.'
-        ],
-        initialVotes: 189
-      }
-    ]
-  },
-  { 
-    id: 'e2', 
-    title: 'Node-Hackathon Meetup', 
-    date: 'Nov 02, 2026', 
-    location: 'Data Hub, Central Plaza', 
-    description: 'Collaborative hacking, hardware overclocking, and networking event for all local digital gladiators.',
-    dares: [
-      {
-        id: 'pd3',
-        title: 'Deep Focus Dev Session',
-        category: 'Focus & Creativity',
-        difficulty: 'NETRUNNER',
-        author: '@code_runner',
-        description: 'Implement an active code component or module continuously for 4 hours with no external distractions.',
-        image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=600&auto=format&fit=crop&q=80',
-        credReward: 600,
-        detailedRequirements: [
-          'Record an uninterrupted screen capture timeline.',
-          'Commit code to GitHub with detailed telemetry logs.',
-          'Verify no messaging platforms or social feeds accessed during the sprint.'
-        ],
-        initialVotes: 351
-      },
-      {
-        id: 'pd4',
-        title: 'Zero-Sugar Hydro Protocol',
-        category: 'Endurance Nutrition',
-        difficulty: 'EASY',
-        author: '@clean_grid',
-        description: 'Keep your system pure! Drink only natural water and clean hydration salts for 36 hours.',
-        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?w=600&auto=format&fit=crop&q=80',
-        credReward: 200,
-        detailedRequirements: [
-          'Zero coffee, sodas, energy drinks, or flavored boosters.',
-          'Submit visual checkpoints every 12 hours with timed timestamps.',
-          'Must document a minimum total water intake of 4 Liters.'
-        ],
-        initialVotes: 124
-      }
-    ]
-  }
-];
+const EVENTS_WITH_DARES: EventItemWithDares[] = [];
 
 interface MerchItemCustom extends MerchItem {
   subtitle?: string;
@@ -151,16 +68,11 @@ const MOCK_MERCH: MerchItemCustom[] = [
 
 export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'events' | 'merch'>('events');
-  const [selectedEventId, setSelectedEventId] = useState<string>('e1');
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [expandedDareId, setExpandedDareId] = useState<string | null>(null);
   
   // Dynamic user voting state
-  const [votesState, setVotesState] = useState<Record<string, number>>({
-    pd1: 242,
-    pd2: 189,
-    pd3: 351,
-    pd4: 124
-  });
+  const [votesState, setVotesState] = useState<Record<string, number>>({});
   const [votedDares, setVotedDares] = useState<Record<string, boolean>>({});
   const [notifiedMerchIds, setNotifiedMerchIds] = useState<Record<string, boolean>>({});
   const [notifiedAll, setNotifiedAll] = useState(false);
@@ -210,7 +122,7 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
 
   if (!isOpen) return null;
 
-  const currentEvent = MOCK_EVENTS_WITH_DARES.find(e => e.id === selectedEventId) || MOCK_EVENTS_WITH_DARES[0];
+  const currentEvent = EVENTS_WITH_DARES.find(e => e.id === selectedEventId) || EVENTS_WITH_DARES[0];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
@@ -278,13 +190,24 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
         {/* Content Container */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 bg-[#090d18]">
           {activeTab === 'events' ? (
+            EVENTS_WITH_DARES.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                <Calendar className="h-10 w-10 text-slate-600 animate-pulse" />
+                <p className="font-mono text-sm font-bold text-slate-300">
+                  No official events currently scheduled. Check back soon.
+                </p>
+                <p className="text-xs text-slate-500 max-w-sm">
+                  Official DARE convergence dates and physical community summits will appear here once announced.
+                </p>
+              </div>
+            ) : (
             <div className="space-y-6">
               
               {/* Event Selector Row */}
               <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between border-b border-slate-800/60 pb-4">
                 <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest text-slate-400">Select active convergence:</span>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {MOCK_EVENTS_WITH_DARES.map(event => (
+                  {EVENTS_WITH_DARES.map(event => (
                     <button
                       key={event.id}
                       onClick={() => {
@@ -487,8 +410,8 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
                   })}
                 </div>
               </div>
-
             </div>
+            )
           ) : (
             <div className="space-y-5">
               {/* Coming Soon Announcement Banner */}

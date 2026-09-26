@@ -173,11 +173,6 @@ export const ProofModal: React.FC<ProofModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleSelectSampleMedia = (url: string) => {
-    stopCamera();
-    setMediaUrl(url);
-    playSound('click');
-  };
 
   const handleRunGeminiScan = async () => {
     if (!caption.trim() && !mediaUrl.trim()) {
@@ -485,29 +480,6 @@ export const ProofModal: React.FC<ProofModalProps> = ({
               </div>
             </div>
 
-            {/* Quick Demo Media Presets (Photos & Short Videos) */}
-            <div className="mt-2.5">
-              <span className="text-[10px] font-mono text-slate-400 block mb-1">
-                Quick Demo Presets (Photos & Short Video Clips):
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: '💻 Workspace Photo', url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80' },
-                  { label: '🌿 Outdoor Photo', url: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&auto=format&fit=crop&q=80' },
-                  { label: '🎬 Screencast Video Clip', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' },
-                  { label: '🏃 Fitness Video Clip', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4' },
-                ].map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => handleSelectSampleMedia(preset.url)}
-                    className="rounded border border-slate-700 bg-slate-800/60 px-2.5 py-1 text-[10px] font-mono text-indigo-300 hover:border-indigo-500 hover:bg-slate-700/60 transition-colors"
-                  >
-                    + {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Preview Selected Media */}
             {mediaUrl && (

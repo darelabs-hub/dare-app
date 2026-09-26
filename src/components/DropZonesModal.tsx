@@ -1101,8 +1101,19 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
               </div>
 
               {/* Grid List of Available Drop Zones */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredZones.map((zone) => {
+              {filteredZones.length === 0 ? (
+                <div className="py-16 text-center text-xs font-mono text-slate-400 rounded-2xl border border-white/10 bg-slate-900/40 p-8 flex flex-col items-center justify-center space-y-2">
+                  <Radio className="h-8 w-8 text-cyan-500/50 animate-pulse mb-1" />
+                  <p className="font-bold text-sm text-slate-300">
+                    No drop zones or AR beacons deployed in this area yet.
+                  </p>
+                  <p className="text-[11px] text-slate-500 max-w-sm">
+                    Be the pioneer: fund and deploy an AR geofenced drop beacon to broadcast bounties to operatives nearby.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredZones.map((zone) => {
                   const isClaimed = zone.claimedUserIds?.includes(currentUser.id);
                   const isSelected = selectedZone?.id === zone.id;
 
@@ -1158,6 +1169,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                   );
                 })}
               </div>
+              )}
 
             </div>
           )}

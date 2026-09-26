@@ -56,7 +56,7 @@ export const HeatmapView: React.FC<HeatmapViewProps> = ({ dares = [], onOpenDrop
           locationName: `${d.location.lat.toFixed(3)}°N, ${d.location.lng.toFixed(3)}°W`,
           position: [d.location.lng, d.location.lat],
           status: d.status === 'verified' ? 'verified' : 'active',
-          handle: d.acceptedBy?.handle || d.creator?.handle || '@challenger',
+          handle: d.acceptedBy?.handle || d.creator?.handle || '',
         });
       }
     });
