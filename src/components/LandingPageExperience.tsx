@@ -39,6 +39,7 @@ interface LandingPageExperienceProps {
   dailyMission?: any;
   onStartMission: (dare: DareItem) => void;
   onOpenCreateModal: () => void;
+  onExploreChallenges?: () => void;
   onOpenDropZones: () => void;
   onOpenLiveDuels: () => void;
   onOpenTournaments: () => void;
@@ -55,6 +56,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
   dailyMission,
   onStartMission,
   onOpenCreateModal,
+  onExploreChallenges,
   onOpenDropZones,
   onOpenLiveDuels,
   onOpenTournaments,
@@ -82,6 +84,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
     setIsDailyAccepted(true);
     if (dailyMission?.dare) {
       onStartMission(dailyMission.dare);
+    } else if (onExploreChallenges) {
+      onExploreChallenges();
     } else {
       const el = document.getElementById('dare-feed-section');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -90,6 +94,10 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
   const scrollToFeed = () => {
     playSound('click');
+    if (onExploreChallenges) {
+      onExploreChallenges();
+      return;
+    }
     const el = document.getElementById('dare-feed-section') || document.querySelector('.dare-feed');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });

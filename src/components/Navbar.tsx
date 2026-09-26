@@ -68,6 +68,7 @@ interface NavbarProps {
   };
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  onNavigateToPath?: (path: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -101,6 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   stats,
   searchQuery,
   setSearchQuery,
+  onNavigateToPath,
 }) => {
   const { t } = useLanguage();
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
@@ -145,7 +147,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-6">
           <div 
             className="flex items-center cursor-pointer select-none shrink-0" 
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              if (onNavigateToPath) {
+                onNavigateToPath('/');
+              } else {
+                window.location.reload();
+              }
+            }}
             title="DARE - Home"
           >
             <DareDayLogo size={42} showText={true} />
@@ -156,8 +164,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => {
                 playSound('click');
-                const el = document.getElementById('dare-feed-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (onNavigateToPath) {
+                  onNavigateToPath('/app');
+                } else {
+                  const el = document.getElementById('dare-feed-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
               }}
               className="hover:text-pink-400 transition-colors cursor-pointer"
             >
@@ -166,8 +178,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => {
                 playSound('click');
-                const el = document.getElementById('how-it-works-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (window.location.pathname !== '/' && onNavigateToPath) {
+                  onNavigateToPath('/');
+                  setTimeout(() => {
+                    const el = document.getElementById('how-it-works-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                } else {
+                  const el = document.getElementById('how-it-works-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
               }}
               className="hover:text-purple-400 transition-colors cursor-pointer"
             >
@@ -176,8 +196,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => {
                 playSound('click');
-                const el = document.getElementById('community-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (window.location.pathname !== '/' && onNavigateToPath) {
+                  onNavigateToPath('/');
+                  setTimeout(() => {
+                    const el = document.getElementById('community-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                } else {
+                  const el = document.getElementById('community-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
               }}
               className="hover:text-cyan-400 transition-colors cursor-pointer"
             >

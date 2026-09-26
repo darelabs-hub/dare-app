@@ -987,38 +987,47 @@ export default function App() {
         stats={stats}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        onNavigateToPath={navigateTo}
       />
 
-      {/* DARE — High-Energy Cinematic Landing Page Experience */}
-      <LandingPageExperience
-        currentUser={currentUser}
-        dailyMission={dailyMission}
-        onStartMission={async (dare) => {
-          setSearchQuery('');
-          setActiveCategory('all');
-          setActiveTab('feed');
-          if (dare.status === 'open') {
-            await handleAcceptDare(dare);
-          }
-          setHighlightedDareId(dare.id);
-          setTimeout(() => {
-            const el = document.getElementById(`dare-card-${dare.id}`);
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      {/* Route Separation: Public Marketing Landing Page (/) vs Authenticated/Application Dashboard (/app) */}
+      {!currentPath.startsWith('/app') ? (
+        /* DARE — High-Energy Cinematic Landing Page Experience */
+        <LandingPageExperience
+          currentUser={currentUser}
+          dailyMission={dailyMission}
+          onStartMission={async (dare) => {
+            navigateTo('/app');
+            setSearchQuery('');
+            setActiveCategory('all');
+            setActiveTab('feed');
+            if (dare.status === 'open') {
+              await handleAcceptDare(dare);
             }
-          }, 250);
-        }}
-        onOpenCreateModal={() => setIsCreateModalOpen(true)}
-        onOpenDropZones={() => handleOpenDropZones('radar')}
-        onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-        onOpenTournaments={() => setIsTournamentsOpen(true)}
-        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
-        onOpenArmory={() => setIsArmoryOpen(true)}
-        onAcceptDare={handleAcceptDare}
-        onViewProof={(dare) => setProofViewingDare(dare)}
-        dares={dares}
-      />
+            setHighlightedDareId(dare.id);
+            setTimeout(() => {
+              const el = document.getElementById(`dare-card-${dare.id}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 300);
+          }}
+          onExploreChallenges={() => {
+            navigateTo('/app');
+          }}
+          onOpenCreateModal={() => setIsCreateModalOpen(true)}
+          onOpenDropZones={() => handleOpenDropZones('radar')}
+          onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
+          onOpenTournaments={() => setIsTournamentsOpen(true)}
+          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+          onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
+          onOpenArmory={() => setIsArmoryOpen(true)}
+          onAcceptDare={handleAcceptDare}
+          onViewProof={(dare) => setProofViewingDare(dare)}
+          dares={dares}
+        />
+      ) : (
+        <>
 
       {/* Hero Banner with Filters & Quick Oracle Button */}
       <HeroBanner
@@ -1248,6 +1257,8 @@ export default function App() {
         </div>
 
       </main>
+      </>
+      )}
 
 
 
