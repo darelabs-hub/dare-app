@@ -106,15 +106,15 @@ export default function App() {
       id: `guest_${randomSuffix}`,
       handle: `@guest_${randomNum}`,
       name: 'Guest Operative',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      cred: 100,
+      avatar: '/logo.png',
+      cred: 0,
       xp: 0,
       level: 1,
       rank: 'New Recruit',
       completedDaresCount: 0,
       createdDaresCount: 0,
-      streak: 1,
-      badges: ['⚡ New Recruit'],
+      streak: 0,
+      badges: [],
       isPro: false,
       inventory: [],
       activeBoosters: [],
@@ -391,7 +391,7 @@ export default function App() {
         
         const defaultAvatar = isDareOpsAccount 
           ? '/logo.png' 
-          : (user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
+          : (user.photoURL || '/logo.png');
         
         const defaultName = isDareOpsAccount 
           ? 'DARE_OPS' 
@@ -447,15 +447,15 @@ export default function App() {
           name: resolvedName,
           handle: resolvedHandle,
           avatar: resolvedAvatar,
-          cred: savedData?.cred !== undefined ? savedData.cred : (localCustom?.cred !== undefined ? localCustom.cred : (isDareOpsAccount ? 500 : 100)),
-          xp: savedData?.xp || localCustom?.xp || (isDareOpsAccount ? 1200 : 0),
-          level: savedData?.level || localCustom?.level || (isDareOpsAccount ? 5 : 1),
-          rank: savedData?.rank || localCustom?.rank || (isDareOpsAccount ? 'Syndicate Veteran' : 'New Recruit'),
+          cred: savedData?.cred !== undefined ? savedData.cred : (localCustom?.cred !== undefined ? localCustom.cred : 0),
+          xp: savedData?.xp !== undefined ? savedData.xp : (localCustom?.xp !== undefined ? localCustom.xp : 0),
+          level: savedData?.level !== undefined ? savedData.level : (localCustom?.level !== undefined ? localCustom.level : 1),
+          rank: savedData?.rank || localCustom?.rank || 'New Recruit',
           completedDaresCount: savedData?.completedDaresCount || localCustom?.completedDaresCount || 0,
           createdDaresCount: savedData?.createdDaresCount || localCustom?.createdDaresCount || 0,
-          streak: savedData?.streak || localCustom?.streak || (isDareOpsAccount ? 7 : 1),
+          streak: savedData?.streak !== undefined ? savedData.streak : (localCustom?.streak !== undefined ? localCustom.streak : 0),
           lastActiveDate: savedData?.lastActiveDate || new Date().toISOString().split('T')[0],
-          badges: savedData?.badges || localCustom?.badges || (isDareOpsAccount ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : ['⚡ Active Operative']),
+          badges: savedData?.badges || localCustom?.badges || [],
           isPro: savedData?.isPro !== undefined ? savedData.isPro : (localCustom?.isPro !== undefined ? localCustom.isPro : isDareOpsAccount),
           proTier: savedData?.proTier || localCustom?.proTier || (isDareOpsAccount ? 'ultra' : null),
           inventory: savedData?.inventory || localCustom?.inventory || [],
@@ -821,79 +821,6 @@ export default function App() {
     }, 250);
   };
 
-  // Live incoming alert simulation for immediate testing
-  const handleSimulateNotification = () => {
-    const otherUsers = users.filter((u) => u.id !== currentUser.id);
-    const randomActor = otherUsers[Math.floor(Math.random() * otherUsers.length)] || {
-      handle: '@Vortex_99',
-      name: 'Vortex Pulse',
-      avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150',
-    };
-
-    const sampleDares = dares.length > 0 ? dares : [
-      { id: 'dare_001', title: 'Code an entire Retro Synthwave Terminal in 15 Minutes Blindfolded' },
-      { id: 'dare_002', title: '10-Minute Dark Synth Beat Loop' },
-    ];
-    const randomDare = sampleDares[Math.floor(Math.random() * sampleDares.length)];
-
-    const simTypes = [
-      {
-        type: 'dare_accepted' as const,
-        title: 'Dare Accepted!',
-        message: `${randomActor.handle} accepted your challenge "${randomDare.title}"`,
-      },
-      {
-        type: 'proof_voted' as const,
-        title: 'Evidence Voted LEGIT!',
-        message: `${randomActor.handle} verified your proof for "${randomDare.title}" as LEGIT`,
-        voteType: 'legit' as const,
-      },
-      {
-        type: 'comment_received' as const,
-        title: 'New Comment / Heckle',
-        message: `${randomActor.handle} commented: "Total cyber wizardry! Next level execution."`,
-      },
-    ];
-    const picked = simTypes[Math.floor(Math.random() * simTypes.length)];
-
-    const newSimNotif: NotificationItem = {
-      id: `sim_${Date.now()}`,
-      userId: currentUser.id,
-      type: picked.type,
-      title: picked.title,
-      message: picked.message,
-      dareId: randomDare.id,
-      dareTitle: randomDare.title,
-      actorHandle: randomActor.handle,
-      actorName: randomActor.name,
-      actorAvatar: randomActor.avatar,
-      voteType: picked.voteType,
-      read: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    setNotifications((prev) => [newSimNotif, ...prev]);
-    setUnreadNotificationsCount((c) => c + 1);
-    playSound('notification');
-  };
-
-  const handleSimulateExpiryNotification = () => {
-    // Find an active accepted dare, or create a mock accepted dare that expires in 45 minutes
-    const activeAccepted = dares.find(d => d.status === 'accepted' && d.acceptedBy?.id === currentUser.id);
-    const targetTitle = activeAccepted ? activeAccepted.title : 'Hyper-Overclocked Core Hackathon';
-    const targetId = activeAccepted ? activeAccepted.id : `mock_${Date.now()}`;
-    const mockExpiryToast: ExpiryToastData = {
-      id: `${targetId}_${Date.now()}`,
-      dareId: targetId,
-      dareTitle: targetTitle,
-      timeLeftMinutes: 45,
-      expiresAtString: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
-    };
-
-    setExpiryReminderToast(mockExpiryToast);
-    playSound('notification');
-  };
-
   const handleOpenUserProfile = async (
     userIdOrHandle: string, 
     tab?: 'heatmap' | 'location-map' | 'completed' | 'created' | 'settings' | 'squad' | 'rivalry'
@@ -946,37 +873,37 @@ export default function App() {
         matchingDare.creator.handle.toLowerCase() === handleWithoutAt ||
         matchingDare.creator.name.toLowerCase() === cleanIdentifier.toLowerCase();
 
-      const target = isCreator ? matchingDare.creator : matchingDare.acceptedBy!;
-      const syntheticProfile: UserProfile = {
+      const target: any = isCreator ? matchingDare.creator : matchingDare.acceptedBy!;
+      const dareUser: UserProfile = {
         id: target.id || `u_${Date.now().toString(36)}`,
         handle: target.handle?.startsWith('@') ? target.handle : `@${target.handle || 'operative'}`,
         name: target.name || 'DARE Operative',
-        avatar: target.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        cred: 500,
-        xp: 850,
-        level: 4,
-        rank: target.isPro ? 'Syndicate Veteran' : 'Netrunner Operative',
+        avatar: target.avatar || '/logo.png',
+        cred: target.cred || 0,
+        xp: target.xp || 0,
+        level: target.level || 1,
+        rank: target.rank || (target.isPro ? 'Syndicate Veteran' : 'New Recruit'),
         completedDaresCount: dares.filter((d) => d.acceptedBy?.id === target.id && d.status === 'verified').length,
         createdDaresCount: dares.filter((d) => d.creator.id === target.id).length || (isCreator ? 1 : 0),
-        streak: 5,
-        lastActiveDate: new Date().toISOString().split('T')[0],
-        badges: target.isPro ? ['⚡ Syndicate Overlord', '👑 Cyber Pioneer'] : ['⚡ Verified Operative'],
+        streak: target.streak || 0,
+        lastActiveDate: target.lastActiveDate || new Date().toISOString().split('T')[0],
+        badges: target.badges || (target.isPro ? ['👑 PRO Operative'] : []),
         isPro: !!target.isPro,
         proTier: target.proTier || (target.isPro ? 'ultra' : null),
-        inventory: [],
-        activeBoosters: [],
-        seasonPassLevel: 3,
-        seasonPassXp: 950,
+        inventory: target.inventory || [],
+        activeBoosters: target.activeBoosters || [],
+        seasonPassLevel: target.seasonPassLevel || 1,
+        seasonPassXp: target.seasonPassXp || 0,
         seasonPassClaimedFree: [],
         seasonPassClaimedElite: [],
         activeStakes: [],
         totalCredWonInStakes: 0,
-        squadFriends: [],
+        squadFriends: target.squadFriends || [],
         squadSentRequests: [],
         squadReceivedRequests: [],
         disableHelpBubbles: false,
       };
-      setProfileViewingUser(syntheticProfile);
+      setProfileViewingUser(dareUser);
     }
 
     // 4. Also asynchronously try to fetch fresh from server
@@ -1056,8 +983,6 @@ export default function App() {
         onDeleteNotification={handleDeleteNotification}
         onClearAllNotifications={handleClearAllNotifications}
         onNavigateToDare={handleNavigateToDare}
-        onSimulateNotification={handleSimulateNotification}
-        onSimulateExpiryNotification={handleSimulateExpiryNotification}
         stats={stats}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -1457,29 +1382,6 @@ export default function App() {
           const dare = dares.find((d) => d.id === expiryReminderToast?.dareId);
           if (dare) {
             setProofSubmissionDare(dare);
-          } else {
-            // Handle simulated mock challenge upload gracefully
-            setProofSubmissionDare({
-              id: expiryReminderToast?.dareId || 'mock',
-              title: expiryReminderToast?.dareTitle || 'Mock Challenge',
-              description: 'This is a simulated challenge approaching its expiration deadline. Prove your supremacy!',
-              proofRequirement: 'Provide video or photo telemetry logs.',
-              category: 'physical',
-              difficulty: 'Level 2 - Moderate',
-              rewardCred: 60,
-              creator: {
-                id: 'u_dare_ops',
-                handle: '@DARE_OPS',
-                name: 'DARE_OPS',
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-              },
-              targetType: 'public',
-              status: 'accepted',
-              createdAt: new Date().toISOString(),
-              likes: 12,
-              likedUserIds: [],
-              comments: [],
-            });
           }
           setExpiryReminderToast(null);
         }}

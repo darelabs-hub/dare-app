@@ -400,15 +400,15 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       handle: initialHandle,
       name: initialName,
       avatar: initialAvatar,
-      cred: defaultProfile?.cred !== undefined ? defaultProfile.cred : (isDareOpsOwner ? 500 : 100),
-      xp: defaultProfile?.xp || (isDareOpsOwner ? 1200 : 0),
-      level: defaultProfile?.level || (isDareOpsOwner ? 5 : 1),
-      rank: defaultProfile?.rank || (isDareOpsOwner ? 'Syndicate Veteran' : 'New Recruit'),
+      cred: defaultProfile?.cred !== undefined ? defaultProfile.cred : (isDareOpsOwner ? 500 : 0),
+      xp: defaultProfile?.xp || 0,
+      level: defaultProfile?.level || 1,
+      rank: defaultProfile?.rank || 'New Recruit',
       completedDaresCount: defaultProfile?.completedDaresCount || 0,
       createdDaresCount: defaultProfile?.createdDaresCount || 0,
-      streak: defaultProfile?.streak || (isDareOpsOwner ? 7 : 1),
+      streak: defaultProfile?.streak || 0,
       lastActiveDate: defaultProfile?.lastActiveDate || new Date().toISOString().split('T')[0],
-      badges: defaultProfile?.badges || (isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : ['⚡ Active Operative']),
+      badges: defaultProfile?.badges || (isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : []),
       isPro: defaultProfile?.isPro !== undefined ? Boolean(defaultProfile.isPro) : isDareOpsOwner,
       proTier: defaultProfile?.proTier || (isDareOpsOwner ? 'ultra' : null),
       inventory: defaultProfile?.inventory || [],
@@ -1238,36 +1238,16 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  // Squad Chat Group Terminal State
-  const squadChatMessages = [
-    {
-      id: 'msg_1',
-      senderId: 'u_vortex',
-      senderHandle: '@vortex_run',
-      senderName: 'Vortex',
-      senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      text: 'Just completed the absolute netrunner dare in Sector 7! The AI Oracle gave me a LEGENDARY verdict! 🔥',
-      timestamp: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    },
-    {
-      id: 'msg_2',
-      senderId: 'u_cyber_samurai',
-      senderHandle: '@cyber_samurai',
-      senderName: 'Kaelen Vance',
-      senderAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      text: 'Nice work Vortex. I am prepping for the physical endurance level 3 dare tonight. Who is down to spectate?',
-      timestamp: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    },
-    {
-      id: 'msg_3',
-      senderId: 'u_vortex',
-      senderHandle: '@vortex_run',
-      senderName: 'Vortex',
-      senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      text: 'I can cover telemetry and verify proof for you Kaelen. Let us lock in that team bonus!',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    }
-  ];
+  // Squad Chat Group Messages (Runtime in-memory store)
+  const squadChatMessages: Array<{
+    id: string;
+    senderId: string;
+    senderHandle: string;
+    senderName: string;
+    senderAvatar?: string;
+    text: string;
+    timestamp: string;
+  }> = [];
 
   app.get('/api/squad/chat', (req, res) => {
     res.json({ success: true, messages: squadChatMessages });
@@ -1558,27 +1538,8 @@ Instructions:
       }
     }
 
-    const isRich = (caption && caption.length > 30) || Boolean(mediaUrl);
-    return res.json({
-      verdict: isRich ? 'LEGENDARY' : 'LEGIT',
-      confidence: Math.floor(Math.random() * 6) + 93,
-      commentary: isRich
-        ? `Multimodal Vision telemetry validated. Optical verification confirms strict adherence to "${dare.title}".`
-        : `Challenge telemetry criteria verified. Live capture data aligns with proof requirements.`,
-      bonusCred: isRich ? 25 : 12,
-      antiSpoofScore: 97,
-      visualClarityScore: 94,
-      authenticityRating: 'Verified Live Telemetry',
-      detectedActions: ['Active Challenge Execution', 'Proof Telemetry Sync'],
-      detectedObjects: ['Mobile Device Display', 'Subject In-Frame', 'Environment Context'],
-      criteriaChecks: [
-        { criterion: 'Challenge Parameter Adherence', passed: true, score: 96, note: 'All proof specifications fulfilled.' },
-        { criterion: 'Visual Integrity & Anti-Spoof', passed: true, score: 95, note: 'No deepfake pixel alterations detected.' },
-        { criterion: 'Temporal Window Alignment', passed: true, score: 98, note: 'Valid execution timestamp.' },
-      ],
-      badgesAwarded: isRich ? ['🔥 Multimodal Certified', '⚡ Flawless Execution'] : ['⚡ Verified Operative'],
-      evaluatedAt: new Date().toISOString(),
-      refereeModel: 'Gemini Multimodal Neural Arbiter (Synthesized)',
+    return res.status(503).json({
+      error: 'AI Neural Arbiter is currently unavailable. You can submit your proof directly for peer consensus verification.'
     });
   });
 
@@ -1610,7 +1571,7 @@ Instructions:
       deviceType: req.headers['user-agent']?.includes('Mobile') ? 'Mobile Cyberdeck' : 'Desktop Neural Rig',
       captureTimestamp: new Date().toISOString(),
       hasAudioTrack: !!(mediaUrl && (mediaUrl.includes('mp4') || mediaUrl.includes('webm'))),
-      tamperRiskScore: mediaUrl ? Math.floor(Math.random() * 8) + 2 : 15,
+      tamperRiskScore: 0,
       verifiedLocation: location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : undefined,
       mimeType: mediaUrl?.includes('mp4') ? 'video/mp4' : mediaUrl ? 'image/jpeg' : 'text/plain',
     };
@@ -1706,50 +1667,22 @@ Respond strictly in valid JSON matching this schema:
       }
     }
 
-    // Fallback Neural Arbiter if Gemini wasn't available or had an error
-    if (!aiJudgement) {
-      const isLegendary = caption.length > 50 || !!mediaUrl;
-      aiJudgement = {
-        verdict: isLegendary ? 'LEGENDARY' : 'LEGIT',
-        confidence: Math.floor(Math.random() * 6) + 93,
-        commentary: isLegendary
-          ? `Neural Arbiter Scan complete: High voltage execution detected. Subject displayed superior grit and fulfilled all proof parameters with style.`
-          : `Telemetry scan validated: Evidence meets the DARE protocol specs. Execution verified with high confidence.`,
-        bonusCred: isLegendary ? 20 : 10,
-        evaluatedAt: new Date().toISOString(),
-        antiSpoofScore: 97,
-        visualClarityScore: 94,
-        authenticityRating: 'Verified Live Telemetry',
-        detectedActions: ['Physical Challenge Execution', 'Telemetry Sync'],
-        detectedObjects: ['Visual Telemetry', 'Device In-Situ'],
-        criteriaChecks: [
-          { criterion: 'Objective Completion', passed: true, score: isLegendary ? 98 : 92, note: 'Target requirements fulfilled without compromise.' },
-          { criterion: 'Anti-Spoof Spectral Check', passed: true, score: 96, note: 'No deepfake artifacts or temporal tampering detected.' },
-          { criterion: 'Proof Telemetry Integrity', passed: true, score: 95, note: 'Timestamps and device fingerprint align with submission window.' },
-        ],
-        badgesAwarded: isLegendary ? ['🔥 Legendary Executor', '⚡ Neural Certified'] : ['⚡ Verified Operative'],
-        refereeModel: 'Gemini Multimodal Neural Arbiter (Synthesized)',
-      };
-    }
-
     dare.proof = {
       caption,
-      mediaUrl: mediaUrl || 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
+      mediaUrl: mediaUrl || '',
       submittedAt: new Date().toISOString(),
-      submittedByHandle: userHandle || (dare.acceptedBy ? dare.acceptedBy.handle : '@daredaylabs'),
-      aiJudgement,
+      submittedByHandle: userHandle || (dare.acceptedBy ? dare.acceptedBy.handle : '@operative'),
+      aiJudgement: aiJudgement || undefined,
       telemetry,
       communityVotes: {
-        legit: 1,
+        legit: 0,
         busted: 0,
-        userVotes: {
-          'system_arbiter': 'legit',
-        },
+        userVotes: {},
       },
     };
 
-    // If Neural Arbiter says LEGENDARY or LEGIT, mark as verified and award cred
-    if (aiJudgement.verdict !== 'BUSTED') {
+    // If Neural Arbiter says LEGENDARY or LEGIT, mark as verified and award cred; otherwise remains 'submitted' for community verification
+    if (aiJudgement && aiJudgement.verdict !== 'BUSTED') {
       dare.status = 'verified';
       const acceptor = initialUsers.find(u => u.handle === dare.proof?.submittedByHandle);
       if (acceptor) {
@@ -2036,36 +1969,9 @@ Return strictly JSON matching this structure:
       }
     }
 
-    // Creative pre-built cyber dare fallbacks if API key is not yet set
-    const fallbacks = [
-      {
-        title: 'Debug Code with Dark Sunglasses and Cyberpunk Soundtrack at Full Blast',
-        description: 'Put on mirror shades, play high-octane synthwave/darksynth, and resolve at least 2 git issues or build a CSS animation within 20 minutes.',
-        proofRequirement: 'Photo with shades and your open terminal/IDE showing the git commit diff.',
-        recommendedDifficulty: 'Level 2 - Moderate',
-        recommendedCred: 65,
-        category: 'tech',
-      },
-      {
-        title: 'Speak Only in Binary (0s and 1s) for the First 3 Minutes of a Phone Call',
-        description: 'Call a friend or colleague and respond to their initial greeting purely with rapid 01001000 01001001 patterns until you crack or 3 minutes pass.',
-        proofRequirement: 'Audio clip or recording of the hilarious confused reaction.',
-        recommendedDifficulty: 'Level 3 - Intense',
-        recommendedCred: 95,
-        category: 'social',
-      },
-      {
-        title: 'Design a Neon Hologram UI Mockup in 10 Minutes Using Only Neon Colors',
-        description: 'Open your canvas or Figma/CSS and design a futuristic sci-fi dashboard card using only cyan (#00f2fe), hot pink (#ff007f), and pitch black.',
-        proofRequirement: 'Screenshot or live URL of the finished neon UI card.',
-        recommendedDifficulty: 'Level 1 - Starter',
-        recommendedCred: 40,
-        category: 'creative',
-      },
-    ];
-
-    const pick = fallbacks[Math.floor(Math.random() * fallbacks.length)];
-    res.json(pick);
+    return res.status(503).json({
+      error: 'AI challenge generation is currently unavailable. Please enter your challenge parameters manually.'
+    });
   });
 
   // AI Dare Coach API: Generates personalized execution tips and safety guidance for any dare
@@ -2126,68 +2032,8 @@ Provide your response in strictly valid JSON with this structure:
       }
     }
 
-    // High-fidelity dynamic contextual coach synthesis
-    const titleLower = (title || '').toLowerCase();
-    const isPhysical = (category || '').toLowerCase().includes('physical') || titleLower.includes('squat') || titleLower.includes('pushup') || titleLower.includes('run') || titleLower.includes('plank') || titleLower.includes('burpee') || titleLower.includes('jump');
-    const isSocial = (category || '').toLowerCase().includes('social') || titleLower.includes('talk') || titleLower.includes('call') || titleLower.includes('stranger') || titleLower.includes('speech') || titleLower.includes('karaoke') || titleLower.includes('sing');
-    const isCreative = (category || '').toLowerCase().includes('creative') || titleLower.includes('design') || titleLower.includes('paint') || titleLower.includes('draw') || titleLower.includes('photo') || titleLower.includes('video') || titleLower.includes('build') || titleLower.includes('code');
-
-    const prepList = isPhysical ? [
-      'Perform 3-5 minutes of dynamic joint mobilization and warm-up.',
-      'Have a hydration bottle within arm reach before starting the timer.',
-      'Mount your phone at hip or chest height to capture full range of motion.'
-    ] : isSocial ? [
-      'Take 3 deep centering breaths to steady your voice and body language.',
-      'Review the social prompt to maintain a warm, respectful, and confident delivery.',
-      'Ensure ambient lighting and clear audio capture before recording.'
-    ] : isCreative ? [
-      'Gather all necessary creative tools and references before beginning.',
-      'Set an uninterrupted focus timer to enter a state of deep flow.',
-      'Check canvas resolution and frame boundaries for clean visual capture.'
-    ] : [
-      'Read through the challenge objectives carefully before starting.',
-      'Prepare your environment to avoid unexpected interruptions.',
-      'Position your recording angle so the completed deliverable is obvious.'
-    ];
-
-    const executionTips = isPhysical ? [
-      'Partition the reps into manageable, disciplined sets rather than red-lining early.',
-      'Prioritize strict form, full depth, and rhythmic breathing over uncontrolled tempo.',
-      'Lock in steady pacing with a clear countdown clock visible in your frame.'
-    ] : isSocial ? [
-      'Lead with friendly eye contact, an open posture, and genuine curiosity.',
-      'Embrace the momentary adrenaline — awkwardness fades the second you commit.',
-      'Keep the interaction upbeat, lighthearted, and respectful to all involved.'
-    ] : isCreative ? [
-      'Focus on bold, intentional execution rather than second-guessing early drafts.',
-      'Highlight distinctive aesthetic touches that reflect the DARE spirit.',
-      'Ensure high visual contrast and polish so your proof stands out on the grid.'
-    ] : [
-      'Break down complex steps into simple sequential actions.',
-      'Commit fully to the challenge parameters from the very first minute.',
-      'Stay disciplined and celebrate the milestone as soon as you cross the finish line.'
-    ];
-
-    const safetyList = isPhysical ? [
-      'Listen to your body: Halt immediately if experiencing sharp joint strain or dizziness.',
-      'Ensure your training surface is stable, non-slip, and clear of tripping hazards.'
-    ] : isSocial ? [
-      'Always respect personal boundaries and public safety regulations.',
-      'Do not engage in obstructive or intrusive behavior in private commercial spaces.'
-    ] : [
-      'Keep all activities within safe, responsible, and legal boundaries.',
-      'Avoid hazardous heights, traffic intersections, or unsafe environments.'
-    ];
-
-    res.json({
-      coachPersona: 'AI Dare Mentor',
-      summary: `You've got this! Approach "${title || 'this challenge'}" with disciplined focus, steady pacing, and clear execution to lock in your ${rewardCred || 300} Cred.`,
-      difficultyAssessment: `Rated at ${difficulty || 'Level 2 - Moderate'}. Requires deliberate preparation and committed follow-through.`,
-      preparation: prepList,
-      stepByStepTips: executionTips,
-      safetyGuidance: safetyList,
-      proofAdvice: `Ensure ${proofRequirement || 'clear photo/video evidence'} shows the entire sequence without obstruction so arbiters verify your victory instantly.`,
-      estimatedTimeMinutes: isPhysical ? 15 : isCreative ? 25 : 10
+    return res.status(503).json({
+      error: 'AI Dare Coach is currently unavailable.'
     });
   });
 
@@ -2342,23 +2188,23 @@ Provide your response in strictly valid JSON with this structure:
       progressPercent: 0,
       status: 'battling',
       wagerOdds: 2.05,
-      totalWagersCred: 100,
-      cheerCount: 15,
-      recentAction: 'Initializing neural challenge models...',
+      totalWagersCred: 0,
+      cheerCount: 0,
+      recentAction: 'Initialized neural challenge model',
     } : {
-      id: 'u2',
-      handle: '@cyber_ghost',
-      name: 'Elena Rostova',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-      isPro: true,
-      squadTag: 'GRID',
-      isReady: true,
+      id: 'waiting_opponent',
+      handle: '@open_slot',
+      name: 'Open Contender Slot',
+      avatar: '/logo.png',
+      isPro: false,
+      squadTag: 'OPEN',
+      isReady: false,
       progressPercent: 0,
-      status: 'battling',
-      wagerOdds: 1.95,
-      totalWagersCred: 100,
-      cheerCount: 20,
-      recentAction: 'Ready in lobby...',
+      status: 'connecting',
+      wagerOdds: 2.00,
+      totalWagersCred: 0,
+      cheerCount: 0,
+      recentAction: 'Awaiting challenger...',
     };
 
     const newDuel: LiveDuel = {
@@ -2369,24 +2215,24 @@ Provide your response in strictly valid JSON with this structure:
       challengeBrief: challengeBrief || 'Simultaneous speed challenge. Submit verified proof before your opponent.',
       proofCriteria: proofCriteria || 'Clear timestamped proof photo or screencast showing complete criteria.',
       durationSeconds: Number(durationSeconds) || 180,
-      potCred: stake * 2,
+      potCred: stake,
       entryFeeCred: stake,
-      status: 'in_progress',
+      status: isAiOpponent ? 'in_progress' : 'lobby',
       startedAt: Date.now(),
       endsAt: Date.now() + (Number(durationSeconds) || 180) * 1000,
       challenger: {
-        id: user ? user.id : 'u1',
-        handle: user ? user.handle : '@neon_blade',
-        name: user ? user.name : 'Kai Vance',
-        avatar: user ? user.avatar : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        id: user ? user.id : 'u_challenger',
+        handle: user ? user.handle : '@operative',
+        name: user ? user.name : 'Operative',
+        avatar: user ? user.avatar : '/logo.png',
         isPro: user ? user.isPro : false,
-        squadTag: 'NEON',
+        squadTag: 'CHALLENGER',
         isReady: true,
         progressPercent: 0,
         status: 'battling',
-        wagerOdds: 1.90,
+        wagerOdds: 2.00,
         totalWagersCred: stake,
-        cheerCount: 10,
+        cheerCount: 0,
         recentAction: 'Combatant deployed challenge...',
       },
       opponent: opponentParticipant,
@@ -2579,7 +2425,7 @@ Provide your response in strictly valid JSON with this structure:
       const parsedCost = Number(costCred) || 0;
       if (user.cred < parsedCost) {
         return res.status(400).json({ 
-          error: 'Insufficient Cred telemetry to upgrade. Complete more dares or use simulated credit card!' 
+          error: `Insufficient Cred balance to upgrade. Need ${parsedCost} Cred.` 
         });
       }
       user.cred -= parsedCost;
@@ -2594,8 +2440,9 @@ Provide your response in strictly valid JSON with this structure:
         timestamp: new Date().toISOString(),
       });
     } else {
-      // Simulate credit card success - add a tiny positive transaction showing card activation if desired,
-      // or simply skip deducting cred and update status directly.
+      return res.status(400).json({ 
+        error: 'Card payments must be processed securely via Stripe Checkout.' 
+      });
     }
 
     // Set PRO status attributes
@@ -3035,13 +2882,27 @@ Provide your response in strictly valid JSON with this structure:
 
   // --- HIGH-ROLLER CRED STAKING APIS ---
   app.get('/api/staking/jackpot', (_req, res) => {
+    // Trace genuine user active stakes and duel spectator wagers
+    const activeUserStakes = initialUsers.flatMap(u => (u.activeStakes || []).filter(s => s.status === 'active'));
+    const activeDuelWagers = liveDuels.filter(d => d.status === 'in_progress' || d.status === 'lobby').flatMap(d => d.spectatorWagers || []);
+    const activeWagersCount = activeUserStakes.length + activeDuelWagers.length;
+
+    // Trace genuine stake win transactions
+    const stakeWonTransactions = transactions.filter(t => t.type === 'stake_won');
+    const recentBigWinners = stakeWonTransactions.map(tx => {
+      const user = initialUsers.find(u => u.id === tx.userId);
+      return {
+        handle: user?.handle || '@operative',
+        amount: Math.abs(tx.amount),
+        dare: tx.dareTitle || tx.description,
+        timestamp: tx.timestamp,
+      };
+    });
+
     res.json({
       jackpotPool: communityJackpotPool,
-      activeWagersCount: 28,
-      recentBigWinners: [
-        { handle: '@Vortex_99', amount: 950, dare: 'Core Iron Wall: 5-Minute Plank', timestamp: '2h ago' },
-        { handle: '@daredaylabs', amount: 650, dare: 'Retro Synthwave Terminal', timestamp: '5h ago' },
-      ]
+      activeWagersCount,
+      recentBigWinners,
     });
   });
 
@@ -3164,100 +3025,6 @@ Provide your response in strictly valid JSON with this structure:
     if (lat && lng && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
       const userLat = Number(lat);
       const userLng = Number(lng);
-
-      // Check if any beacons exist within 15km of this user's position
-      const nearbyExisting = dropZones.filter(z => 
-        calculateDistanceMeters(userLat, userLng, z.coordinates.lat, z.coordinates.lng) < 15000
-      );
-
-      // If no beacons exist near user's current GPS location, dynamically spawn 3 local neighborhood beacons
-      if (nearbyExisting.length === 0) {
-        const localTemplates: Array<Partial<DropZone> & { latOffset: number; lngOffset: number }> = [
-          {
-            name: 'Local Sector Quantum Vault',
-            code: `NODE-LOC-${Math.floor(10 + Math.random() * 89)}`,
-            category: 'cyber',
-            latOffset: 0.0011,
-            lngOffset: 0.0009,
-            radiusMeters: 180,
-            bountyCred: 350,
-            bountyXp: 500,
-            lootRarity: 'legendary',
-            activeDareTitle: 'Neural Proximity Lock',
-            activeDareDescription: 'Engage the AR viewfinder and align your optical sensor with the local electromagnetic pulse node.',
-            arBeaconType: 'quantum_vault',
-            arObjectIcon: '💠',
-            passcodeHint: 'Align viewfinder 45° North-East within 150m radius',
-          },
-          {
-            name: 'High-Frequency Neural Cache',
-            code: `CACHE-LOC-${Math.floor(10 + Math.random() * 89)}`,
-            category: 'tech',
-            latOffset: -0.0009,
-            lngOffset: 0.0014,
-            radiusMeters: 220,
-            bountyCred: 260,
-            bountyXp: 380,
-            lootRarity: 'epic',
-            activeDareTitle: 'Street Grid Decryption',
-            activeDareDescription: 'Maintain a 10-second continuous lock on the floating neural node hovering at 12m altitude.',
-            arBeaconType: 'neural_node',
-            arObjectIcon: '🔮',
-            passcodeHint: 'Point lens toward the highest street light fixture',
-          },
-          {
-            name: 'Guerrilla Stealth Crate',
-            code: `CRATE-LOC-${Math.floor(10 + Math.random() * 89)}`,
-            category: 'physical',
-            latOffset: 0.0014,
-            lngOffset: -0.0012,
-            radiusMeters: 250,
-            bountyCred: 200,
-            bountyXp: 300,
-            lootRarity: 'rare',
-            activeDareTitle: 'Local Perimeter Sprint',
-            activeDareDescription: 'Approach within 80m of the geofence perimeter and scan the military supply crate payload.',
-            arBeaconType: 'stealth_crate',
-            arObjectIcon: '📦',
-            passcodeHint: 'Approach from the western sidewalk approach',
-          }
-        ];
-
-        localTemplates.forEach((t, i) => {
-          const newZ: DropZone = {
-            id: `zone_dyn_${Date.now()}_${i}`,
-            name: t.name!,
-            code: t.code!,
-            category: t.category as any,
-            coordinates: {
-              lat: +(userLat + (t as any).latOffset).toFixed(6),
-              lng: +(userLng + (t as any).lngOffset).toFixed(6),
-            },
-            radiusMeters: t.radiusMeters || 200,
-            city: 'Active Sector',
-            country: 'Global Grid',
-            bountyCred: t.bountyCred || 250,
-            bountyXp: t.bountyXp || 350,
-            lootRarity: t.lootRarity as any,
-            activeDareTitle: t.activeDareTitle!,
-            activeDareDescription: t.activeDareDescription!,
-            beaconSignalStrength: 95 - i * 4,
-            arBeaconType: t.arBeaconType as any,
-            arObjectIcon: t.arObjectIcon || '💠',
-            claimedByCount: Math.floor(Math.random() * 12) + 1,
-            claimedUserIds: [],
-            deployedByHandle: 'grid_sentinel',
-            deployedByName: 'Grid Sentinel',
-            deployedByAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=256',
-            expiresAt: new Date(Date.now() + 86400000 * 7).toISOString(),
-            createdAt: new Date().toISOString(),
-            passcodeHint: t.passcodeHint,
-            requiresArScan: true,
-          };
-          dropZones.push(newZ);
-          results.push(newZ);
-        });
-      }
 
       const enriched = results.map(zone => {
         const distance = calculateDistanceMeters(userLat, userLng, zone.coordinates.lat, zone.coordinates.lng);
@@ -3545,12 +3312,9 @@ Provide your response in strictly valid JSON with this structure:
       const resolvedCancelUrl = cancelUrl || `${appUrl}/?payment_status=cancelled`;
 
       if (!stripe) {
-        // Simulated checkout URL when Stripe keys are not yet provided
-        return res.json({
-          url: resolvedSuccessUrl.replace('{CHECKOUT_SESSION_ID}', `sim_${Date.now()}`),
-          sessionId: `sim_session_${Date.now()}`,
-          simulated: true,
-          message: 'Running in simulated checkout mode. Configure STRIPE_SECRET_KEY for live Stripe Checkout.',
+        return res.status(503).json({
+          error: 'Payments temporarily unavailable',
+          configured: false,
         });
       }
 
@@ -3658,10 +3422,9 @@ Provide your response in strictly valid JSON with this structure:
       const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
 
       if (!stripe) {
-        return res.json({
-          url: returnUrl || `${appUrl}/`,
-          simulated: true,
-          message: 'Stripe keys required for live customer portal.',
+        return res.status(503).json({
+          error: 'Payments temporarily unavailable',
+          configured: false,
         });
       }
 
@@ -3687,10 +3450,9 @@ Provide your response in strictly valid JSON with this structure:
       const { amount, currency = 'gbp', description, userId } = req.body;
       const stripe = getStripe();
       if (!stripe) {
-        return res.json({
-          clientSecret: `seti_simulated_${Math.random().toString(36).substring(2)}_secret_${Math.random().toString(36).substring(2)}`,
-          simulated: true,
-          message: 'Stripe secret key not provided in environment. Using secure simulated test mode.'
+        return res.status(503).json({
+          error: 'Payments temporarily unavailable',
+          configured: false,
         });
       }
 
@@ -3717,7 +3479,10 @@ Provide your response in strictly valid JSON with this structure:
     let event: Stripe.Event;
 
     if (!stripe) {
-      return res.status(200).json({ received: true, simulated: true });
+      return res.status(503).json({
+        error: 'Payments temporarily unavailable',
+        configured: false,
+      });
     }
 
     try {
@@ -3808,15 +3573,11 @@ Provide your response in strictly valid JSON with this structure:
   });
 
   // 7. Status endpoint
-  app.get('/api/stripe/status', (req, res) => {
+  app.get('/api/stripe/status', (_req, res) => {
     const stripe = getStripe();
     res.json({
       configured: !!stripe,
-      mode: stripe ? 'live_api' : 'simulated_fallback',
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
-      message: stripe 
-        ? 'Stripe SDK successfully initialized with API keys.' 
-        : 'Stripe key not configured. Running in secure simulated test mode (ready for live keys).'
     });
   });
 
