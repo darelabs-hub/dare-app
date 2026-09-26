@@ -142,12 +142,48 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
         
         {/* Logo & Brand */}
-        <div 
-          className="flex items-center cursor-pointer select-none shrink-0" 
-          onClick={() => window.location.reload()}
-          title="DARE - Home"
-        >
-          <DareDayLogo size={42} showText={true} />
+        <div className="flex items-center gap-6">
+          <div 
+            className="flex items-center cursor-pointer select-none shrink-0" 
+            onClick={() => window.location.reload()}
+            title="DARE - Home"
+          >
+            <DareDayLogo size={42} showText={true} />
+          </div>
+
+          {/* Minimal Clean Landing Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-300">
+            <button
+              onClick={() => {
+                playSound('click');
+                const el = document.getElementById('dare-feed-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="hover:text-pink-400 transition-colors cursor-pointer"
+            >
+              Challenges
+            </button>
+            <button
+              onClick={() => {
+                playSound('click');
+                const el = document.getElementById('how-it-works-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="hover:text-purple-400 transition-colors cursor-pointer"
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => {
+                playSound('click');
+                const el = document.getElementById('community-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="hover:text-cyan-400 transition-colors cursor-pointer"
+            >
+              Community
+            </button>
+          </nav>
         </div>
 
         {/* Global Live Ticker (Desktop only, 2xl) */}
@@ -756,6 +792,22 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
             )}
           </div>
+
+          {/* Quick Primary Header CTA: START A DARE */}
+          <button
+            id="navbar-create-dare-cta"
+            type="button"
+            onClick={() => {
+              playSound('pop');
+              onOpenCreateModal();
+            }}
+            className="flex items-center gap-1.5 sm:gap-2 rounded-xl bg-gradient-to-r from-[#FF007F] to-[#FF5533] px-3.5 sm:px-4 py-2 text-xs font-black text-white uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(255,0,127,0.35)] transition-all cursor-pointer shrink-0 active:scale-95"
+            title="Create and Deploy a DARE"
+          >
+            <Flame className="h-3.5 w-3.5 text-amber-200" />
+            <span className="hidden xs:inline">START A DARE</span>
+            <span className="xs:hidden">DARE</span>
+          </button>
 
         </div>
       </div>

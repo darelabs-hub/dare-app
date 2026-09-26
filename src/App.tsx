@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { LandingPageExperience } from './components/LandingPageExperience';
 import { HeroBanner } from './components/HeroBanner';
 import { DareCard } from './components/DareCard';
 import { CreateDareModal } from './components/CreateDareModal';
@@ -988,6 +989,37 @@ export default function App() {
         setSearchQuery={setSearchQuery}
       />
 
+      {/* DARE — High-Energy Cinematic Landing Page Experience */}
+      <LandingPageExperience
+        currentUser={currentUser}
+        dailyMission={dailyMission}
+        onStartMission={async (dare) => {
+          setSearchQuery('');
+          setActiveCategory('all');
+          setActiveTab('feed');
+          if (dare.status === 'open') {
+            await handleAcceptDare(dare);
+          }
+          setHighlightedDareId(dare.id);
+          setTimeout(() => {
+            const el = document.getElementById(`dare-card-${dare.id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 250);
+        }}
+        onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        onOpenDropZones={() => handleOpenDropZones('radar')}
+        onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
+        onOpenTournaments={() => setIsTournamentsOpen(true)}
+        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+        onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
+        onOpenArmory={() => setIsArmoryOpen(true)}
+        onAcceptDare={handleAcceptDare}
+        onViewProof={(dare) => setProofViewingDare(dare)}
+        dares={dares}
+      />
+
       {/* Hero Banner with Filters & Quick Oracle Button */}
       <HeroBanner
         activeTab={activeTab}
@@ -1710,29 +1742,31 @@ export default function App() {
 
       <ConfettiEffect />
 
-      {/* Mobile Ergonomic Bottom Navigation Bar */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        onOpenCreate={() => setIsCreateModalOpen(true)}
-        onOpenArmory={() => setIsArmoryOpen(true)}
-        onOpenSeasonPass={() => setIsSeasonPassOpen(true)}
-        onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-        onOpenTournaments={() => setIsTournamentsOpen(true)}
-        onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-        onOpenDropZones={() => handleOpenDropZones('radar')}
-        onOpenCredLog={() => setIsCredLogOpen(true)}
-        onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
-        onOpenEventsMerch={() => setIsEventsMerchOpen(true)}
-        onOpenProfile={() => {
-          setProfileModalTab('heatmap');
-          setProfileViewingUser(currentUser);
-        }}
-        currentUser={currentUser}
-        isAuthenticated={!!user}
-        onSignIn={signIn}
-        onSignOut={handleSignOut}
-      />
+      {/* Mobile Ergonomic Bottom Navigation Bar (Shown inside App Experience, hidden on public marketing landing) */}
+      {currentPath.startsWith('/app') && (
+        <MobileBottomNav
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          onOpenCreate={() => setIsCreateModalOpen(true)}
+          onOpenArmory={() => setIsArmoryOpen(true)}
+          onOpenSeasonPass={() => setIsSeasonPassOpen(true)}
+          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
+          onOpenTournaments={() => setIsTournamentsOpen(true)}
+          onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
+          onOpenDropZones={() => handleOpenDropZones('radar')}
+          onOpenCredLog={() => setIsCredLogOpen(true)}
+          onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
+          onOpenEventsMerch={() => setIsEventsMerchOpen(true)}
+          onOpenProfile={() => {
+            setProfileModalTab('heatmap');
+            setProfileViewingUser(currentUser);
+          }}
+          currentUser={currentUser}
+          isAuthenticated={!!user}
+          onSignIn={signIn}
+          onSignOut={handleSignOut}
+        />
+      )}
 
       <Footer
         currentUser={currentUser}
