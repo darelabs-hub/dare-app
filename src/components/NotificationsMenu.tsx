@@ -15,16 +15,10 @@ import {
   Sparkles,
   Clock,
   Swords,
-  Coins,
-  BellRing
+  Coins
 } from 'lucide-react';
 import { NotificationItem, UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
-import { 
-  getPushPermissionStatus, 
-  requestPushNotificationPermission, 
-  dispatchSystemNotification 
-} from '../utils/pushNotifications';
 
 interface NotificationsMenuProps {
   currentUser: UserProfile;
@@ -457,37 +451,12 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
             )}
           </div>
 
-          {/* Live Synchronized Footer with Simulator */}
+          {/* Live Synchronized Footer */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-800/80 bg-[#07090e] px-3.5 sm:px-4 py-2.5 text-[11px] gap-2 shrink-0">
             <span className="font-mono text-slate-500 text-[10px] flex items-center gap-1">
               <span className="h-1 w-1 bg-cyan-400 rounded-full animate-ping" />
               <span>Stream Live</span>
             </span>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                id="test-web-push-notif-menu-btn"
-                onClick={async () => {
-                  playSound('laser');
-                  const perm = getPushPermissionStatus();
-                  if (perm !== 'granted') {
-                    await requestPushNotificationPermission().catch(() => {});
-                  }
-                  await dispatchSystemNotification({
-                    title: '⚡ DARE Transmission Alert',
-                    body: 'Incoming challenge transmission from Grid Sector 7 (+100 Cred)!',
-                    tag: 'TRANSMISSION // ACTIVE',
-                    userId: currentUser?.id,
-                  });
-                }}
-                className="flex items-center gap-1 rounded-lg border border-indigo-500/30 bg-indigo-950/40 px-2 py-1 text-[10px] font-mono font-bold text-indigo-300 hover:border-indigo-400 hover:bg-indigo-900/50 transition-all cursor-pointer"
-                title="Send system notification and telemetry pulse"
-              >
-                <BellRing className="h-3 w-3 text-indigo-400" />
-                <span>Push Alert</span>
-              </button>
-            </div>
           </div>
         </div>
       </>
