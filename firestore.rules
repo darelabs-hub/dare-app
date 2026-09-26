@@ -16,13 +16,78 @@ service cloud.firestore {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
       allow create, update: if isOwner(userId);
+      allow delete: if false;
     }
 
     // Dares Collection
     match /dares/{dareId} {
-      allow read: if isSignedIn();
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn(); // Needs more refined rules (Pillar 4/5)
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // Live Duels Collection
+    match /duels/{duelId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // Drop Zones Collection
+    match /dropZones/{dropZoneId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // Squad Chat Messages Collection
+    match /squadChatMessages/{messageId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Squad Tournaments Collection
+    match /tournaments/{tournamentId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // Transactions Ledger (Server-side authoritative writes only)
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // User Notifications
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if false; // server generated
+    }
+
+    // Stripe Webhook Idempotency Store (Internal Server Only)
+    match /stripeWebhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Health Check Ping Document
+    match /_health/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
   }
 }

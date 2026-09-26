@@ -10,11 +10,14 @@
         "name": { "type": "string" },
         "avatar": { "type": "string" },
         "cred": { "type": "number" },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
         "rank": { "type": "string" },
         "completedDaresCount": { "type": "number" },
         "createdDaresCount": { "type": "number" },
         "streak": { "type": "number" },
         "isPro": { "type": "boolean" },
+        "proTier": { "type": "string" },
         "referralCode": { "type": "string" },
         "referralCount": { "type": "number" }
       },
@@ -30,9 +33,93 @@
         "description": { "type": "string" },
         "rewardCred": { "type": "number" },
         "status": { "type": "string" },
-        "creatorId": { "type": "string" }
+        "category": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "createdAt": { "type": "string" }
       },
-      "required": ["id", "title", "status", "creatorId"]
+      "required": ["id", "title", "status"]
+    },
+    "LiveDuel": {
+      "title": "LiveDuel",
+      "description": "Live Head-to-Head Duel",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "potCred": { "type": "number" },
+        "status": { "type": "string" },
+        "startedAt": { "type": "number" }
+      },
+      "required": ["id", "title", "status"]
+    },
+    "DropZone": {
+      "title": "DropZone",
+      "description": "Geofenced Drop Zone AR Node",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "bountyCred": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "code"]
+    },
+    "SquadChatMessage": {
+      "title": "SquadChatMessage",
+      "description": "Squad real-time chat message",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderHandle": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "senderId", "text", "timestamp"]
+    },
+    "SquadTournament": {
+      "title": "SquadTournament",
+      "description": "Squad group tournament competition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "status": { "type": "string" },
+        "potCred": { "type": "number" },
+        "entryFeeCred": { "type": "number" }
+      },
+      "required": ["id", "title", "status"]
+    },
+    "CredTransaction": {
+      "title": "CredTransaction",
+      "description": "Authoritative ledger transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "amount", "timestamp"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "User notification alert record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "title", "read", "createdAt"]
     }
   },
   "firestore": {
@@ -43,6 +130,30 @@
     "dares/{dareId}": {
       "schema": "Dare",
       "description": "Challenge dares"
+    },
+    "duels/{duelId}": {
+      "schema": "LiveDuel",
+      "description": "Live duels"
+    },
+    "dropZones/{dropZoneId}": {
+      "schema": "DropZone",
+      "description": "Geofenced drop zones"
+    },
+    "squadChatMessages/{messageId}": {
+      "schema": "SquadChatMessage",
+      "description": "Squad chat messages"
+    },
+    "tournaments/{tournamentId}": {
+      "schema": "SquadTournament",
+      "description": "Squad tournaments"
+    },
+    "transactions/{transactionId}": {
+      "schema": "CredTransaction",
+      "description": "Cred transaction records"
+    },
+    "notifications/{notificationId}": {
+      "schema": "NotificationItem",
+      "description": "User notification alerts"
     }
   }
 }

@@ -5,7 +5,7 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
-import { getApps, initializeApp, getApp } from 'firebase-admin/app';
+import { cert, getApps, initializeApp, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { 
   DareItem, 
@@ -35,15 +35,57 @@ import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog'
 
 dotenv.config();
 
-// Initialize Firebase Admin safely
+// Initialize Firebase Admin safely with support for all credential formats
 import firebaseConfig from './firebase-applet-config.json';
 let db: any = null;
+let hasAdminCredentials = false;
+
 try {
-  let app: any;
+  let credential: any = null;
+  const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  const googleAppCreds = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (saRaw) {
+    try {
+      const parsed = typeof saRaw === 'string' && (saRaw.trim().startsWith('{') || saRaw.trim().startsWith('['))
+        ? JSON.parse(saRaw)
+        : JSON.parse(Buffer.from(saRaw, 'base64').toString('utf8'));
+      credential = cert(parsed);
+      hasAdminCredentials = true;
+    } catch (_e) {
+      if (typeof saRaw === 'string' && !saRaw.includes('{')) {
+        credential = cert(saRaw);
+        hasAdminCredentials = true;
+      }
+    }
+  } else if (googleAppCreds) {
+    try {
+      if (googleAppCreds.trim().startsWith('{')) {
+        credential = cert(JSON.parse(googleAppCreds));
+      } else {
+        credential = cert(googleAppCreds);
+      }
+      hasAdminCredentials = true;
+    } catch (_e) {}
+  } else if (clientEmail && privateKey) {
+    try {
+      credential = cert({
+        projectId: firebaseConfig.projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+      });
+      hasAdminCredentials = true;
+    } catch (_e) {}
+  }
+
   const existingApps = getApps();
+  let app: any;
   if (!existingApps || existingApps.length === 0) {
     app = initializeApp({
       projectId: firebaseConfig.projectId,
+      credential: credential || undefined,
     });
   } else {
     app = getApp();
@@ -53,21 +95,93 @@ try {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
 
-// Check if Firebase Admin credentials are provided in the environment
-const hasAdminCredentials = !!(
-  process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-  process.env.FIREBASE_SERVICE_ACCOUNT ||
-  process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-);
+// Rate Limiting Engine
+interface RateLimitBucket {
+  count: number;
+  resetAt: number;
+}
+const rateLimitStore = new Map<string, RateLimitBucket>();
+
+function rateLimiter(options: { windowMs: number; max: number; keyPrefix?: string }) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const clientIp = (req.headers['x-real-ip'] as string)?.trim() || req.ip || req.socket.remoteAddress || 'unknown';
+    const key = `${options.keyPrefix || 'rl'}:${clientIp}`;
+    const now = Date.now();
+    let bucket = rateLimitStore.get(key);
+
+    if (!bucket || now > bucket.resetAt) {
+      bucket = { count: 1, resetAt: now + options.windowMs };
+      rateLimitStore.set(key, bucket);
+      return next();
+    }
+
+    if (bucket.count >= options.max) {
+      const retryAfterSec = Math.ceil((bucket.resetAt - now) / 1000);
+      res.setHeader('Retry-After', retryAfterSec);
+      return res.status(429).json({
+        error: 'Rate limit exceeded. Too many requests. Please try again shortly.',
+        retryAfterSeconds: retryAfterSec,
+      });
+    }
+
+    bucket.count += 1;
+    next();
+  };
+}
+
+const authSyncRateLimiter = rateLimiter({ windowMs: 60000, max: 40, keyPrefix: 'auth_sync' });
+const squadChatRateLimiter = rateLimiter({ windowMs: 60000, max: 30, keyPrefix: 'squad_chat' });
+const dareCreationRateLimiter = rateLimiter({ windowMs: 60000, max: 20, keyPrefix: 'dare_create' });
+const proofSubmissionRateLimiter = rateLimiter({ windowMs: 60000, max: 15, keyPrefix: 'proof_sub' });
+const aiRateLimiter = rateLimiter({ windowMs: 60000, max: 15, keyPrefix: 'ai_ops' });
+const paymentRateLimiter = rateLimiter({ windowMs: 60000, max: 20, keyPrefix: 'stripe_ops' });
+
+// Idempotency Tracking for Stripe Webhook Events
+const processedStripeEventIds = new Set<string>();
+
+async function isStripeEventProcessed(eventId: string): Promise<boolean> {
+  if (processedStripeEventIds.has(eventId)) return true;
+  if (!db || !hasAdminCredentials) return false;
+  try {
+    const snap = await db.collection('stripeWebhookEvents').doc(eventId).get();
+    if (snap && snap.exists) {
+      processedStripeEventIds.add(eventId);
+      return true;
+    }
+  } catch (_e) {}
+  return false;
+}
+
+async function recordStripeEventProcessed(eventId: string, type: string) {
+  processedStripeEventIds.add(eventId);
+  if (!db || !hasAdminCredentials) return;
+  try {
+    await db.collection('stripeWebhookEvents').doc(eventId).set({
+      id: eventId,
+      type,
+      processedAt: new Date().toISOString(),
+    });
+  } catch (_e) {}
+}
+
+// Database Connectivity Health Check
+async function checkFirestoreHealth(): Promise<'connected' | 'unconfigured' | 'unreachable'> {
+  if (!hasAdminCredentials) return 'unconfigured';
+  if (!db) return 'unreachable';
+  try {
+    await db.collection('_health').doc('ping').get();
+    return 'connected';
+  } catch (_err) {
+    return 'unreachable';
+  }
+}
 
 // User persistence helpers
 async function saveUserToFirestore(user: UserProfile) {
   try {
     if (!db || !user || !user.id || !hasAdminCredentials) return;
     await db.collection('users').doc(user.id).set(user, { merge: true });
-  } catch (_err) {
-    // Graceful fallback to memory store if service account IAM is not present
-  }
+  } catch (_err) {}
 }
 
 async function getUserFromFirestore(userId: string): Promise<UserProfile | null> {
@@ -77,10 +191,72 @@ async function getUserFromFirestore(userId: string): Promise<UserProfile | null>
     if (snap && snap.exists) {
       return snap.data() as UserProfile;
     }
-  } catch (_err) {
-    // Graceful fallback to memory store if service account IAM is not present
-  }
+  } catch (_err) {}
   return null;
+}
+
+// Dare persistence helpers
+async function saveDareToFirestore(dare: DareItem) {
+  try {
+    if (!db || !dare || !dare.id || !hasAdminCredentials) return;
+    await db.collection('dares').doc(dare.id).set(dare, { merge: true });
+  } catch (_err) {}
+}
+
+// Duel persistence helpers
+async function saveDuelToFirestore(duel: LiveDuel) {
+  try {
+    if (!db || !duel || !duel.id || !hasAdminCredentials) return;
+    await db.collection('duels').doc(duel.id).set(duel, { merge: true });
+  } catch (_err) {}
+}
+
+// DropZone persistence helpers
+async function saveDropZoneToFirestore(zone: DropZone) {
+  try {
+    if (!db || !zone || !zone.id || !hasAdminCredentials) return;
+    await db.collection('dropZones').doc(zone.id).set(zone, { merge: true });
+  } catch (_err) {}
+}
+
+// Chat persistence helpers
+async function saveChatMessageToFirestore(msg: any) {
+  try {
+    if (!db || !msg || !msg.id || !hasAdminCredentials) return;
+    await db.collection('squadChatMessages').doc(msg.id).set(msg);
+  } catch (_err) {}
+}
+
+// Transaction persistence helpers
+async function saveTransactionToFirestore(tx: CredTransaction) {
+  try {
+    if (!db || !tx || !tx.id || !hasAdminCredentials) return;
+    await db.collection('transactions').doc(tx.id).set(tx);
+  } catch (_err) {}
+}
+
+// Notification persistence helpers
+async function saveNotificationToFirestore(notif: NotificationItem) {
+  try {
+    if (!db || !notif || !notif.id || !hasAdminCredentials) return;
+    await db.collection('notifications').doc(notif.id).set(notif, { merge: true });
+  } catch (_err) {}
+}
+
+// Tournament persistence helpers
+async function saveTournamentToFirestore(tourney: SquadTournament) {
+  try {
+    if (!db || !tourney || !tourney.id || !hasAdminCredentials) return;
+    await db.collection('tournaments').doc(tourney.id).set(tourney, { merge: true });
+  } catch (_err) {}
+}
+
+// Notification deletion helper
+async function deleteNotificationFromFirestore(notifId: string) {
+  try {
+    if (!db || !notifId || !hasAdminCredentials) return;
+    await db.collection('notifications').doc(notifId).delete();
+  } catch (_err) {}
 }
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -498,6 +674,7 @@ function recordUserActivity(user: UserProfile) {
       user.cred += 1000;
     }
   }
+  saveUserToFirestore(user);
 }
 
 // Helper to award XP, process Level Ups, and progress Season Pass
@@ -538,6 +715,7 @@ function awardXpToUser(user: UserProfile, xpAmount: number) {
       user.seasonPassLevel = tier.level;
     }
   }
+  saveUserToFirestore(user);
 }
 
 // Daily Operations State Generator
@@ -639,6 +817,7 @@ function addNotification(notif: Omit<NotificationItem, 'id' | 'createdAt'>): Not
     createdAt: new Date().toISOString(),
   };
   notifications.unshift(newNotif);
+  saveNotificationToFirestore(newNotif);
   return newNotif;
 }
 
@@ -657,13 +836,134 @@ function addTransaction(userId: string, type: CredTransactionType, amount: numbe
     timestamp: new Date().toISOString(),
   };
   transactions.unshift(tx);
+  saveTransactionToFirestore(tx);
   return tx;
 }
 
 // In-Memory Dares Store
 let dares: DareItem[] = [...initialDares];
 
+// In-Memory Live Duels Store
+let liveDuels: LiveDuel[] = [...initialLiveDuels];
+
+// In-Memory Squad Tournaments Store
+let tournaments: SquadTournament[] = [...initialTournaments];
+
+// In-Memory Squad Chat Group Messages Store
+const squadChatMessages: Array<{
+  id: string;
+  senderId: string;
+  senderHandle: string;
+  senderName: string;
+  senderAvatar?: string;
+  text: string;
+  timestamp: string;
+}> = [];
+
+// Bootstrap loader: hydrate runtime stores from Firestore on startup
+async function loadAllInitialDataFromFirestore() {
+  if (!db || !hasAdminCredentials) return;
+  try {
+    // Load Users
+    const usersSnap = await db.collection('users').get();
+    if (usersSnap && !usersSnap.empty) {
+      usersSnap.forEach((doc: any) => {
+        const u = doc.data() as UserProfile;
+        if (!initialUsers.some(existing => existing.id === u.id)) {
+          initialUsers.push(u);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${usersSnap.size} user profile(s).`);
+    }
+
+    // Load Dares
+    const daresSnap = await db.collection('dares').get();
+    if (daresSnap && !daresSnap.empty) {
+      daresSnap.forEach((doc: any) => {
+        const d = doc.data() as DareItem;
+        if (!dares.some(existing => existing.id === d.id)) {
+          dares.push(d);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${daresSnap.size} dare(s).`);
+    }
+
+    // Load Live Duels
+    const duelsSnap = await db.collection('duels').get();
+    if (duelsSnap && !duelsSnap.empty) {
+      duelsSnap.forEach((doc: any) => {
+        const dl = doc.data() as LiveDuel;
+        if (!liveDuels.some(existing => existing.id === dl.id)) {
+          liveDuels.push(dl);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${duelsSnap.size} live duel(s).`);
+    }
+
+    // Load Tournaments
+    const tourneysSnap = await db.collection('tournaments').get();
+    if (tourneysSnap && !tourneysSnap.empty) {
+      tourneysSnap.forEach((doc: any) => {
+        const t = doc.data() as SquadTournament;
+        if (!tournaments.some(existing => existing.id === t.id)) {
+          tournaments.push(t);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${tourneysSnap.size} squad tournament(s).`);
+    }
+
+    // Load Drop Zones
+    const dropZonesSnap = await db.collection('dropZones').get();
+    if (dropZonesSnap && !dropZonesSnap.empty) {
+      dropZonesSnap.forEach((doc: any) => {
+        const dz = doc.data() as DropZone;
+        if (!dropZones.some(existing => existing.id === dz.id)) {
+          dropZones.push(dz);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${dropZonesSnap.size} drop zone(s).`);
+    }
+
+    // Load Squad Chat Messages
+    const chatSnap = await db.collection('squadChatMessages').orderBy('timestamp', 'desc').limit(100).get();
+    if (chatSnap && !chatSnap.empty) {
+      const msgs = chatSnap.docs.map((doc: any) => doc.data()).reverse();
+      squadChatMessages.length = 0;
+      squadChatMessages.push(...msgs);
+      console.log(`[Firestore] Hydrated ${chatSnap.size} squad chat message(s).`);
+    }
+
+    // Load Transactions
+    const txSnap = await db.collection('transactions').orderBy('timestamp', 'desc').limit(200).get();
+    if (txSnap && !txSnap.empty) {
+      txSnap.forEach((doc: any) => {
+        const tx = doc.data() as CredTransaction;
+        if (!transactions.some(existing => existing.id === tx.id)) {
+          transactions.push(tx);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${txSnap.size} transaction(s).`);
+    }
+
+    // Load Notifications
+    const notifSnap = await db.collection('notifications').orderBy('createdAt', 'desc').limit(200).get();
+    if (notifSnap && !notifSnap.empty) {
+      notifSnap.forEach((doc: any) => {
+        const n = doc.data() as NotificationItem;
+        if (!notifications.some(existing => existing.id === n.id)) {
+          notifications.push(n);
+        }
+      });
+      console.log(`[Firestore] Hydrated ${notifSnap.size} notification(s).`);
+    }
+  } catch (err: any) {
+    console.warn('[Firestore] Bootstrap hydration warning:', err?.message || err);
+  }
+}
+
 async function startServer() {
+  await loadAllInitialDataFromFirestore();
+
   const app = express();
   // Enable 1-hop proxy trust for Render load balancer so req.ip and X-Forwarded headers are validated
   app.set('trust proxy', 1);
@@ -735,9 +1035,16 @@ async function startServer() {
 
   // --- API ROUTES ---
 
-  // Health check
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', service: 'DARE Core Engine', time: new Date().toISOString() });
+  // Health check with active database connection status
+  app.get('/api/health', async (_req, res) => {
+    const dbStatus = await checkFirestoreHealth();
+    res.json({
+      status: 'ok',
+      service: 'DARE Core Engine',
+      database: dbStatus,
+      time: new Date().toISOString(),
+      version: '1.0.0',
+    });
   });
 
   // --- REAL-TIME TELEMETRY / ANALYTICS CAPTURE ---
@@ -967,10 +1274,10 @@ async function startServer() {
   app.post('/api/users/profile', handleProfileUpdate);
 
   // Sync / Register active user profile
-  app.post('/api/users/sync', (req, res) => {
+  app.post('/api/users/sync', authSyncRateLimiter, (req, res) => {
     const profile = req.body as Partial<UserProfile> & { isExplicitUpdate?: boolean };
-    if (!profile || !profile.id) {
-      return res.status(400).json({ error: 'User ID is required' });
+    if (!profile || !profile.id || typeof profile.id !== 'string') {
+      return res.status(400).json({ error: 'Valid user ID is required' });
     }
     const user = findOrCreateUser(profile.id, profile);
     res.json(user);
@@ -1003,6 +1310,7 @@ async function startServer() {
     // Add transaction
     addTransaction(user.id, 'stipend_claimed', 150, 'Claimed Daily Cyberpunk Stipend of 150 Cred');
     recordUserActivity(user);
+    saveUserToFirestore(user);
 
     res.json(user);
   });
@@ -1038,6 +1346,7 @@ async function startServer() {
     // Add transaction
     addTransaction(user.id, 'pro_upgrade', -cost, `Upgraded to PRO (${(user.proTier || 'elite').toUpperCase()}) tier`);
     recordUserActivity(user);
+    saveUserToFirestore(user);
 
     res.json(user);
   });
@@ -1097,6 +1406,7 @@ async function startServer() {
     // Add transaction or notification log
     addTransaction(user.id, 'shield_activated', 0, 'Activated 24H Premium Streak Shield protection');
     recordUserActivity(user);
+    saveUserToFirestore(user);
 
     res.json(user);
   });
@@ -1133,6 +1443,9 @@ async function startServer() {
     if (!toUser.squadReceivedRequests.includes(fromUserId)) {
       toUser.squadReceivedRequests.push(fromUserId);
     }
+
+    saveUserToFirestore(fromUser);
+    saveUserToFirestore(toUser);
 
     // Add push style notification for the recipient
     addNotification({
@@ -1181,6 +1494,9 @@ async function startServer() {
       toUser.squadFriends.push(fromUserId);
     }
 
+    saveUserToFirestore(fromUser);
+    saveUserToFirestore(toUser);
+
     // Notify original sender
     addNotification({
       userId: fromUserId,
@@ -1209,10 +1525,12 @@ async function startServer() {
     if (fromUser) {
       fromUser.squadSentRequests = (fromUser.squadSentRequests || []).filter(id => id !== toUserId);
       fromUser.squadReceivedRequests = (fromUser.squadReceivedRequests || []).filter(id => id !== toUserId);
+      saveUserToFirestore(fromUser);
     }
     if (toUser) {
       toUser.squadSentRequests = (toUser.squadSentRequests || []).filter(id => id !== fromUserId);
       toUser.squadReceivedRequests = (toUser.squadReceivedRequests || []).filter(id => id !== fromUserId);
+      saveUserToFirestore(toUser);
     }
 
     res.json({ success: true });
@@ -1230,49 +1548,90 @@ async function startServer() {
 
     if (user) {
       user.squadFriends = (user.squadFriends || []).filter(id => id !== friendId);
+      saveUserToFirestore(user);
     }
     if (friend) {
       friend.squadFriends = (friend.squadFriends || []).filter(id => id !== userId);
+      saveUserToFirestore(friend);
     }
 
     res.json({ success: true });
   });
 
-  // Squad Chat Group Messages (Runtime in-memory store)
-  const squadChatMessages: Array<{
-    id: string;
-    senderId: string;
-    senderHandle: string;
-    senderName: string;
-    senderAvatar?: string;
-    text: string;
-    timestamp: string;
-  }> = [];
+  // Squad Chat Group Messages (Runtime in-memory store + Firestore sync)
+  app.get('/api/squad/chat', async (req, res) => {
+    try {
+      const limitParam = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '50', 10)));
+      const beforeParam = req.query.before as string | undefined;
 
-  app.get('/api/squad/chat', (req, res) => {
-    res.json({ success: true, messages: squadChatMessages });
+      if (db && hasAdminCredentials) {
+        try {
+          let q = db.collection('squadChatMessages').orderBy('timestamp', 'desc').limit(limitParam);
+          if (beforeParam) {
+            q = q.where('timestamp', '<', beforeParam);
+          }
+          const snapshot = await q.get();
+          const messages = snapshot.docs.map((doc: any) => doc.data()).reverse();
+          return res.json({ success: true, messages });
+        } catch (dbErr: any) {
+          console.error('Firestore squad chat query error:', dbErr.message);
+          return res.status(500).json({ error: 'Database query failed' });
+        }
+      }
+
+      let messages = [...squadChatMessages];
+      if (beforeParam) {
+        messages = messages.filter(m => m.timestamp < beforeParam);
+      }
+      messages = messages.slice(-limitParam);
+
+      res.json({ success: true, messages });
+    } catch (_err) {
+      res.status(500).json({ error: 'Failed to retrieve squad messages' });
+    }
   });
 
-  app.post('/api/squad/chat', (req, res) => {
-    const { senderId, text } = req.body;
-    if (!senderId || !text) {
-      return res.status(400).json({ error: 'Missing parameters' });
+  app.post('/api/squad/chat', squadChatRateLimiter, async (req, res) => {
+    try {
+      const { senderId, text } = req.body;
+      if (!senderId || typeof senderId !== 'string' || !senderId.trim()) {
+        return res.status(400).json({ error: 'Missing or invalid senderId' });
+      }
+      if (!text || typeof text !== 'string' || !text.trim()) {
+        return res.status(400).json({ error: 'Message text cannot be empty' });
+      }
+
+      const trimmedText = text.trim();
+      if (trimmedText.length > 500) {
+        return res.status(400).json({ error: 'Message exceeds maximum limit of 500 characters' });
+      }
+
+      const sender = initialUsers.find(u => u.id === senderId) || await getUserFromFirestore(senderId);
+      if (!sender) {
+        return res.status(404).json({ error: 'Sender profile not found' });
+      }
+
+      const newMessage = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        senderId: sender.id,
+        senderHandle: sender.handle,
+        senderName: sender.name,
+        senderAvatar: sender.avatar,
+        text: trimmedText,
+        timestamp: new Date().toISOString()
+      };
+
+      squadChatMessages.push(newMessage);
+      if (squadChatMessages.length > 500) {
+        squadChatMessages.shift();
+      }
+
+      saveChatMessageToFirestore(newMessage);
+
+      res.json({ success: true, message: newMessage });
+    } catch (_err) {
+      res.status(500).json({ error: 'Failed to post squad message' });
     }
-    const sender = initialUsers.find(u => u.id === senderId);
-    if (!sender) {
-      return res.status(404).json({ error: 'Sender not found' });
-    }
-    const newMessage = {
-      id: `msg_${Date.now()}`,
-      senderId: sender.id,
-      senderHandle: sender.handle,
-      senderName: sender.name,
-      senderAvatar: sender.avatar,
-      text,
-      timestamp: new Date().toISOString()
-    };
-    squadChatMessages.push(newMessage);
-    res.json({ success: true, message: newMessage });
   });
 
   // Get dares with filtering & search
@@ -1343,7 +1702,7 @@ async function startServer() {
   });
 
   // Create a new dare
-  app.post('/api/dares', (req, res) => {
+  app.post('/api/dares', dareCreationRateLimiter, (req, res) => {
     const {
       title,
       description,
@@ -1357,21 +1716,25 @@ async function startServer() {
       expiresInHours,
     } = req.body;
 
-    if (!title || !description) {
-      return res.status(400).json({ error: 'Title and description required' });
+    if (!title || typeof title !== 'string' || title.trim().length < 3 || title.trim().length > 150) {
+      return res.status(400).json({ error: 'Title is required (between 3 and 150 characters)' });
+    }
+    if (!description || typeof description !== 'string' || description.trim().length < 5 || description.trim().length > 2000) {
+      return res.status(400).json({ error: 'Description is required (between 5 and 2000 characters)' });
     }
 
+    const parsedReward = Math.min(10000, Math.max(1, Number(rewardCred) || 50));
     const creator = initialUsers.find(u => u.id === creatorId) || findOrCreateUser(creatorId || 'u_active_user');
-    const durationHours = Number(expiresInHours) || 48;
+    const durationHours = Math.min(168, Math.max(1, Number(expiresInHours) || 48));
 
     const newDare: DareItem = {
-      id: `dare_${Date.now()}`,
+      id: `dare_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       title: title.trim(),
       description: description.trim(),
       proofRequirement: (proofRequirement || 'Submit photo, video, or verified telemetry log.').trim(),
       category: category || 'cyber',
       difficulty: difficulty || 'Level 2 - Moderate',
-      rewardCred: Number(rewardCred) || 50,
+      rewardCred: parsedReward,
       creator: {
         id: creator.id,
         handle: creator.handle,
@@ -1393,6 +1756,8 @@ async function startServer() {
     addTransaction(creator.id, 'challenge_created', 25, `Initiated challenge: "${newDare.title}"`, newDare.id, newDare.title);
     recordUserActivity(creator);
     dares.unshift(newDare);
+    saveDareToFirestore(newDare);
+    saveUserToFirestore(creator);
 
     // If targeted dare, notify recipient!
     if (newDare.targetType === 'direct' && newDare.targetUserHandle) {
@@ -1440,6 +1805,8 @@ async function startServer() {
     dare.acceptedAt = new Date().toISOString();
     dare.expiresAt = new Date(Date.now() + 86400000 * 2).toISOString(); // 48h limit
     recordUserActivity(user);
+    saveDareToFirestore(dare);
+    saveUserToFirestore(user);
 
     // Notify the dare creator that someone accepted their dare!
     if (dare.creator && dare.creator.id !== user.id) {
@@ -1756,8 +2123,11 @@ Respond strictly in valid JSON matching this schema:
         }
         
         recordUserActivity(acceptor);
+        saveUserToFirestore(acceptor);
       }
     }
+
+    saveDareToFirestore(dare);
 
     res.json(dare);
   });
@@ -1805,6 +2175,7 @@ Respond strictly in valid JSON matching this schema:
           addTransaction(voter.id, 'daily_contract_completed', reconContract.rewardCred, `Daily Op Completed: ${reconContract.title}`);
         }
       }
+      saveUserToFirestore(voter);
     }
 
     // Auto-verify if legit votes >= 3 and status was submitted
@@ -1817,8 +2188,11 @@ Respond strictly in valid JSON matching this schema:
         addTransaction(submitter.id, 'dare_completed', dare.rewardCred, `Completed challenge: "${dare.title}"`, dare.id, dare.title);
         awardXpToUser(submitter, dare.rewardCred * 2);
         recordUserActivity(submitter);
+        saveUserToFirestore(submitter);
       }
     }
+
+    saveDareToFirestore(dare);
 
     // Notify proof submitter if voter is not the submitter
     const proofSubmitter = initialUsers.find(u => u.handle === dare.proof?.submittedByHandle);
@@ -1857,6 +2231,8 @@ Respond strictly in valid JSON matching this schema:
       dare.likes += 1;
     }
 
+    saveDareToFirestore(dare);
+
     res.json({ likes: dare.likes, likedUserIds: dare.likedUserIds });
   });
 
@@ -1884,6 +2260,7 @@ Respond strictly in valid JSON matching this schema:
     };
 
     dare.comments.push(comment);
+    saveDareToFirestore(dare);
 
     const notifSnippet = isVoiceNote 
       ? `🎙️ [Voice Note ${voiceDuration ? `${voiceDuration}s: ` : ''}] "${comment.text.slice(0, 45)}${comment.text.length > 45 ? '...' : ''}"`
@@ -2057,6 +2434,7 @@ Provide your response in strictly valid JSON with this structure:
     const notif = notifications.find(n => n.id === req.params.id);
     if (!notif) return res.status(404).json({ error: 'Notification not found' });
     notif.read = true;
+    saveNotificationToFirestore(notif);
     res.json(notif);
   });
 
@@ -2066,6 +2444,7 @@ Provide your response in strictly valid JSON with this structure:
     notifications.forEach(n => {
       if (!userId || n.userId === userId) {
         n.read = true;
+        saveNotificationToFirestore(n);
       }
     });
     res.json({ success: true });
@@ -2077,6 +2456,7 @@ Provide your response in strictly valid JSON with this structure:
     if (idx > -1) {
       notifications.splice(idx, 1);
     }
+    deleteNotificationFromFirestore(req.params.id);
     res.json({ success: true });
   });
 
@@ -2086,7 +2466,10 @@ Provide your response in strictly valid JSON with this structure:
     if (userId) {
       for (let i = notifications.length - 1; i >= 0; i--) {
         if (notifications[i].userId === userId) {
-          notifications.splice(i, 1);
+          const removed = notifications.splice(i, 1)[0];
+          if (removed && removed.id) {
+            deleteNotificationFromFirestore(removed.id);
+          }
         }
       }
     }
@@ -2094,8 +2477,6 @@ Provide your response in strictly valid JSON with this structure:
   });
 
   // Squad Tournaments
-  let tournaments: SquadTournament[] = [...initialTournaments];
-
   app.get('/api/tournaments', (_req, res) => {
     res.json(tournaments);
   });
@@ -2131,6 +2512,8 @@ Provide your response in strictly valid JSON with this structure:
       }
     }
     tourney.potCred += wager;
+    saveTournamentToFirestore(tourney);
+    saveUserToFirestore(user);
 
     // Send notification
     addNotification({
@@ -2148,8 +2531,6 @@ Provide your response in strictly valid JSON with this structure:
   });
 
   // --- LIVE SQUAD & 1v1 HEAD-TO-HEAD DUELS ARENA ---
-  let liveDuels: LiveDuel[] = [...initialLiveDuels];
-
   // Get all active duels
   app.get('/api/duels', (_req, res) => {
     res.json(liveDuels);
@@ -2242,6 +2623,8 @@ Provide your response in strictly valid JSON with this structure:
     };
 
     liveDuels.unshift(newDuel);
+    saveDuelToFirestore(newDuel);
+    if (user) saveUserToFirestore(user);
     res.json({ duel: newDuel, userCred: user ? user.cred : undefined });
   });
 
@@ -2274,6 +2657,7 @@ Provide your response in strictly valid JSON with this structure:
       user.cred += duel.potCred;
       user.completedDaresCount = (user.completedDaresCount || 0) + 1;
       addTransaction(user.id, 'dare_completed', duel.potCred, `Won Live Head-to-Head Duel "${duel.title}"`);
+      saveUserToFirestore(user);
     }
 
     // Award winning spectator wagers
@@ -2283,9 +2667,12 @@ Provide your response in strictly valid JSON with this structure:
         if (spectator) {
           spectator.cred += Math.round(w.potentialWinCred);
           addTransaction(spectator.id, 'stake_won', Math.round(w.potentialWinCred), `Won Spectator Wager on ${participant.handle} in Duel "${duel.title}"`);
+          saveUserToFirestore(spectator);
         }
       }
     });
+
+    saveDuelToFirestore(duel);
 
     res.json({ duel, userCred: user ? user.cred : undefined });
   });
@@ -2309,6 +2696,7 @@ Provide your response in strictly valid JSON with this structure:
 
     user.cred -= stake;
     addTransaction(user.id, 'dare_accepted', -stake, `Spectator wager of ${stake} CR placed on duel "${duel.title}"`);
+    saveUserToFirestore(user);
 
     const participant = duel.challenger.id === targetParticipantId ? duel.challenger : duel.opponent;
     participant.totalWagersCred += stake;
@@ -2322,6 +2710,8 @@ Provide your response in strictly valid JSON with this structure:
       potentialWinCred: potentialWin,
       timestamp: new Date().toISOString(),
     });
+
+    saveDuelToFirestore(duel);
 
     res.json({ duel, userCred: user.cred });
   });
@@ -2345,6 +2735,8 @@ Provide your response in strictly valid JSON with this structure:
       timestamp: Date.now(),
     });
 
+    saveDuelToFirestore(duel);
+
     res.json({ duel });
   });
 
@@ -2364,6 +2756,8 @@ Provide your response in strictly valid JSON with this structure:
         duel.winnerDeclaredReason = `Declared winner on clock expiry with higher telemetry sync (${duel.opponent.progressPercent}% vs ${duel.challenger.progressPercent}%).`;
       }
     }
+
+    saveDuelToFirestore(duel);
 
     res.json({ duel });
   });
@@ -2476,6 +2870,8 @@ Provide your response in strictly valid JSON with this structure:
       actorAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
       read: false,
     });
+
+    saveUserToFirestore(user);
 
     res.json(user);
   });
@@ -2607,6 +3003,8 @@ Provide your response in strictly valid JSON with this structure:
       read: false,
     });
 
+    saveUserToFirestore(user);
+
     res.json({
       success: true,
       user,
@@ -2651,6 +3049,8 @@ Provide your response in strictly valid JSON with this structure:
         });
       }
     }
+
+    saveUserToFirestore(user);
 
     res.json({ success: true, user });
   });
@@ -2703,6 +3103,7 @@ Provide your response in strictly valid JSON with this structure:
     }
 
     addTransaction(user.id, 'booster_activated', 0, `Activated Booster: ${catalogItem.name}`);
+    saveUserToFirestore(user);
 
     res.json({
       success: true,
@@ -2766,6 +3167,8 @@ Provide your response in strictly valid JSON with this structure:
       actorAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150',
       read: false,
     });
+
+    saveUserToFirestore(user);
 
     res.json({ success: true, user, state });
   });
@@ -2835,6 +3238,8 @@ Provide your response in strictly valid JSON with this structure:
       }
     }
 
+    saveUserToFirestore(user);
+
     res.json({
       success: true,
       user,
@@ -2851,6 +3256,7 @@ Provide your response in strictly valid JSON with this structure:
 
     if (user.hasElitePass || user.isPro) {
       user.hasElitePass = true;
+      saveUserToFirestore(user);
       return res.json({ success: true, user, message: 'Elite Pass is already unlocked!' });
     }
 
@@ -2876,6 +3282,8 @@ Provide your response in strictly valid JSON with this structure:
       actorAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150',
       read: false,
     });
+
+    saveUserToFirestore(user);
 
     res.json({ success: true, user });
   });
@@ -2960,6 +3368,9 @@ Provide your response in strictly valid JSON with this structure:
       }
     }
 
+    saveUserToFirestore(user);
+    saveDareToFirestore(dare);
+
     res.json({
       success: true,
       user,
@@ -3004,6 +3415,9 @@ Provide your response in strictly valid JSON with this structure:
       actorAvatar: sender.avatar,
       read: false,
     });
+
+    saveUserToFirestore(sender);
+    saveUserToFirestore(recipient);
 
     res.json({ success: true, sender, recipient, tipAmount });
   });
@@ -3139,6 +3553,9 @@ Provide your response in strictly valid JSON with this structure:
       read: false,
     });
 
+    saveDropZoneToFirestore(zone);
+    saveUserToFirestore(user);
+
     res.json({
       success: true,
       dropZone: zone,
@@ -3211,6 +3628,8 @@ Provide your response in strictly valid JSON with this structure:
     };
 
     dropZones.unshift(newZone);
+    saveDropZoneToFirestore(newZone);
+    saveUserToFirestore(user);
 
     res.json({
       success: true,
@@ -3549,6 +3968,8 @@ Provide your response in strictly valid JSON with this structure:
               actorAvatar: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=150&auto=format&fit=crop&q=80',
               read: false,
             });
+
+            saveUserToFirestore(user);
           }
           break;
         }
