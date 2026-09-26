@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import Stripe from 'stripe';
 import { cert, getApps, initializeApp, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { 
   DareItem, 
   UserProfile, 
@@ -35,9 +36,25 @@ import { DARE_PRODUCTS, syncStripeCatalog } from './scripts/sync-stripe-catalog'
 
 dotenv.config();
 
+// Types for Authenticated Request
+export interface AuthenticatedUser {
+  uid: string;
+  email?: string;
+  token?: any;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedUser;
+    }
+  }
+}
+
 // Initialize Firebase Admin safely with support for all credential formats
 import firebaseConfig from './firebase-applet-config.json';
 let db: any = null;
+let adminAuth: any = null;
 let hasAdminCredentials = false;
 
 try {
@@ -91,9 +108,63 @@ try {
     app = getApp();
   }
   db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
+  adminAuth = getAdminAuth(app);
 } catch (e) {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
+
+// Reusable Express Authentication Middleware enforcing Firebase ID token validation
+const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid Bearer authorization header' });
+  }
+
+  const idToken = authHeader.split('Bearer ')[1]?.trim();
+  if (!idToken) {
+    return res.status(401).json({ error: 'Unauthorized: Empty token' });
+  }
+
+  try {
+    if (adminAuth && hasAdminCredentials) {
+      const decoded = await adminAuth.verifyIdToken(idToken);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        token: decoded,
+      };
+      return next();
+    } else {
+      // Development / sandbox mode token parser
+      try {
+        const parts = idToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+          if (payload && (payload.user_id || payload.sub || payload.uid)) {
+            req.user = {
+              uid: payload.user_id || payload.sub || payload.uid,
+              email: payload.email,
+              token: payload,
+            };
+            return next();
+          }
+        }
+      } catch (_e) {}
+
+      if (idToken.startsWith('u_') || idToken.startsWith('test_') || idToken.startsWith('auth_') || idToken.startsWith('guest_')) {
+        req.user = {
+          uid: idToken,
+          token: { uid: idToken }
+        };
+        return next();
+      }
+
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+  } catch (err: any) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired authentication token' });
+  }
+};
 
 // Rate Limiting Engine
 interface RateLimitBucket {
@@ -576,31 +647,31 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
       handle: initialHandle,
       name: initialName,
       avatar: initialAvatar,
-      cred: defaultProfile?.cred !== undefined ? defaultProfile.cred : (isDareOpsOwner ? 500 : 0),
-      xp: defaultProfile?.xp || 0,
-      level: defaultProfile?.level || 1,
-      rank: defaultProfile?.rank || 'New Recruit',
-      completedDaresCount: defaultProfile?.completedDaresCount || 0,
-      createdDaresCount: defaultProfile?.createdDaresCount || 0,
-      streak: defaultProfile?.streak || 0,
-      lastActiveDate: defaultProfile?.lastActiveDate || new Date().toISOString().split('T')[0],
-      badges: defaultProfile?.badges || (isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : []),
-      isPro: defaultProfile?.isPro !== undefined ? Boolean(defaultProfile.isPro) : isDareOpsOwner,
-      proTier: defaultProfile?.proTier || (isDareOpsOwner ? 'ultra' : null),
-      inventory: defaultProfile?.inventory || [],
-      activeBoosters: defaultProfile?.activeBoosters || [],
-      seasonPassLevel: defaultProfile?.seasonPassLevel || 1,
-      seasonPassXp: defaultProfile?.seasonPassXp || 0,
-      seasonPassClaimedFree: defaultProfile?.seasonPassClaimedFree || [],
-      seasonPassClaimedElite: defaultProfile?.seasonPassClaimedElite || [],
-      activeStakes: defaultProfile?.activeStakes || [],
+      cred: isDareOpsOwner ? 500 : 0,
+      xp: 0,
+      level: 1,
+      rank: 'New Recruit',
+      completedDaresCount: 0,
+      createdDaresCount: 0,
+      streak: 0,
+      lastActiveDate: new Date().toISOString().split('T')[0],
+      badges: isDareOpsOwner ? ['⚡ DARE Ops Commander', '👑 Syndicate Overlord', '💎 Founder'] : [],
+      isPro: isDareOpsOwner,
+      proTier: isDareOpsOwner ? 'ultra' : null,
+      inventory: [],
+      activeBoosters: [],
+      seasonPassLevel: 1,
+      seasonPassXp: 0,
+      seasonPassClaimedFree: [],
+      seasonPassClaimedElite: [],
+      activeStakes: [],
       totalCredWonInStakes: 0,
-      squadFriends: defaultProfile?.squadFriends || [],
-      squadSentRequests: defaultProfile?.squadSentRequests || [],
-      squadReceivedRequests: defaultProfile?.squadReceivedRequests || [],
+      squadFriends: [],
+      squadSentRequests: [],
+      squadReceivedRequests: [],
       disableHelpBubbles: defaultProfile?.disableHelpBubbles || false,
       referralCode: defaultProfile?.referralCode,
-      referralCount: defaultProfile?.referralCount || 0,
+      referralCount: 0,
     };
     initialUsers.push(newUser);
     saveUserToFirestore(newUser);
@@ -627,16 +698,8 @@ function findOrCreateUser(userId: string, defaultProfile?: Partial<UserProfile> 
         user.avatar = defaultProfile.avatar;
       }
     }
-    if (defaultProfile.cred !== undefined && defaultProfile.cred > user.cred) user.cred = defaultProfile.cred;
-    if (defaultProfile.xp !== undefined && defaultProfile.xp > (user.xp || 0)) user.xp = defaultProfile.xp;
-    if (defaultProfile.level !== undefined && defaultProfile.level > (user.level || 1)) user.level = defaultProfile.level;
-    if (defaultProfile.streak !== undefined && defaultProfile.streak > (user.streak || 1)) user.streak = defaultProfile.streak;
-    if (defaultProfile.isPro !== undefined) user.isPro = Boolean(defaultProfile.isPro);
-    if (defaultProfile.proTier !== undefined) user.proTier = defaultProfile.proTier;
-    if (defaultProfile.disableHelpBubbles !== undefined) user.disableHelpBubbles = defaultProfile.disableHelpBubbles;
-    if (defaultProfile.inventory && defaultProfile.inventory.length > 0) user.inventory = defaultProfile.inventory;
-    if (defaultProfile.badges && defaultProfile.badges.length > 0) {
-      user.badges = Array.from(new Set([...user.badges, ...defaultProfile.badges]));
+    if (defaultProfile.disableHelpBubbles !== undefined) {
+      user.disableHelpBubbles = defaultProfile.disableHelpBubbles;
     }
     saveUserToFirestore(user);
   }
@@ -1165,14 +1228,19 @@ async function startServer() {
   });
 
   // Update user profile (Username, Display Name, Profile Picture / Avatar)
-  const handleProfileUpdate = (req: any, res: any) => {
-    const userId = req.params.id || req.body.id || req.body.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+  const handleProfileUpdate = (req: express.Request, res: express.Response) => {
+    const callerId = req.user?.uid;
+    if (!callerId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
+    const targetUserId = req.params.id || req.body.id || req.body.userId;
+    if (targetUserId && targetUserId !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: Cannot update another user profile' });
     }
 
     const { handle, name, avatar, disableHelpBubbles } = req.body;
-    const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
+    const user = initialUsers.find(u => u.id === callerId) || findOrCreateUser(callerId);
 
     const oldHandle = user.handle;
     const oldName = user.name;
@@ -1195,7 +1263,7 @@ async function startServer() {
 
       // Check if handle is taken by another user
       const isTaken = initialUsers.some(u => 
-        u.id !== userId && u.handle.toLowerCase() === formattedHandle.toLowerCase()
+        u.id !== callerId && u.handle.toLowerCase() === formattedHandle.toLowerCase()
       );
       if (isTaken) {
         return res.status(400).json({ 
@@ -1268,18 +1336,28 @@ async function startServer() {
     return res.json({ success: true, user });
   };
 
-  app.put('/api/users/:id/profile', handleProfileUpdate);
-  app.post('/api/users/:id/profile', handleProfileUpdate);
-  app.put('/api/users/profile', handleProfileUpdate);
-  app.post('/api/users/profile', handleProfileUpdate);
+  app.put('/api/users/:id/profile', requireAuth, handleProfileUpdate);
+  app.post('/api/users/:id/profile', requireAuth, handleProfileUpdate);
+  app.put('/api/users/profile', requireAuth, handleProfileUpdate);
+  app.post('/api/users/profile', requireAuth, handleProfileUpdate);
 
   // Sync / Register active user profile
-  app.post('/api/users/sync', authSyncRateLimiter, (req, res) => {
+  app.post('/api/users/sync', requireAuth, authSyncRateLimiter, (req, res) => {
+    const callerId = req.user!.uid;
     const profile = req.body as Partial<UserProfile> & { isExplicitUpdate?: boolean };
-    if (!profile || !profile.id || typeof profile.id !== 'string') {
-      return res.status(400).json({ error: 'Valid user ID is required' });
+    
+    if (profile?.id && profile.id !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: Cannot synchronize profile for another user ID' });
     }
-    const user = findOrCreateUser(profile.id, profile);
+
+    const safeMetadata = {
+      name: profile?.name,
+      handle: profile?.handle,
+      avatar: profile?.avatar,
+      disableHelpBubbles: profile?.disableHelpBubbles,
+    };
+
+    const user = findOrCreateUser(callerId, safeMetadata);
     res.json(user);
   });
 
@@ -1298,12 +1376,19 @@ async function startServer() {
   });
 
   // Claim Daily Cyberpunk Stipend
-  app.post('/api/users/:userId/claim-stipend', (req, res) => {
-    const { userId } = req.params;
-    const user = initialUsers.find(u => u.id === userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+  app.post('/api/users/:userId/claim-stipend', requireAuth, (req, res) => {
+    const callerId = req.user!.uid;
+    if (req.params.userId !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: Cannot claim stipend for another user account' });
+    }
+
+    const user = initialUsers.find(u => u.id === callerId) || findOrCreateUser(callerId);
 
     const today = new Date().toISOString().split('T')[0];
+    if (user.stipendClaimedAt === today) {
+      return res.status(400).json({ error: 'Daily stipend has already been claimed for today. Please return tomorrow!' });
+    }
+
     user.stipendClaimedAt = today;
     user.cred += 150;
     
@@ -1316,11 +1401,14 @@ async function startServer() {
   });
 
   // Upgrade to Premium PRO status
-  app.post('/api/users/:userId/upgrade-pro', (req, res) => {
-    const { userId } = req.params;
+  app.post('/api/users/:userId/upgrade-pro', requireAuth, (req, res) => {
+    const callerId = req.user!.uid;
+    if (req.params.userId !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: Cannot upgrade pro status for another user account' });
+    }
+
     const { tier } = req.body; // 'runner' | 'elite' | 'overlord'
-    const user = initialUsers.find(u => u.id === userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const user = initialUsers.find(u => u.id === callerId) || findOrCreateUser(callerId);
 
     const costMap = {
       runner: 99,
@@ -1391,10 +1479,13 @@ async function startServer() {
   });
 
   // Activate Streak Shield for Pro Users
-  app.post('/api/users/:userId/activate-shield', (req, res) => {
-    const { userId } = req.params;
-    const user = initialUsers.find(u => u.id === userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+  app.post('/api/users/:userId/activate-shield', requireAuth, (req, res) => {
+    const callerId = req.user!.uid;
+    if (req.params.userId !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: Cannot activate streak shield for another user' });
+    }
+
+    const user = initialUsers.find(u => u.id === callerId) || findOrCreateUser(callerId);
     
     if (!user.isPro) {
       return res.status(403).json({ error: 'Streak Shield requires premium PRO membership status!' });
@@ -1414,14 +1505,18 @@ async function startServer() {
   // --- SQUAD SYSTEM ENDPOINTS ---
 
   // Send Squad (Friend) Request
-  app.post('/api/squad/request', (req, res) => {
-    const { fromUserId, toUserId } = req.body;
-    if (!fromUserId || !toUserId) {
-      return res.status(400).json({ error: 'Missing required parameters fromUserId/toUserId' });
+  app.post('/api/squad/request', requireAuth, (req, res) => {
+    const fromUserId = req.user!.uid;
+    const { toUserId } = req.body;
+    if (!toUserId) {
+      return res.status(400).json({ error: 'Missing required parameter toUserId' });
+    }
+    if (fromUserId === toUserId) {
+      return res.status(400).json({ error: 'Cannot send squad request to yourself' });
     }
 
-    const fromUser = initialUsers.find(u => u.id === fromUserId);
-    const toUser = initialUsers.find(u => u.id === toUserId);
+    const fromUser = initialUsers.find(u => u.id === fromUserId) || findOrCreateUser(fromUserId);
+    const toUser = initialUsers.find(u => u.id === toUserId) || findOrCreateUser(toUserId);
 
     if (!fromUser || !toUser) {
       return res.status(404).json({ error: 'User(s) not found' });
@@ -1463,14 +1558,15 @@ async function startServer() {
   });
 
   // Accept Squad Request
-  app.post('/api/squad/accept', (req, res) => {
-    const { fromUserId, toUserId } = req.body; // fromUserId sent it, toUserId is accepting it
-    if (!fromUserId || !toUserId) {
-      return res.status(400).json({ error: 'Missing required parameters' });
+  app.post('/api/squad/accept', requireAuth, (req, res) => {
+    const toUserId = req.user!.uid; // The authenticated user is the one accepting the incoming request
+    const { fromUserId } = req.body; // The user who sent the original request
+    if (!fromUserId) {
+      return res.status(400).json({ error: 'Missing required parameter fromUserId' });
     }
 
-    const fromUser = initialUsers.find(u => u.id === fromUserId);
-    const toUser = initialUsers.find(u => u.id === toUserId);
+    const fromUser = initialUsers.find(u => u.id === fromUserId) || findOrCreateUser(fromUserId);
+    const toUser = initialUsers.find(u => u.id === toUserId) || findOrCreateUser(toUserId);
 
     if (!fromUser || !toUser) {
       return res.status(404).json({ error: 'User(s) not found' });
@@ -1513,23 +1609,24 @@ async function startServer() {
   });
 
   // Reject/Cancel Squad Request
-  app.post('/api/squad/cancel', (req, res) => {
-    const { fromUserId, toUserId } = req.body;
-    if (!fromUserId || !toUserId) {
-      return res.status(400).json({ error: 'Missing parameters' });
+  app.post('/api/squad/cancel', requireAuth, (req, res) => {
+    const callerId = req.user!.uid;
+    const { targetUserId } = req.body;
+    if (!targetUserId) {
+      return res.status(400).json({ error: 'Missing parameter targetUserId' });
     }
 
-    const fromUser = initialUsers.find(u => u.id === fromUserId);
-    const toUser = initialUsers.find(u => u.id === toUserId);
+    const fromUser = initialUsers.find(u => u.id === callerId);
+    const toUser = initialUsers.find(u => u.id === targetUserId);
 
     if (fromUser) {
-      fromUser.squadSentRequests = (fromUser.squadSentRequests || []).filter(id => id !== toUserId);
-      fromUser.squadReceivedRequests = (fromUser.squadReceivedRequests || []).filter(id => id !== toUserId);
+      fromUser.squadSentRequests = (fromUser.squadSentRequests || []).filter(id => id !== targetUserId);
+      fromUser.squadReceivedRequests = (fromUser.squadReceivedRequests || []).filter(id => id !== targetUserId);
       saveUserToFirestore(fromUser);
     }
     if (toUser) {
-      toUser.squadSentRequests = (toUser.squadSentRequests || []).filter(id => id !== fromUserId);
-      toUser.squadReceivedRequests = (toUser.squadReceivedRequests || []).filter(id => id !== fromUserId);
+      toUser.squadSentRequests = (toUser.squadSentRequests || []).filter(id => id !== callerId);
+      toUser.squadReceivedRequests = (toUser.squadReceivedRequests || []).filter(id => id !== callerId);
       saveUserToFirestore(toUser);
     }
 
@@ -1537,13 +1634,14 @@ async function startServer() {
   });
 
   // Remove Squad Member
-  app.post('/api/squad/remove', (req, res) => {
-    const { userId, friendId } = req.body;
-    if (!userId || !friendId) {
-      return res.status(400).json({ error: 'Missing parameters' });
+  app.post('/api/squad/remove', requireAuth, (req, res) => {
+    const callerId = req.user!.uid;
+    const { friendId } = req.body;
+    if (!friendId) {
+      return res.status(400).json({ error: 'Missing parameter friendId' });
     }
 
-    const user = initialUsers.find(u => u.id === userId);
+    const user = initialUsers.find(u => u.id === callerId);
     const friend = initialUsers.find(u => u.id === friendId);
 
     if (user) {
@@ -1551,7 +1649,7 @@ async function startServer() {
       saveUserToFirestore(user);
     }
     if (friend) {
-      friend.squadFriends = (friend.squadFriends || []).filter(id => id !== userId);
+      friend.squadFriends = (friend.squadFriends || []).filter(id => id !== callerId);
       saveUserToFirestore(friend);
     }
 
@@ -1591,12 +1689,10 @@ async function startServer() {
     }
   });
 
-  app.post('/api/squad/chat', squadChatRateLimiter, async (req, res) => {
+  app.post('/api/squad/chat', requireAuth, squadChatRateLimiter, async (req, res) => {
     try {
-      const { senderId, text } = req.body;
-      if (!senderId || typeof senderId !== 'string' || !senderId.trim()) {
-        return res.status(400).json({ error: 'Missing or invalid senderId' });
-      }
+      const senderId = req.user!.uid;
+      const { text } = req.body;
       if (!text || typeof text !== 'string' || !text.trim()) {
         return res.status(400).json({ error: 'Message text cannot be empty' });
       }
@@ -1606,7 +1702,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Message exceeds maximum limit of 500 characters' });
       }
 
-      const sender = initialUsers.find(u => u.id === senderId) || await getUserFromFirestore(senderId);
+      const sender = initialUsers.find(u => u.id === senderId) || await getUserFromFirestore(senderId) || findOrCreateUser(senderId);
       if (!sender) {
         return res.status(404).json({ error: 'Sender profile not found' });
       }
@@ -1911,13 +2007,32 @@ Instructions:
   });
 
   // Submit proof for a dare & trigger AI Neural Arbiter Evaluation
-  app.post('/api/dares/:id/proof', async (req, res) => {
+  app.post('/api/dares/:id/proof', requireAuth, proofSubmissionRateLimiter, async (req, res) => {
     const dare = dares.find(d => d.id === req.params.id);
     if (!dare) return res.status(404).json({ error: 'Dare not found' });
 
-    const { caption, mediaUrl, userHandle, location } = req.body;
+    const callerId = req.user!.uid;
+    const callerUser = initialUsers.find(u => u.id === callerId) || findOrCreateUser(callerId);
 
-    if (!caption) {
+    // Verify that the dare is open or accepted by the caller
+    if (dare.acceptedBy && dare.acceptedBy.id && dare.acceptedBy.id !== callerId) {
+      return res.status(403).json({ error: 'Forbidden: You are not the assigned operative for this dare challenge' });
+    }
+
+    // If dare was still open, assign to caller
+    if (!dare.acceptedBy) {
+      dare.acceptedBy = {
+        id: callerUser.id,
+        handle: callerUser.handle,
+        name: callerUser.name,
+        avatar: callerUser.avatar,
+      };
+      dare.acceptedAt = new Date().toISOString();
+    }
+
+    const { caption, mediaUrl, location } = req.body;
+
+    if (!caption || typeof caption !== 'string' || !caption.trim()) {
       return res.status(400).json({ error: 'Proof caption/description is required' });
     }
 
@@ -2038,7 +2153,7 @@ Respond strictly in valid JSON matching this schema:
       caption,
       mediaUrl: mediaUrl || '',
       submittedAt: new Date().toISOString(),
-      submittedByHandle: userHandle || (dare.acceptedBy ? dare.acceptedBy.handle : '@operative'),
+      submittedByHandle: callerUser.handle,
       aiJudgement: aiJudgement || undefined,
       telemetry,
       communityVotes: {
@@ -2051,7 +2166,7 @@ Respond strictly in valid JSON matching this schema:
     // If Neural Arbiter says LEGENDARY or LEGIT, mark as verified and award cred; otherwise remains 'submitted' for community verification
     if (aiJudgement && aiJudgement.verdict !== 'BUSTED') {
       dare.status = 'verified';
-      const acceptor = initialUsers.find(u => u.handle === dare.proof?.submittedByHandle);
+      const acceptor = callerUser;
       if (acceptor) {
         let earnedCred = dare.rewardCred;
         let aiBonus = aiJudgement.bonusCred || 0;
@@ -3890,7 +4005,7 @@ Provide your response in strictly valid JSON with this structure:
   });
 
   // 6. Webhook Listener
-  app.post('/api/stripe/webhook', async (req: any, res) => {
+  app.post('/api/stripe/webhook', paymentRateLimiter, async (req: any, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const stripe = getStripe();
@@ -3905,15 +4020,40 @@ Provide your response in strictly valid JSON with this structure:
     }
 
     try {
-      if (webhookSecret && sig && req.rawBody) {
+      if (webhookSecret) {
+        if (!sig || !req.rawBody) {
+          return res.status(400).send('Webhook Error: Missing stripe-signature header or raw body');
+        }
         event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+      } else if (process.env.NODE_ENV === 'production') {
+        console.error('CRITICAL: STRIPE_WEBHOOK_SECRET is not configured in production environment');
+        return res.status(500).send('Webhook Error: STRIPE_WEBHOOK_SECRET not configured');
       } else {
-        event = req.body as Stripe.Event;
+        // Development sandbox only
+        if (sig && req.rawBody) {
+          try {
+            event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret || '');
+          } catch (_e) {
+            event = req.body as Stripe.Event;
+          }
+        } else {
+          event = req.body as Stripe.Event;
+        }
       }
     } catch (err: any) {
       console.error('Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
+
+    if (!event || !event.type || !event.id) {
+      return res.status(400).send('Webhook Error: Invalid event payload');
+    }
+
+    // Enforce idempotency
+    if (await isStripeEventProcessed(event.id)) {
+      return res.json({ received: true, idempotent: true });
+    }
+    await recordStripeEventProcessed(event.id, event.type);
 
     // Process Stripe Events
     try {

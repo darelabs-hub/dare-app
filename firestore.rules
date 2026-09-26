@@ -11,45 +11,46 @@ service cloud.firestore {
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
 
-    // Users Collection
+    // Users Collection (Direct client updates can only modify non-authoritative profile fields)
     match /users/{userId} {
-      allow get: if isSignedIn();
+      allow get: if true;
       allow list: if isSignedIn();
-      allow create, update: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+        (!request.resource.data.keys().hasAny(['cred', 'xp', 'level', 'streak', 'badges', 'isPro', 'proTier', 'transactions', 'stipendClaimedAt']) || 
+         request.resource.data.cred == 0);
+      allow update: if isOwner(userId) && 
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'cred', 'xp', 'level', 'streak', 'badges', 'isPro', 'proTier', 
+          'transactions', 'stipendClaimedAt', 'activeStakes', 'totalCredWonInStakes'
+        ]);
       allow delete: if false;
     }
 
-    // Dares Collection
+    // Dares Collection (Public read; mutations handled via server API)
     match /dares/{dareId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow write: if false; // Server authoritative
     }
 
-    // Live Duels Collection
+    // Live Duels Collection (Public read; mutations handled via server API)
     match /duels/{duelId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow write: if false; // Server authoritative
     }
 
-    // Drop Zones Collection
+    // Drop Zones Collection (Public read; mutations handled via server API)
     match /dropZones/{dropZoneId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow write: if false; // Server authoritative
     }
 
     // Squad Chat Messages Collection
     match /squadChatMessages/{messageId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
       allow update, delete: if false;
     }
@@ -58,9 +59,7 @@ service cloud.firestore {
     match /tournaments/{tournamentId} {
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if false;
+      allow write: if false; // Server authoritative
     }
 
     // Transactions Ledger (Server-side authoritative writes only)
@@ -76,7 +75,7 @@ service cloud.firestore {
       allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if false; // server generated
+      allow create: if false; // Server generated
     }
 
     // Stripe Webhook Idempotency Store (Internal Server Only)
