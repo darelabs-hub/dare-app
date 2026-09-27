@@ -33,6 +33,7 @@ import {
 import { UserProfile, DareItem } from '../types';
 import { playSound } from '../utils/soundEffects';
 import { DareDayLogo } from './DareDayLogo';
+import { trackEvent } from '../utils/analytics';
 
 interface LandingPageExperienceProps {
   currentUser: UserProfile;
@@ -80,6 +81,16 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
   const dailyDareCred = dailyMission?.dare?.credReward || 50;
 
   const handleAcceptDailyHero = () => {
+    trackEvent({
+      event: 'landing_cta_clicked',
+      category: 'navigation',
+      label: 'daily_mission',
+      metadata: {
+        dareTitle: dailyDareTitle,
+        category: dailyDareCategory,
+        credReward: dailyDareCred,
+      },
+    });
     playSound('levelUp');
     setIsDailyAccepted(true);
     if (dailyMission?.dare) {
@@ -220,6 +231,11 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  trackEvent({
+                    event: 'landing_cta_clicked',
+                    category: 'navigation',
+                    label: 'start_dare',
+                  });
                   playSound('pop');
                   onOpenCreateModal();
                 }}
@@ -233,7 +249,14 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
               <button
                 type="button"
-                onClick={scrollToFeed}
+                onClick={() => {
+                  trackEvent({
+                    event: 'landing_cta_clicked',
+                    category: 'navigation',
+                    label: 'explore_challenges',
+                  });
+                  scrollToFeed();
+                }}
                 className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 backdrop-blur-md px-6 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-slate-200 transition-all hover:border-pink-500/50 hover:bg-slate-800 hover:text-white active:scale-95 cursor-pointer shadow-lg"
               >
                 <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400 shrink-0" />
@@ -337,8 +360,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
       {/* ========================================================================= */}
       {/* 2. SECTION 2: STOP SCROLLING. START DOING. (5-Step Interactive Process) */}
-      {/* ========================================================================= */}
-      <section id="how-it-works-section" className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0B12] border-b border-slate-800/80 overflow-hidden">
+      {/* ========================================================================= */
+            <section id="how-it-works-section" className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0B12] border-b border-slate-800/80 overflow-hidden">
         <div className="mx-auto max-w-7xl">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
@@ -668,6 +691,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
         </div>
       </section>
+            </section>
 
       {/* ========================================================================= */}
       {/* 4. SECTION 4: REAL WORLD / GPS (Your City is Full of Dares)             */}
@@ -827,16 +851,27 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 ))}
               </div>
 
-              <div className="pt-3 flex flex-wrap gap-3 sm:gap-4">
+              <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   onClick={() => {
                     playSound('pop');
                     onOpenCreateModal();
                   }}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-600 px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-black uppercase tracking-wider text-white shadow-[0_0_25px_rgba(255,0,127,0.4)] hover:brightness-110 active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white px-5 py-3 text-xs sm:text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-pink-600/20"
                 >
-                  <Flame className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span>CREATE A DARE FOR A FRIEND</span>
+                  <Flame className="h-4 w-4" />
+                  DARE A FRIEND
+                </button>
+
+                <button
+                  onClick={() => {
+                    playSound('laser');
+                    onOpenLiveDuels();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-purple-500/40 bg-purple-950/30 hover:bg-purple-900/40 text-purple-200 px-5 py-3 text-xs sm:text-sm font-black uppercase tracking-wider transition-all"
+                >
+                  <Swords className="h-4 w-4 text-purple-400" />
+                  LIVE 1V1
                 </button>
 
                 <button
@@ -844,17 +879,58 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                     playSound('click');
                     onOpenTournaments();
                   }}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-slate-200 hover:text-white hover:border-pink-500/50 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-950/20 hover:bg-amber-900/30 text-amber-200 px-5 py-3 text-xs sm:text-sm font-black uppercase tracking-wider transition-all"
                 >
-                  <Swords className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400" />
-                  <span>SQUAD WARS</span>
+                  <Trophy className="h-4 w-4 text-amber-400" />
+                  TOURNAMENTS
                 </button>
+              </div>
+            </div>
+
+            {/* Social Feed Preview */}
+            <div className="relative z-10 mt-8 sm:mt-10 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              
+              <div className="rounded-2xl bg-black/40 border border-slate-800 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-xs font-black text-white">
+                    JD
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white">@josh_dare</div>
+                    <div className="text-[10px] text-slate-500">Sample squad challenge</div>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-slate-300 leading-relaxed">
+                  "I dare @alex to complete the sunrise hill sprint before 7AM."
+                </p>
+                <div className="mt-3 flex items-center gap-4 text-[10px] text-slate-500 font-mono">
+                  <span>🔥 14 accepted</span>
+                  <span>💬 6 replies</span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-black/40 border border-slate-800 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-black text-white">
+                    SK
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white">@sarah_k</div>
+                    <div className="text-[10px] text-slate-500">Sample proof submission</div>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-slate-300 leading-relaxed">
+                  "Challenge complete. Proof submitted. Waiting for AI verification."
+                </p>
+                <div className="mt-3 flex items-center gap-4 text-[10px] text-slate-500 font-mono">
+                  <span>🤖 AI checking</span>
+                  <span>🏆 +100 Cred potential</span>
+                </div>
               </div>
 
             </div>
 
           </div>
-
         </div>
       </section>
 
@@ -907,8 +983,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Right Interactive AI Judging Simulator */}
+                        {/* Right Interactive AI Judging Simulator */}
             <div className="lg:col-span-6 w-full max-w-full">
               <div className="rounded-3xl border border-purple-500/40 bg-[#11111A] p-4 sm:p-6 shadow-[0_0_40px_rgba(168,85,247,0.2)]">
                 
@@ -938,7 +1013,6 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                   </div>
                 </div>
 
-                {/* Interactive Simulator Screen */}
                 <div className="my-5 p-4 sm:p-5 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
                   
                   {aiJudgeStage === 'upload' && (
@@ -1031,7 +1105,6 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             </p>
           </div>
 
-          {/* Stats & Economy Matrix */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             
             <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-6 text-center shadow-lg">
@@ -1095,324 +1168,331 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               🛡 Open Cyber Armory
             </button>
             <button
-              onClick={() => {
-                playSound('levelUp');
-                onOpenProUpgrade();
-              }}
-              className="px-5 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-pink-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition-all cursor-pointer"
-            >
-              👑 Explore DARE PRO Tiers
-            </button>
-          </div>
-
+                          }}
+            className="px-5 sm:px-6 py-3 rounded-xl border border-amber-500/40 bg-amber-950/30 text-amber-300 font-bold text-xs uppercase tracking-wider hover:bg-amber-950/60 transition-all cursor-pointer"
+          >
+            🛡 Open Cyber Armory
+          </button>
+          <button
+            onClick={() => {
+              playSound('levelUp');
+              onOpenProUpgrade();
+            }}
+            className="px-5 sm:px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-pink-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 transition-all cursor-pointer"
+          >
+            👑 Explore DARE PRO Tiers
+          </button>
         </div>
-      </section>
 
-      {/* ========================================================================= */}
-      {/* 8. SECTION 8: DARE CHAIN (Viral Social Growth)                           */}
-      {/* ========================================================================= */}
-      <section className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0B12] border-b border-slate-800 overflow-hidden">
-        <div className="mx-auto max-w-7xl">
-          
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
-            <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
-              <RefreshCw className="h-3.5 w-3.5 text-pink-400" />
-              <span>THE VIRAL CHALLENGE LOOP · ILLUSTRATIVE CHAIN</span>
-            </div>
-            <h2 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white">
-              ONE DARE <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-400 to-amber-300">
-                CAN START A CHAIN.
-              </span>
-            </h2>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-slate-300 font-medium">
-              Challenge someone. They complete it. They challenge someone else. <br className="hidden sm:inline" />
-              <strong className="text-white">HOW FAR WILL YOUR DARE GO?</strong>
-            </p>
-          </div>
+      </div>
+    </section>
 
-          {/* Visual Interactive Chain Diagram */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-3xl bg-[#11111A] border border-slate-800">
-            
-            {/* Node 1: YOU */}
-            <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-pink-500/40 text-center">
-              <span className="text-[10px] font-mono text-pink-400 font-bold uppercase">ORIGINATOR</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">YOU</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Launches Dare</p>
-            </div>
-
-            <div className="text-pink-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-
-            {/* Node 2: JOSH */}
-            <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">SAMPLE FRIEND 1</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@josh</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
-            </div>
-
-            <div className="text-amber-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-
-            {/* Node 3: SARAH */}
-            <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">SAMPLE FRIEND 2</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@sarah</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
-            </div>
-
-            <div className="text-cyan-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-
-            {/* Node 4: MIKE */}
-            <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">SAMPLE FRIEND 3</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@mike</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Dares You Back</p>
-            </div>
-
-            <div className="text-purple-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
-              <ArrowRight className="h-5 w-5" />
-            </div>
-
-            {/* Node 5: CHAIN MULTIPLIER */}
-            <div className="flex-1 w-full p-4 rounded-2xl bg-gradient-to-b from-pink-950/40 to-purple-950/40 border border-pink-500/50 text-center">
-              <span className="text-[10px] font-mono text-pink-300 font-bold uppercase">CHAIN MULTIPLIER</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">5X STREAK</h4>
-              <p className="text-xs text-amber-300 mt-0.5">Sample: +25% Bonus Cred</p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 9. SECTION 9: COMMUNITY / REAL PEOPLE REAL DARES                         */}
-      {/* ========================================================================= */}
-      <section id="community-section" className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#050509] border-b border-pink-500/10 overflow-hidden">
-        <div className="mx-auto max-w-7xl">
-          
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
-                <Users className="h-3.5 w-3.5 text-pink-400" />
-                <span>COMMUNITY ARENA · SAMPLE SHOWCASES (ILLUSTRATIVE)</span>
-              </div>
-              <h2 className="text-3xl xs:text-4xl sm:text-5xl font-black uppercase tracking-tight text-white">
-                REAL PEOPLE. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-400 to-amber-400">
-                  REAL DARES.
-                </span>
-              </h2>
-            </div>
-
-            <button
-              onClick={scrollToFeed}
-              className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer"
-            >
-              <span>View All Live Grid Dares</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* High-Fidelity Community Activity Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-            
-            {/* Card 1 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-pink-500/30 border border-pink-400 flex items-center justify-center font-bold text-xs text-pink-300">
-                      A
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@alex_dares</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-pink-400 uppercase font-bold">OUTDOOR MISSION</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Run to the highest viewpoint before sunset."</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+100 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c1')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c1'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 42
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 8
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/30 border border-cyan-400 flex items-center justify-center font-bold text-xs text-cyan-300">
-                      M
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@maya_motion</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">FITNESS BOUNTY</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"50 Clean Push-Ups in Under 90 Seconds"</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+75 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c2')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c2'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 58
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 14
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/30 border border-purple-400 flex items-center justify-center font-bold text-xs text-purple-300">
-                      K
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@kai_explorer</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">CREATIVE DARE</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Find and photograph 3 neon signs in town."</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+60 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c3')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c3'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 31
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 5
-                  </span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div className="mt-8 text-center text-xs font-mono text-slate-400">
-            <span>Illustrative community showcases · Explore live bounties and connect with verified operatives in /app</span>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 10. FINAL CTA: I DARE YOU.                                                */}
-      {/* ========================================================================= */}
-      <section className="relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#050509] text-center overflow-hidden">
+    {/* ========================================================================= */}
+    {/* 8. SECTION 8: DARE CHAIN (Viral Social Growth)                           */}
+    {/* ========================================================================= */}
+    <section className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#0B0B12] border-b border-slate-800 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
         
-        {/* Subtle Ambient Glow */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[550px] h-[300px] bg-gradient-to-r from-pink-600/20 via-purple-600/15 to-transparent rounded-full blur-[120px]" />
-        </div>
-
-        <div className="relative mx-auto max-w-4xl z-10 space-y-6 sm:space-y-8">
-          
-          <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-4 py-1.5 text-xs font-mono font-bold text-pink-300">
-            <Flame className="h-4 w-4 text-pink-400" />
-            <span>dare.me.uk</span>
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
+          <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
+            <RefreshCw className="h-3.5 w-3.5 text-pink-400" />
+            <span>THE VIRAL CHALLENGE LOOP · ILLUSTRATIVE CHAIN</span>
           </div>
-
-          <h2 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">
-            I DARE <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF007F] via-[#FF5533] to-[#E000B8] drop-shadow-[0_0_40px_rgba(255,0,127,0.5)]">
-              YOU.
+          <h2 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white">
+            ONE DARE <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-400 to-amber-300">
+              CAN START A CHAIN.
             </span>
           </h2>
-
-          <p className="text-base sm:text-xl md:text-2xl text-slate-300 font-medium max-w-xl mx-auto">
-            Your first challenge is waiting.
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-slate-300 font-medium">
+            Challenge someone. They complete it. They challenge someone else. <br className="hidden sm:inline" />
+            <strong className="text-white">HOW FAR WILL YOUR DARE GO?</strong>
           </p>
+        </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-4 pt-2 sm:pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                playSound('pop');
-                onOpenCreateModal();
-              }}
-              className="flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#FF007F] via-[#FF3366] to-[#FF5533] px-8 sm:px-10 py-4 sm:py-5 text-sm sm:text-lg font-black tracking-wide text-white uppercase shadow-[0_0_35px_rgba(255,0,127,0.5)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-pink-400/40"
-            >
-              <Flame className="h-5 sm:h-6 w-5 sm:w-6 text-amber-200" />
-              <span>🔥 START YOUR FIRST DARE</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={scrollToFeed}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-7 sm:px-8 py-4 sm:py-5 text-sm sm:text-lg font-bold text-slate-200 hover:text-white hover:border-pink-500/50 active:scale-95 transition-all cursor-pointer"
-            >
-              <Compass className="h-5 sm:h-6 w-5 sm:w-6 text-pink-400" />
-              <span>EXPLORE CHALLENGES</span>
-            </button>
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-3xl bg-[#11111A] border border-slate-800">
+          
+          <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-pink-500/40 text-center">
+            <span className="text-[10px] font-mono text-pink-400 font-bold uppercase">ORIGINATOR</span>
+            <h4 className="text-base sm:text-lg font-black text-white mt-1">YOU</h4>
+            <p className="text-xs text-slate-400 mt-0.5">Launches Dare</p>
           </div>
 
-          <div className="pt-6 space-y-2 text-xs font-mono text-slate-400">
-            <p>Available on desktop & mobile · Install DARE directly from your browser</p>
-            <div className="text-xs sm:text-sm font-black tracking-widest text-slate-200 uppercase pt-2">
-              GOOD HABITS. BETTER FRIENDS.
+          <div className="text-pink-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
+            <ArrowRight className="h-5 w-5" />
+          </div>
+
+          <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">SAMPLE FRIEND 1</span>
+            <h4 className="text-base sm:text-lg font-black text-white mt-1">@josh</h4>
+            <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
+          </div>
+
+          <div className="text-amber-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
+            <ArrowRight className="h-5 w-5" />
+          </div>
+
+          <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">SAMPLE FRIEND 2</span>
+            <h4 className="text-base sm:text-lg font-black text-white mt-1">@sarah</h4>
+            <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
+          </div>
+
+          <div className="text-cyan-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
+            <ArrowRight className="h-5 w-5" />
+          </div>
+
+          <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">SAMPLE FRIEND 3</span>
+            <h4 className="text-base sm:text-lg font-black text-white mt-1">@mike</h4>
+            <p className="text-xs text-slate-400 mt-0.5">Dares You Back</p>
+          </div>
+
+          <div className="text-purple-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
+            <ArrowRight className="h-5 w-5" />
+          </div>
+
+          <div className="flex-1 w-full p-4 rounded-2xl bg-gradient-to-b from-pink-950/40 to-purple-950/40 border border-pink-500/50 text-center">
+            <span className="text-[10px] font-mono text-pink-300 font-bold uppercase">CHAIN MULTIPLIER</span>
+            <h4 className="text-base sm:text-lg font-black text-white mt-1">5X STREAK</h4>
+            <p className="text-xs text-amber-300 mt-0.5">Sample: +25% Bonus Cred</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    {/* ========================================================================= */}
+    {/* 9. SECTION 9: COMMUNITY / REAL PEOPLE REAL DARES                         */}
+    {/* ========================================================================= */}
+    <section id="community-section" className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[#050509] border-b border-pink-500/10 overflow-hidden">
+      <div className="mx-auto max-w-7xl">
+        
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-12 gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
+              <Users className="h-3.5 w-3.5 text-pink-400" />
+              <span>COMMUNITY ARENA · SAMPLE SHOWCASES (ILLUSTRATIVE)</span>
+            </div>
+            <h2 className="text-3xl xs:text-4xl sm:text-5xl font-black uppercase tracking-tight text-white">
+              REAL PEOPLE. <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-rose-400 to-amber-400">
+                REAL DARES.
+              </span>
+            </h2>
+          </div>
+
+          <button
+            onClick={scrollToFeed}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer"
+          >
+            <span>View All Live Grid Dares</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+          
+          <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-pink-500/30 border border-pink-400 flex items-center justify-center font-bold text-xs text-pink-300">
+                    A
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">@alex_dares</div>
+                    <div className="text-[10px] text-slate-400">Sample Showcase</div>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
+                  ILLUSTRATIVE
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
+                <span className="text-[10px] font-mono text-pink-400 uppercase font-bold">OUTDOOR MISSION</span>
+                <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Run to the highest viewpoint before sunset."</h5>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span className="text-amber-400 font-bold">+100 CRED (SAMPLE)</span>
+              <div className="flex items-center gap-3 text-slate-400">
+                <button 
+                  onClick={() => toggleLike('c1')}
+                  className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c1'] ? 'text-pink-500' : ''}`}
+                >
+                  <Heart className="h-3.5 w-3.5 fill-current" /> 42
+                </button>
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="h-3.5 w-3.5" /> 8
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/30 border border-cyan-400 flex items-center justify-center font-bold text-xs text-cyan-300">
+                    M
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">@maya_motion</div>
+                    <div className="text-[10px] text-slate-400">Sample Showcase</div>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
+                  ILLUSTRATIVE
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
+                <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">FITNESS BOUNTY</span>
+                <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"50 Clean Push-Ups in Under 90 Seconds"</h5>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span className="text-amber-400 font-bold">+75 CRED (SAMPLE)</span>
+              <div className="flex items-center gap-3 text-slate-400">
+                <button 
+                  onClick={() => toggleLike('c2')}
+                  className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c2'] ? 'text-pink-500' : ''}`}
+                >
+                  <Heart className="h-3.5 w-3.5 fill-current" /> 58
+                </button>
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="h-3.5 w-3.5" /> 14
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-purple-500/30 border border-purple-400 flex items-center justify-center font-bold text-xs text-purple-300">
+                    K
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white">@kai_explorer</div>
+                    <div className="text-[10px] text-slate-400">Sample Showcase</div>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
+                  ILLUSTRATIVE
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
+                <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">CREATIVE DARE</span>
+                <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Find and photograph 3 neon signs in town."</h5>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+              <span className="text-amber-400 font-bold">+60 CRED (SAMPLE)</span>
+              <div className="flex items-center gap-3 text-slate-400">
+                <button 
+                  onClick={() => toggleLike('c3')}
+                  className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c3'] ? 'text-pink-500' : ''}`}
+                >
+                  <Heart className="h-3.5 w-3.5 fill-current" /> 31
+                </button>
+                <span className="flex items-center gap-1">
+                  <MessageSquare className="h-3.5 w-3.5" /> 5
+                </span>
+              </div>
             </div>
           </div>
 
         </div>
 
-      </section>
+        <div className="mt-8 text-center text-xs font-mono text-slate-400">
+          <span>Illustrative community showcases · Explore live bounties and connect with verified operatives in /app</span>
+        </div>
 
-    </div>
-  );
+      </div>
+    </section>
+
+    {/* ========================================================================= */}
+    {/* 10. FINAL CTA: I DARE YOU.                                                */}
+    {/* ========================================================================= */}
+    <section className="relative py-20 sm:py-24 px-4 sm:px-6 lg:px-8 bg-[#050509] text-center overflow-hidden">
+      
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[550px] h-[300px] bg-gradient-to-r from-pink-600/20 via-purple-600/15 to-transparent rounded-full blur-[120px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-4xl z-10 space-y-6 sm:space-y-8">
+        
+        <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-4 py-1.5 text-xs font-mono font-bold text-pink-300">
+          <Flame className="h-4 w-4 text-pink-400" />
+          <span>dare.me.uk</span>
+        </div>
+
+        <h2 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter text-white drop-shadow-2xl">
+          I DARE <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF007F] via-[#FF5533] to-[#E000B8] drop-shadow-[0_0_40px_rgba(255,0,127,0.5)]">
+            YOU.
+          </span>
+        </h2>
+
+        <p className="text-base sm:text-xl md:text-2xl text-slate-300 font-medium max-w-xl mx-auto">
+          Your first challenge is waiting.
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-4 pt-2 sm:pt-4">
+          <button
+            type="button"
+            onClick={() => {
+              trackEvent({
+                event: 'landing_cta_clicked',
+                category: 'navigation',
+                label: 'start_dare_bottom',
+              });
+              playSound('pop');
+              onOpenCreateModal();
+            }}
+            className="flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#FF007F] via-[#FF3366] to-[#FF5533] px-8 sm:px-10 py-4 sm:py-5 text-sm sm:text-lg font-black tracking-wide text-white uppercase shadow-[0_0_35px_rgba(255,0,127,0.5)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-pink-400/40"
+          >
+            <Flame className="h-5 sm:h-6 w-5 sm:w-6 text-amber-200" />
+            <span>🔥 START YOUR FIRST DARE</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              trackEvent({
+                event: 'landing_cta_clicked',
+                category: 'navigation',
+                label: 'explore_challenges_bottom',
+              });
+              scrollToFeed();
+            }}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-7 sm:px-8 py-4 sm:py-5 text-sm sm:text-lg font-bold text-slate-200 hover:text-white hover:border-pink-500/50 active:scale-95 transition-all cursor-pointer"
+          >
+            <Compass className="h-5 sm:h-6 w-5 sm:w-6 text-pink-400" />
+            <span>EXPLORE CHALLENGES</span>
+          </button>
+        </div>
+
+        <div className="pt-6 space-y-2 text-xs font-mono text-slate-400">
+          <p>Available on desktop & mobile · Install DARE directly from your browser</p>
+          <div className="text-xs sm:text-sm font-black tracking-widest text-slate-200 uppercase pt-2">
+            GOOD HABITS. BETTER FRIENDS.
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+);
 };
