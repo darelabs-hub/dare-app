@@ -56,7 +56,7 @@ export function initAnalytics(customGaId?: string, customPosthogKey?: string) {
         api_host: POSTHOG_PROXY_HOST,
         ui_host: POSTHOG_UI_HOST,
         person_profiles: 'always',
-        capture_pageview: true,
+        capture_pageview: 'history_change',
         capture_pageleave: true,
         autocapture: true,
         capture_performance: true,
