@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from '../lib/firebase';
 import { 
   X, 
   Zap, 
@@ -119,16 +120,34 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
         ultra: 'dare_pro_ultra_monthly'
       };
       const tierItemId = tierIdMap[selectedTier] || 'dare_pro_lite_monthly';
-      const res = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(currentUser?.id ? { 'Authorization': `Bearer ${currentUser.id}` } : {})
-        },
-        body: JSON.stringify({
-          itemId: tierItemId,
-        }),
-      });
+      let token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+let res = await fetch('/api/stripe/create-checkout-session', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  },
+  body: JSON.stringify({
+    itemId: tierItemId,
+  }),
+});
+
+if (res.status === 401 && auth.currentUser) {
+  try {
+    token = await auth.currentUser.getIdToken(true);
+    res = await fetch('/api/stripe/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({
+        itemId: tierItemId,
+      }),
+    });
+  } catch (_refreshErr) {}
+}
       const data = await res.json();
       if (data.url) {
         setCheckoutUrl(data.url);
@@ -194,19 +213,40 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       const tierItemId = tierIdMap[selectedTier] || 'dare_pro_lite_monthly';
       const gbpNumeric = Number(selectedTierDetails.priceUSD.replace(/[^0-9.]/g, '')) || 1.99;
       try {
-        const piRes = await fetch('/api/stripe/create-payment-intent', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...(currentUser?.id ? { 'Authorization': `Bearer ${currentUser.id}` } : {})
-          },
-          body: JSON.stringify({
-            itemId: tierItemId,
-            amount: gbpNumeric,
-            currency: 'gbp',
-            description: `DARE PRO Subscription - ${selectedTierDetails.name}`,
-          }),
-        });
+        let piToken = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+let piRes = await fetch('/api/stripe/create-payment-intent', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    ...(piToken ? { 'Authorization': `Bearer ${piToken}` } : {})
+  },
+  body: JSON.stringify({
+    itemId: tierItemId,
+    amount: gbpNumeric,
+    currency: 'gbp',
+    description: `DARE PRO Subscription - ${selectedTierDetails.name}`,
+  }),
+});
+
+if (piRes.status === 401 && auth.currentUser) {
+  try {
+    piToken = await auth.currentUser.getIdToken(true);
+    piRes = await fetch('/api/stripe/create-payment-intent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(piToken ? { 'Authorization': `Bearer ${piToken}` } : {})
+      },
+      body: JSON.stringify({
+        itemId: tierItemId,
+        amount: gbpNumeric,
+        currency: 'gbp',
+        description: `DARE PRO Subscription - ${selectedTierDetails.name}`,
+      }),
+    });
+  } catch (_refreshErr) {}
+}
         if (!piRes.ok) {
           const piData = await piRes.json();
           console.warn('Payment intent notification:', piData.error);
@@ -218,15 +258,38 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
 
     try {
       // Hit the official backend upgrade-pro API endpoint
-      const response = await fetch(`/api/users/${currentUser.id}/upgrade-pro`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          tier: selectedTier,
-          paymentMode,
-          mockCard: paymentMode === 'card' ? { name: cardName } : undefined
-        }),
-      });
+      let upgradeToken = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+let response = await fetch(`/api/users/${currentUser.id}/upgrade-pro`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    ...(upgradeToken ? { 'Authorization': `Bearer ${upgradeToken}` } : {})
+  },
+  body: JSON.stringify({
+    tier: selectedTier,
+    paymentMode,
+    mockCard: paymentMode === 'card' ? { name: cardName } : undefined
+  }),
+});
+
+if (response.status === 401 && auth.currentUser) {
+  try {
+    upgradeToken = await auth.currentUser.getIdToken(true);
+    response = await fetch(`/api/users/${currentUser.id}/upgrade-pro`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(upgradeToken ? { 'Authorization': `Bearer ${upgradeToken}` } : {})
+      },
+      body: JSON.stringify({
+        tier: selectedTier,
+        paymentMode,
+        mockCard: paymentMode === 'card' ? { name: cardName } : undefined
+      }),
+    });
+  } catch (_refreshErr) {}
+}
 
       if (!response.ok) {
         const errorData = await response.json();
