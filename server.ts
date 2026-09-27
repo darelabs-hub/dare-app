@@ -2190,8 +2190,8 @@ Output ONLY valid JSON matching this schema:
     dare.acceptedAt = new Date().toISOString();
     dare.expiresAt = new Date(Date.now() + 86400000 * 2).toISOString(); // 48h limit
     recordUserActivity(user);
-    saveDareToFirestore(dare);
-    saveUserToFirestore(user);
+    await saveDareToFirestore(dare);
+    await saveUserToFirestore(user);
 
     // Notify the dare creator that someone accepted their dare!
     if (dare.creator && dare.creator.id !== user.id) {
