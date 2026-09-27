@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { auth } from '../lib/firebase';
 import { Bot, Sparkles, Zap, X, ShieldCheck, Flame, ChevronRight, RefreshCw } from 'lucide-react';
 import { DareCategory, DareDifficulty, DareItem, UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -34,18 +35,38 @@ export const AiDareLabModal: React.FC<AiDareLabModalProps> = ({
 
       const idempotencyKey = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-      const res = await fetch('/api/ai-dares/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(currentUser?.id ? { 'Authorization': `Bearer ${currentUser.id}` } : {})
-        },
-        body: JSON.stringify({
-          category: selectedCategory,
-          difficulty: selectedDifficulty,
-          idempotencyKey,
-        }),
-      });
+      let token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+let res = await fetch('/api/ai-dares/generate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  },
+  body: JSON.stringify({
+    category: selectedCategory,
+    difficulty: selectedDifficulty,
+    idempotencyKey,
+  }),
+});
+
+if (res.status === 401 && auth.currentUser) {
+  try {
+    token = await auth.currentUser.getIdToken(true);
+    res = await fetch('/api/ai-dares/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({
+        category: selectedCategory,
+        difficulty: selectedDifficulty,
+        idempotencyKey,
+      }),
+    });
+  } catch (_refreshErr) {}
+}
 
       const data = await res.json();
       if (!res.ok) {
