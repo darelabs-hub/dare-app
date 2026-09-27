@@ -2169,7 +2169,7 @@ Output ONLY valid JSON matching this schema:
   });
 
   // Accept a dare
-  app.post('/api/dares/:id/accept', (req, res) => {
+  app.post('/api/dares/:id/accept', async (req, res) => {
     const dare = dares.find(d => d.id === req.params.id);
     if (!dare) return res.status(404).json({ error: 'Dare not found' });
 
