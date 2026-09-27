@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Users Collection (Direct client updates can only modify non-authoritative profile fields)
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isOwner(userId) && 
+        !request.resource.data.keys().hasAny([
+          'dailyOps', 'activeStakes', 'totalCredWonInStakes', 'isPro', 'proTier', 
+          'transactions', 'stipendClaimedAt'
+        ]) &&
+        (!request.resource.data.keys().hasAny(['cred', 'xp', 'level', 'streak', 'badges']) || 
+         request.resource.data.cred == 0);
+      allow update: if isOwner(userId) && 
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'cred', 'xp', 'level', 'streak', 'badges', 'isPro', 'proTier', 
+          'transactions', 'stipendClaimedAt', 'activeStakes', 'totalCredWonInStakes', 'dailyOps'
+        ]);
+      allow delete: if false;
+    }
+
+    // Dares Collection (Public read; mutations handled via server API)
+    match /dares/{dareId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if false; // Server authoritative
+    }
+
+    // Live Duels Collection (Public read; mutations handled via server API)
+    match /duels/{duelId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if false; // Server authoritative
+    }
+
+    // Drop Zones Collection (Public read; mutations handled via server API)
+    match /dropZones/{dropZoneId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if false; // Server authoritative
+    }
+
+    // Squad Chat Messages Collection
+    match /squadChatMessages/{messageId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Squad Tournaments Collection
+    match /tournaments/{tournamentId} {
+      allow get: if true;
+      allow list: if true;
+      allow write: if false; // Server authoritative
+    }
+
+    // Transactions Ledger (Server-side authoritative writes only)
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // User Notifications
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if false; // Server generated
+    }
+
+    // Stripe Webhook Idempotency Store (Internal Server Only)
+    match /stripeWebhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Health Check Ping Document
+    match /_health/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
