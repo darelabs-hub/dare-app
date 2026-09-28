@@ -328,7 +328,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
           </button>
         </div>
 
-        {/* AI Cyber Oracle Quick Assistance */}
+        {/* AI Challenge Assistant Quick Generator */}
         <div className="mt-4 rounded-xl border border-indigo-500/20 bg-slate-900/50 p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 text-xs text-indigo-200">
             <Sparkles className="h-4 w-4 text-indigo-400 flex-shrink-0" />

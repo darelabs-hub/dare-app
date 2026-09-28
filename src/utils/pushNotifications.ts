@@ -72,7 +72,7 @@ export function getPushProtocolState(): {
     status,
     isNativeSupported: isSupported,
     isInIframe: inIframe,
-    isInAppHudActive: true, // In-App Cyber HUD Telemetry is always active and guaranteed
+    isInAppHudActive: true, // In-App System HUD Telemetry is always active and guaranteed
   };
 }
 
@@ -90,7 +90,7 @@ export async function requestPushNotificationPermission(): Promise<NotificationP
     }
     return permission;
   } catch (err) {
-    console.warn('Notification permission request notice (falling back to In-App Cyber HUD Telemetry):', err);
+    console.warn('Notification permission request notice (falling back to In-App System HUD Telemetry):', err);
     return getPushPermissionStatus();
   }
 }
@@ -172,7 +172,7 @@ export async function dispatchSystemNotification(options: LocalPushOptions): Pro
     playSound('notification');
   }
 
-  // 2. ALWAYS dispatch in-app Cyber System Alert HUD event
+  // 2. ALWAYS dispatch in-app System Alert HUD event
   let hudDelivered = false;
   try {
     window.dispatchEvent(

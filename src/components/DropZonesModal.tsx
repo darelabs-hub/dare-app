@@ -71,7 +71,7 @@ const BEACON_ARCHETYPES: Array<{
   { type: 'quantum_vault', label: 'Quantum Vault', icon: '💠', desc: 'Floating encrypted hypercube with rotating containment rings' },
   { type: 'holo_pod', label: 'Holo-Pod', icon: '🛸', desc: 'Hovering telemetry probe emitting vertical ion beacon beams' },
   { type: 'neural_node', label: 'Neural Node', icon: '🔮', desc: 'Pulsing synaptic crystal lattice broadcasting localized ciphers' },
-  { type: 'cyber_relic', label: 'Cyber Relic', icon: '🔱', desc: 'Ancient high-tech obelisk carved with neon circuit glyphs' },
+  { type: 'cyber_relic', label: 'Beacon Relic', icon: '🔱', desc: 'Ancient high-tech obelisk carved with radiant glyphs' },
   { type: 'stealth_crate', label: 'Stealth Crate', icon: '📦', desc: 'Military-grade tactical cache sealed with biometric locks' },
 ];
 
@@ -308,7 +308,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
       const capabilities = track.getCapabilities ? (track.getCapabilities() as { torch?: boolean }) : {};
       setHasTorchSupport(Boolean(capabilities.torch));
     } catch (err: unknown) {
-      console.warn('Physical camera unavailable, engaging synthetic cyber matrix viewport:', err);
+      console.warn('Physical camera unavailable, engaging synthetic matrix viewport:', err);
       setArCameraActive(false);
       setCameraError('Camera access not granted. Running in synthetic tactical simulation mode.');
     }
@@ -562,11 +562,11 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Draw video feed or synthetic cyber background
+    // Draw video feed or synthetic background
     if (arCameraActive && videoRef.current && videoRef.current.readyState >= 2) {
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     } else {
-      // Draw synthetic cyber matrix backdrop
+      // Draw synthetic matrix backdrop
       ctx.fillStyle = '#050a14';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
@@ -1080,7 +1080,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-white/5">
                 <div className="flex items-center gap-1.5 flex-wrap text-xs font-mono">
                   <span className="text-slate-400 text-[11px] font-bold uppercase mr-1">Filter:</span>
-                  {['all', 'cyber', 'tech', 'physical', 'creative', 'social'].map((cat) => (
+                  {['all', 'digital', 'tech', 'physical', 'creative', 'social'].map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setFilterCategory(cat)}
@@ -1190,7 +1190,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                 className="relative h-[480px] sm:h-[560px] w-full rounded-2xl overflow-hidden border border-cyan-500/40 bg-black shadow-2xl flex items-center justify-center select-none cursor-grab active:cursor-grabbing"
               >
                 
-                {/* Live Real-World Video Feed or Synthetic Cyber Matrix */}
+                {/* Live Real-World Video Feed or Synthetic Matrix */}
                 <video
                   ref={videoRef}
                   playsInline
@@ -1339,7 +1339,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                         ? 'border-emerald-400 bg-emerald-950/70 shadow-[0_0_50px_rgba(52,211,153,0.9)] scale-110'
                         : 'border-cyan-400/80 bg-cyan-950/70 shadow-[0_0_40px_rgba(6,182,212,0.7)] animate-pulse'
                     }`}>
-                      {/* Rotating Orbital Gyro Rings for 3D Cyber Depth */}
+                      {/* Rotating Orbital Gyro Rings for 3D Depth */}
                       <div className="absolute inset-0 rounded-3xl border border-cyan-300/40 animate-spin-slow" />
                       <div className="absolute -inset-2 rounded-full border border-indigo-400/30 animate-spin" style={{ animationDuration: '8s' }} />
 
@@ -1489,7 +1489,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
               <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 flex items-start gap-3.5">
                 <Sparkles className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-xs text-slate-300">
-                  <div className="font-bold text-amber-300 text-sm">Deploy a Geofenced Cyber Beacon</div>
+                  <div className="font-bold text-amber-300 text-sm">Deploy a Geofenced Beacon</div>
                   Broadcast a real-world GPS bounty at your current coordinates. Nearby agents can scan and claim your field dare via AR tracking.
                 </div>
               </div>
@@ -1544,7 +1544,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                     onChange={(e) => setDeployCategory(e.target.value as DareCategory)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono"
                   >
-                    <option value="cyber">Cyber & Hacking</option>
+                    <option value="digital">Digital & Code</option>
                     <option value="tech">Tech & Terminal</option>
                     <option value="physical">Physical & Fitness</option>
                     <option value="creative">Creative & Audio</option>

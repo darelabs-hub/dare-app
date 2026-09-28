@@ -35,7 +35,7 @@ export interface StreakMilestone {
 export const getStreakTier = (streak: number) => {
   if (streak >= 30) {
     return {
-      tier: 'Mythic Cyber God',
+      tier: 'Mythic Apex Champion',
       label: '30+ Days',
       color: 'text-purple-300',
       badgeBorder: 'border-purple-500/70',
@@ -95,7 +95,7 @@ export const getStreakTier = (streak: number) => {
   }
   if (streak >= 3) {
     return {
-      tier: 'Ignited Netrunner',
+      tier: 'Ignited Challenger',
       label: '3-Day Spark',
       color: 'text-emerald-300',
       badgeBorder: 'border-emerald-500/50',
@@ -105,7 +105,7 @@ export const getStreakTier = (streak: number) => {
       flameAnimation: '',
       ringColor: 'ring-emerald-400/30',
       iconEmoji: '⚡',
-      badgeName: '⚡ Spark Netrunner',
+      badgeName: '⚡ Spark Pioneer',
     };
   }
   return {
@@ -119,7 +119,7 @@ export const getStreakTier = (streak: number) => {
     flameAnimation: '',
     ringColor: 'ring-slate-700/40',
     iconEmoji: '🎯',
-    badgeName: '🎯 Grid Initiate',
+    badgeName: '🎯 Initiate',
   };
 };
 
@@ -136,7 +136,7 @@ export const StreakIndicator: React.FC<StreakIndicatorProps> = ({
   const milestones: StreakMilestone[] = [
     {
       days: 3,
-      badgeName: '⚡ Spark Netrunner',
+      badgeName: '⚡ Spark Pioneer',
       title: 'Ignition Pulse',
       color: 'text-emerald-400',
       border: 'border-emerald-500/40',
@@ -169,7 +169,7 @@ export const StreakIndicator: React.FC<StreakIndicatorProps> = ({
     },
     {
       days: 14,
-      badgeName: '👑 Neural Kingpin',
+      badgeName: '👑 Dare Sovereign',
       title: 'Fortnight Titan',
       color: 'text-rose-400',
       border: 'border-rose-500/60',
@@ -181,7 +181,7 @@ export const StreakIndicator: React.FC<StreakIndicatorProps> = ({
     {
       days: 30,
       badgeName: '⚡ Overclock Paragon',
-      title: 'Cyber God Status',
+      title: 'Apex Champion Status',
       color: 'text-purple-400',
       border: 'border-purple-500/70',
       glow: 'glow-purple',

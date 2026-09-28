@@ -189,7 +189,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
           <div className="absolute top-1/4 -left-16 w-72 h-72 bg-cyan-600/10 rounded-full blur-[90px]" />
           <div className="absolute bottom-10 -right-16 w-72 h-72 bg-rose-600/10 rounded-full blur-[100px]" />
           
-          {/* Subtle Cyber Radar Lines */}
+          {/* Subtle Radar Dot Mesh Lines */}
           <div className="absolute inset-0 bg-[radial-gradient(#1e1b4b_1px,transparent_1px)] [background-size:32px_32px] opacity-20" />
           {/* Vignette Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#050509]/70 via-transparent to-[#050509]" />

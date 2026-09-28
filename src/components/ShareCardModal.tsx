@@ -115,7 +115,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // 1. Background Gradient & Cyber Grid
+    // 1. Background Gradient & Geometric Grid
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
     if (selectedTheme === 'matrix') {
       bgGrad.addColorStop(0, '#031411');
@@ -137,7 +137,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Cyber Grid lines
+    // Geometric Grid lines
     ctx.strokeStyle = activeTheme.gridColor;
     ctx.lineWidth = 1;
     const gridSize = 40;
@@ -445,7 +445,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       `🔥 CHALLENGE ACCEPTED: "${dare.title}" (+${dare.rewardCred} Cred Bounty) on @DARE!\n\nCan you complete it before the clock runs out? ⏳\n`
     );
     const url = encodeURIComponent(shareUrl);
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=DARE,CyberBounty,DareAccepted`, '_blank');
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=DARE,DareBounty,DareAccepted`, '_blank');
   };
 
   const handleWhatsAppShare = () => {
@@ -546,7 +546,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-tech text-xs font-bold uppercase text-slate-400 flex items-center gap-1.5">
                 <Layers className="h-3.5 w-3.5 text-cyan-400" />
-                <span>Cyber Aesthetic:</span>
+                <span>Card Theme:</span>
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {(['matrix', 'synthwave', 'gold', 'crimson'] as ShareCardTheme[]).map((theme) => {

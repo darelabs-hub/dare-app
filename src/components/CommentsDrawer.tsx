@@ -140,7 +140,7 @@ export const CommentsDrawer: React.FC<CommentsDrawerProps> = ({
 
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) {
-      setSpeechError('Web Speech Recognition is not supported by your browser. You can still type your cyber comment below!');
+      setSpeechError('Web Speech Recognition is not supported by your browser. You can still type your comment below!');
       return;
     }
 
@@ -263,7 +263,7 @@ export const CommentsDrawer: React.FC<CommentsDrawerProps> = ({
     const cleanText = comment.text.replace(/^🎙️\s*\[.*?\]\s*/, '').trim() || comment.text;
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    // Give it a sleek cyberpunk cadence
+    // Smooth modern cadence
     utterance.rate = 1.02;
     utterance.pitch = 1.05;
 
@@ -366,7 +366,7 @@ export const CommentsDrawer: React.FC<CommentsDrawerProps> = ({
               </div>
               <span className="font-bold text-slate-300">No transmissions broadcasted yet</span>
               <span className="mt-1 text-slate-500 text-[11px] max-w-[220px]">
-                Be the first to leave text or tap the mic icon to record a cyber voice note!
+                Be the first to leave text or tap the mic icon to record a voice note!
               </span>
             </div>
           ) : (
@@ -545,7 +545,7 @@ export const CommentsDrawer: React.FC<CommentsDrawerProps> = ({
                 Real-Time Voice Dictation Stream:
               </span>
               <p className="font-mono text-slate-200 min-h-[32px] text-[11px] italic break-words">
-                {voiceTranscript ? `"${voiceTranscript}"` : 'Speak into your microphone... audio is converting to cyber transmission in real time.'}
+                {voiceTranscript ? `"${voiceTranscript}"` : 'Speak into your microphone... audio is converting to text in real time.'}
               </p>
             </div>
 

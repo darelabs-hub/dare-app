@@ -180,7 +180,7 @@ export const HeatmapView: React.FC<HeatmapViewProps> = ({ dares = [], onOpenDrop
         {hasApiKey && activeLayerMode === 'gmap' ? (
           <GoogleMapsOverlayView allNodes={allNodes} />
         ) : (
-          /* Layer 2: Cybernetic Global Radar Stage */
+          /* Layer 2: Interactive Global Radar Stage */
           <div className="relative w-full h-full flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0e1a30] via-[#070c17] to-[#04070d] p-4 select-none">
             {/* Grid Mesh Background */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#00ffff08_1px,transparent_1px),linear-gradient(to_bottom,#00ffff08_1px,transparent_1px)] bg-[size:28px_28px] opacity-70 pointer-events-none" />

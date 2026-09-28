@@ -132,7 +132,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
       badge: 'AI ENGINE',
       category: 'Algorithmic Dares',
       icon: <Sparkles className="h-4 w-4 text-indigo-400" />,
-      description: 'Deploy on-demand, algorithmic challenges powered by Gemini. The Oracle dynamically constructs tailored cyber, social, tech, and physical dares with automated criteria and instant Cred stakes.',
+      description: 'Deploy on-demand, algorithmic challenges powered by Gemini. The Oracle dynamically constructs tailored creative, social, tech, and physical dares with automated criteria and instant Cred stakes.',
       hint: 'Click next to explore direct peer challenges',
       position: 'bottom',
       onEnter: () => {

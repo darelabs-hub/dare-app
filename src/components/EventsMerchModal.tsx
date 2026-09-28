@@ -37,7 +37,7 @@ interface ProposedDare {
   id: string;
   title: string;
   category: string;
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'NETRUNNER';
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'EXTREME';
   author: string;
   description: string;
   image: string;
@@ -286,7 +286,7 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold font-mono ${
-                                  dare.difficulty === 'NETRUNNER' 
+                                  dare.difficulty === 'EXTREME' 
                                     ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' 
                                     : dare.difficulty === 'HARD'
                                     ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'

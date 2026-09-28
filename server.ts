@@ -366,11 +366,11 @@ const getGenAI = () => {
 // Global Community Staking Jackpot Pool
 let communityJackpotPool = 0;
 
-// Cyberpunk Armory Catalog
+// Rewards Armory Catalog
 const armoryCatalog: ArmoryItem[] = [
   {
     id: 'armory_booster_2x',
-    name: '2x Overclock Chip',
+    name: '2x Cred Multiplier',
     description: 'Doubles all Cred earned from your next 3 verified challenge completions.',
     category: 'booster',
     rarity: 'rare',
@@ -382,7 +382,7 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_streak_freeze',
-    name: 'Cryo-Shield Capsule',
+    name: 'Streak Shield Capsule',
     description: 'Preserves your active daily streak from breaking for 24 hours if you miss a day.',
     category: 'booster',
     rarity: 'common',
@@ -394,8 +394,8 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_oracle_reroll',
-    name: 'Quantum Oracle Reroll Token',
-    description: 'Instantly reroll the AI Daily Oracle dare with guaranteed Elite / Netrunner difficulty.',
+    name: 'Oracle Reroll Token',
+    description: 'Instantly reroll the AI Daily Oracle dare with guaranteed Elite difficulty.',
     category: 'booster',
     rarity: 'common',
     priceCred: 100,
@@ -405,8 +405,8 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_spotlight_beacon',
-    name: 'Grid Spotlight Beacon',
-    description: 'Pin your created dare or verified proof to the top of the global grid for 12 hours.',
+    name: 'Spotlight Beacon',
+    description: 'Pin your created dare or verified proof to the top of the global feed for 12 hours.',
     category: 'perk',
     rarity: 'rare',
     priceCred: 250,
@@ -416,7 +416,7 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_bounty_amp',
-    name: 'Bounty Match Injector',
+    name: 'Bounty Match Booster',
     description: 'Adds +50% sponsor matching Cred to any dare you publish, drawing more challengers.',
     category: 'perk',
     rarity: 'rare',
@@ -427,8 +427,8 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_fast_pass',
-    name: 'Neural Fast-Pass',
-    description: 'Instant priority validation with immediate Neural Arbiter sign-off and zero queue.',
+    name: 'Priority Fast-Pass',
+    description: 'Instant priority validation with immediate verification and zero queue.',
     category: 'perk',
     rarity: 'common',
     priceCred: 75,
@@ -437,7 +437,7 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_frame_cyan',
-    name: 'Neon Cyber Grid Aura',
+    name: 'Neon Horizon Aura',
     description: 'Luminous cyan holographic neon border that pulses around your avatar across all feeds.',
     category: 'cosmetic',
     rarity: 'rare',
@@ -448,8 +448,8 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_frame_glitch',
-    name: 'Matrix Glitch Distortion',
-    description: 'High-frequency green phosphor CRT scanline border with digital glitch artifacts.',
+    name: 'Holo Glitch Distortion',
+    description: 'High-frequency green phosphor scanline border with digital distortion accents.',
     category: 'cosmetic',
     rarity: 'epic',
     priceCred: 750,
@@ -459,7 +459,7 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_frame_gold',
-    name: 'Syndicate Gold Overlord',
+    name: 'VIP Gold Overlord',
     description: 'Radiant gold metallic chassis border with floating ember particles and VIP aura.',
     category: 'cosmetic',
     rarity: 'epic',
@@ -481,36 +481,36 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_title_prodigy',
-    name: '⚡ Neural Prodigy',
-    description: 'Display this prestigious cyber title underneath your username across all boards.',
+    name: '⚡ DARE Prodigy',
+    description: 'Display this prestigious title underneath your username across all boards.',
     category: 'title',
     rarity: 'rare',
     priceCred: 350,
     icon: '⚡',
     effectKey: 'title_neural_prodigy',
-    badgeCode: '⚡ Neural Prodigy',
+    badgeCode: '⚡ DARE Prodigy',
   },
   {
     id: 'armory_title_prime',
-    name: '🔱 Netrunner Prime',
-    description: 'Display this elite veteran Netrunner Prime cyber title.',
+    name: '🔱 DARE Champion',
+    description: 'Display this elite veteran DARE Champion title.',
     category: 'title',
     rarity: 'epic',
     priceCred: 600,
     icon: '🔱',
     effectKey: 'title_netrunner_prime',
-    badgeCode: '🔱 Netrunner Prime',
+    badgeCode: '🔱 DARE Champion',
   },
   {
     id: 'armory_title_ghost',
-    name: '🕶️ Ghost in the Grid',
+    name: '🕶️ Ghost Operative',
     description: 'Legendary operative status title for stealth and flawless dare execution.',
     category: 'title',
     rarity: 'legendary',
     priceCred: 900,
     icon: '🕶️',
     effectKey: 'title_ghost_grid',
-    badgeCode: '🕶️ Ghost in the Grid',
+    badgeCode: '🕶️ Ghost Operative',
   },
   {
     id: 'armory_title_tycoon',
@@ -525,8 +525,8 @@ const armoryCatalog: ArmoryItem[] = [
   },
   {
     id: 'armory_hoodie_cyber',
-    name: 'DARE Stealth Cyber Hoodie',
-    description: 'Heavyweight matte-black cyberpunk fleece with embedded NFC chip linked to your profile.',
+    name: 'DARE Stealth Edition Hoodie',
+    description: 'Heavyweight matte-black premium fleece with embedded NFC chip linked to your profile.',
     category: 'merch',
     rarity: 'legendary',
     priceCred: 5000,
@@ -578,7 +578,7 @@ const seasonPassTiers: BattlePassTier[] = [
   {
     level: 5,
     requiredXp: 2000,
-    freeReward: { name: '🎯 Precision Striker Badge', type: 'badge', icon: '🎯', description: 'Cyber combatant milestone badge' },
+    freeReward: { name: '🎯 Precision Striker Badge', type: 'badge', icon: '🎯', description: 'Milestone combatant badge' },
     eliteReward: { name: 'Matrix Glitch Frame', type: 'cosmetic', icon: '🟩', description: 'Animated green glitch frame' },
   },
   {
@@ -597,7 +597,7 @@ const seasonPassTiers: BattlePassTier[] = [
     level: 8,
     requiredXp: 4400,
     freeReward: { name: '250 Cred', type: 'cred', amount: 250, icon: '💎', description: 'Season progression reward' },
-    eliteReward: { name: '🔱 Netrunner Prime Title', type: 'title', icon: '🔱', description: 'Prestige Netrunner Prime title' },
+    eliteReward: { name: '🔱 Dare Champion Title', type: 'title', icon: '🔱', description: 'Prestige Dare Champion title' },
   },
   {
     level: 9,
@@ -724,8 +724,8 @@ function recordUserActivity(user: UserProfile) {
     user.lastActiveDate = today;
 
     // Check and award milestone badge upgrades
-    if (user.streak >= 3 && !user.badges.includes('⚡ Spark Netrunner')) {
-      user.badges.push('⚡ Spark Netrunner');
+    if (user.streak >= 3 && !user.badges.includes('⚡ Spark Pioneer') && !user.badges.includes('⚡ Spark Netrunner')) {
+      user.badges.push('⚡ Spark Pioneer');
     }
     if (user.streak >= 5 && !user.badges.includes('💎 Circuit Breaker (5-Day)')) {
       user.badges.push('💎 Circuit Breaker (5-Day)');
@@ -769,7 +769,7 @@ function awardXpToUser(user: UserProfile, xpAmount: number) {
       userId: user.id,
       type: 'social',
       title: `⚡ Level Up! Reached Rank Level ${newLevel}`,
-      message: `Your cyber rank surged to Level ${newLevel}! ${bonusCred} Cred has been credited to your neural wallet.`,
+      message: `Your platform rank surged to Level ${newLevel}! ${bonusCred} Cred has been credited to your balance.`,
       dareId: '',
       dareTitle: '',
       actorHandle: '@daredaylabs',
@@ -811,8 +811,8 @@ function getDailyOpsForUser(userId: string): DailyOpsState {
         },
         {
           id: 'contract_2',
-          title: 'Physical or Cyber Breakthrough',
-          description: 'Accept and submit verified evidence for any Physical, Tech, or Cyber category dare.',
+          title: 'Physical or Tech Breakthrough',
+          description: 'Accept and submit verified evidence for any Physical, Creative, or Tech category dare.',
           tier: 'assault',
           targetCount: 1,
           currentCount: 0,
@@ -1289,7 +1289,7 @@ async function startServer() {
       const handleRegex = /^@[a-zA-Z0-9_]{3,24}$/;
       if (!handleRegex.test(formattedHandle)) {
         return res.status(400).json({ 
-          error: 'Username must be 3-24 characters and contain only letters, numbers, and underscores (e.g. @cyber_runner).' 
+          error: 'Username must be 3-24 characters and contain only letters, numbers, and underscores (e.g. @dare_runner).' 
         });
       }
 
@@ -1407,7 +1407,7 @@ async function startServer() {
     res.json(sorted.slice(0, 20));
   });
 
-  // Claim Daily Cyberpunk Stipend
+  // Claim Daily Stipend
   app.post('/api/users/:userId/claim-stipend', requireAuth, (req, res) => {
     const callerId = req.user!.uid;
     if (req.params.userId !== callerId) {
@@ -1425,7 +1425,7 @@ async function startServer() {
     user.cred += 150;
     
     // Add transaction
-    addTransaction(user.id, 'stipend_claimed', 150, 'Claimed Daily Cyberpunk Stipend of 150 Cred');
+    addTransaction(user.id, 'stipend_claimed', 150, 'Claimed Daily Stipend of 150 Cred');
     recordUserActivity(user);
     saveUserToFirestore(user);
 
@@ -1727,7 +1727,7 @@ async function startServer() {
   app.post('/api/ai-dares/generate', requireAuth, aiRateLimiter, async (req, res) => {
     try {
       const userId = req.user!.uid;
-      const { category = 'cyber', difficulty = 'Level 2 - Moderate', idempotencyKey } = req.body;
+      const { category = 'digital', difficulty = 'Level 2 - Moderate', idempotencyKey } = req.body;
 
       // 1. Idempotency Check: if client retries with the same idempotency key within 60s, return cached dare
       if (idempotencyKey && typeof idempotencyKey === 'string') {
@@ -1747,7 +1747,7 @@ async function startServer() {
         });
       }
 
-      const prompt = `You are DARE AI, an expert cyber-challenge referee for the DARE social protocol.
+      const prompt = `You are DARE AI, an expert challenge referee for the DARE social protocol.
 Generate a creative, engaging, and safe challenge for category "${category}" and difficulty "${difficulty}".
 Output ONLY valid JSON matching this schema:
 {
@@ -1794,7 +1794,7 @@ Output ONLY valid JSON matching this schema:
         title,
         description,
         proofRequirement,
-        category: (category as any) || 'cyber',
+        category: (category as any) || 'digital',
         difficulty: (difficulty as any) || 'Level 2 - Moderate',
         rewardCred,
         source: 'ai',
@@ -2352,7 +2352,7 @@ Output ONLY valid JSON matching this schema:
       title: title.trim(),
       description: description.trim(),
       proofRequirement: (proofRequirement || 'Submit photo, video, or verified telemetry log.').trim(),
-      category: category || 'cyber',
+      category: category || 'digital',
       difficulty: difficulty || 'Level 2 - Moderate',
       rewardCred: parsedReward,
       creator: {
@@ -2568,13 +2568,13 @@ Instructions:
       };
     }
 
-    // Generate AI evaluation via Gemini or intelligent cyber fallback
+    // Generate AI evaluation via Gemini or intelligent fallback
     let aiJudgement = null;
     const genAI = getGenAI();
 
     // Prepare telemetry details
     const telemetry = {
-      deviceType: req.headers['user-agent']?.includes('Mobile') ? 'Mobile Cyberdeck' : 'Desktop Neural Rig',
+      deviceType: req.headers['user-agent']?.includes('Mobile') ? 'Mobile Device' : 'Desktop Terminal',
       captureTimestamp: new Date().toISOString(),
       hasAudioTrack: !!(mediaUrl && (mediaUrl.includes('mp4') || mediaUrl.includes('webm'))),
       tamperRiskScore: 0,
@@ -2748,7 +2748,7 @@ Respond strictly in valid JSON matching this schema:
           }
         }
 
-        // Advance Daily Operations Contract 2 (Physical/Cyber Breakthrough)
+        // Advance Daily Operations Contract 2 (Physical/Tech Breakthrough)
         const dailyOps = getDailyOpsForUser(acceptor.id);
         const assaultContract = dailyOps.contracts.find(c => c.id === 'contract_2');
         if (assaultContract && !assaultContract.completed) {
@@ -2942,7 +2942,7 @@ Respond strictly in valid JSON matching this schema:
     res.status(201).json(comment);
   });
 
-  // AI Cyber Dare Generator: Generates creative, electrifying dares via Gemini
+  // AI Dare Generator: Generates creative, electrifying dares via Gemini
   app.post('/api/ai/generate-dare', async (req, res) => {
     const { category, difficulty, vibe, targetType, targetUserHandle } = req.body;
 
@@ -3408,7 +3408,7 @@ Provide your response in strictly valid JSON with this structure:
     const targetUser = initialUsers.find(u => u.handle.toLowerCase() === (targetUserHandle || '').toLowerCase());
 
     if (!challenger || !targetUser) {
-      return res.status(404).json({ error: 'Challenger or target netrunner not found' });
+      return res.status(404).json({ error: 'Challenger or target player not found' });
     }
 
     // Create a high-priority notification for the rival
@@ -3485,7 +3485,7 @@ Provide your response in strictly valid JSON with this structure:
     res.json({ success: true, dispatchedAt: new Date().toISOString() });
   });
 
-  // --- CYBERPUNK ARMORY & REWARDS STORE APIS ---
+  // --- REWARDS ARMORY & STORE APIS ---
   // Get all Armory items
   app.get('/api/armory/items', (_req, res) => {
     res.json({
@@ -3549,7 +3549,7 @@ Provide your response in strictly valid JSON with this structure:
       user.id,
       'shop_purchase',
       -totalCost,
-      `Purchased ${quantity}x ${item.name} from Cyber Armory`
+      `Purchased ${quantity}x ${item.name} from Rewards Armory`
     );
 
     // 10% of purchases feed the community jackpot pool!
@@ -3562,7 +3562,7 @@ Provide your response in strictly valid JSON with this structure:
       userId: user.id,
       type: 'social',
       title: `⚡ Armory Requisition: ${item.name}`,
-      message: `Successfully equipped ${quantity}x ${item.name} to your neural inventory. ${totalCost} Cred deducted.`,
+      message: `Successfully equipped ${quantity}x ${item.name} to your inventory. ${totalCost} Cred deducted.`,
       dareId: '',
       actorHandle: '@daredaylabs',
       actorName: 'DARE Quartermaster',
@@ -3580,7 +3580,7 @@ Provide your response in strictly valid JSON with this structure:
     });
   });
 
-  // Equip / Unequip Cosmetic Frame or Cyber Title
+  // Equip / Unequip Cosmetic Frame or Title
   app.post('/api/armory/equip', (req, res) => {
     const { userId, itemId, type } = req.body; // type: 'frame' | 'title'
     const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
@@ -3721,7 +3721,7 @@ Provide your response in strictly valid JSON with this structure:
       effectValue: 2,
     });
 
-    addTransaction(user.id, 'daily_trifecta_claimed', state.trifectaRewardCred, 'Cracked Daily Trifecta Cyber Safe! +500 CR & 2x Overclock Chip');
+    addTransaction(user.id, 'daily_trifecta_claimed', state.trifectaRewardCred, 'Cracked Daily Trifecta Vault Safe! +500 CR & 2x Overclock Chip');
 
     addNotification({
       userId: user.id,
@@ -3789,7 +3789,7 @@ Provide your response in strictly valid JSON with this structure:
       }
     } else {
       if (!user.hasElitePass && !user.isPro) {
-        return res.status(400).json({ error: 'Cyber Elite Pass required to claim this reward.' });
+        return res.status(400).json({ error: 'Elite Pass required to claim this reward.' });
       }
       if (user.seasonPassClaimedElite.includes(tier.level)) {
         return res.status(400).json({ error: 'Elite tier reward already claimed.' });
@@ -3815,7 +3815,7 @@ Provide your response in strictly valid JSON with this structure:
     });
   });
 
-  // Upgrade / Unlock Cyber Elite Battle Pass
+  // Upgrade / Unlock Elite Battle Pass
   app.post('/api/season-pass/upgrade-elite', (req, res) => {
     const { userId } = req.body;
     const user = initialUsers.find(u => u.id === userId) || findOrCreateUser(userId);
@@ -3830,19 +3830,19 @@ Provide your response in strictly valid JSON with this structure:
     const ELITE_PASS_COST = 2000;
     if (user.cred < ELITE_PASS_COST) {
       return res.status(400).json({ 
-        error: `Insufficient Cred. Need ${ELITE_PASS_COST} Cred (or PRO Membership) to unlock the Cyber Elite Battle Pass.` 
+        error: `Insufficient Cred. Need ${ELITE_PASS_COST} Cred (or PRO Membership) to unlock the Elite Battle Pass.` 
       });
     }
 
     user.cred -= ELITE_PASS_COST;
     user.hasElitePass = true;
-    addTransaction(user.id, 'shop_purchase', -ELITE_PASS_COST, 'Unlocked Season 1: Cyber Elite Battle Pass');
+    addTransaction(user.id, 'shop_purchase', -ELITE_PASS_COST, 'Unlocked Season 1: Elite Battle Pass');
 
     addNotification({
       userId: user.id,
       type: 'pro_upgraded',
-      title: '👑 Cyber Elite Pass Unlocked!',
-      message: 'You have unlocked the Cyber Elite track for Season 1! Claim premium frames, titles, and high-roller rewards.',
+      title: '👑 Elite Pass Unlocked!',
+      message: 'You have unlocked the Elite track for Season 1! Claim premium frames, titles, and high-roller rewards.',
       dareId: '',
       actorHandle: '@daredaylabs',
       actorName: 'DARE Arena',
@@ -4137,12 +4137,12 @@ Provide your response in strictly valid JSON with this structure:
   app.post('/api/drop-zones/deploy', (req, res) => {
     const { 
       name, 
-      category = 'cyber', 
+      category = 'special', 
       lat, 
       lng, 
       radiusMeters = 250, 
       city = 'Local Sector', 
-      country = 'Cyber Grid',
+      country = 'Global Sector',
       bountyCred = 200, 
       activeDareTitle, 
       activeDareDescription, 

@@ -87,7 +87,7 @@ export const AiDareLabModal: React.FC<AiDareLabModalProps> = ({
     creative: '🎨 Creative & Arts',
     tech: '🧠 Skills & Trivia',
     absurd: '🤪 Wild & Funny',
-    cyber: '💻 Code & Tech',
+    digital: '💻 Digital & Code',
   };
 
   return (
@@ -127,7 +127,7 @@ export const AiDareLabModal: React.FC<AiDareLabModalProps> = ({
               <div>
                 <label className="block text-xs font-mono text-fuchsia-300 mb-2">Choose Category</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {(['social', 'physical', 'creative', 'tech', 'absurd', 'cyber'] as DareCategory[]).map(cat => (
+                  {(['social', 'physical', 'creative', 'tech', 'absurd', 'digital'] as DareCategory[]).map(cat => (
                     <button
                       key={cat}
                       type="button"

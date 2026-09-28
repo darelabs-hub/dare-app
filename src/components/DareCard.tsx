@@ -221,7 +221,7 @@ export const DareCard: React.FC<DareCardProps> = ({
     }
     return {
       label: 'Extreme',
-      sublabel: 'Tier 4 // Cyber Psycho',
+      sublabel: 'Tier 4 // Legendary Daredevil',
       border: 'border-rose-500/70',
       text: 'text-rose-300',
       bg: 'bg-rose-950/50',
@@ -415,7 +415,7 @@ export const DareCard: React.FC<DareCardProps> = ({
         className={`pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br ${getCardGlowGradient()} opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100`} 
       />
 
-      {/* Cyber Grid Accent Shimmer on Card Top Corner */}
+      {/* Top Corner Shimmer Accent */}
       <div 
         aria-hidden="true"
         className="pointer-events-none absolute top-0 right-0 h-28 w-28 rounded-tr-2xl bg-gradient-to-bl from-white/[0.04] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"

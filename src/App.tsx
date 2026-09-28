@@ -22,7 +22,7 @@ import { CredLogModal } from './components/CredLogModal';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { EventsMerchModal } from './components/EventsMerchModal';
-import { CyberArmoryModal } from './components/CyberArmoryModal';
+import { ArmoryModal } from './components/ArmoryModal';
 import { SeasonPassModal } from './components/SeasonPassModal';
 import { DareStakingModal } from './components/DareStakingModal';
 import { DailyMissionWidget } from './components/DailyMissionWidget';
@@ -1450,7 +1450,7 @@ export default function App() {
         onOpenShareCard={(d) => setShareCardDare(d)}
       />
 
-      {/* Holographic Cyber Share Card Modal */}
+      {/* Holographic Share Card Modal */}
       <ShareCardModal
         isOpen={!!shareCardDare}
         onClose={() => setShareCardDare(null)}
@@ -1537,7 +1537,7 @@ export default function App() {
       {/* In-App Telemetry & Push System Alert HUD */}
       <SystemAlertHUD />
 
-      {/* Cyber Expiry Reminder Push Toast */}
+      {/* Expiry Reminder Push Toast */}
       <ExpiryNotificationToast
         toast={expiryReminderToast}
         onDismiss={() => setExpiryReminderToast(null)}
@@ -1664,8 +1664,8 @@ export default function App() {
         }}
       />
 
-      {/* Cyber Armory & Black Market Exchange Modal */}
-      <CyberArmoryModal
+      {/* Rewards Armory & Rewards Exchange Modal */}
+      <ArmoryModal
         isOpen={isArmoryOpen}
         onClose={() => setIsArmoryOpen(false)}
         currentUser={currentUser}

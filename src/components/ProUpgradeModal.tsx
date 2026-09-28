@@ -56,11 +56,6 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
     return () => unsub();
   }, []);
   
-  // Simulated Card State
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardName, setCardName] = useState('');
   const [downloadReceipt, setDownloadReceipt] = useState(false);
 
   if (!isOpen) return null;
@@ -242,60 +237,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
     }
 
     if (paymentMode === 'card') {
-      if (!cardNumber || !expiry || !cvv || !cardName) {
-        setError('Billing verification failed. All credit card fields are required.');
-        setUpgrading(false);
-        playSound('error');
-        return;
-      }
-      if (cardNumber.replace(/\s+/g, '').length < 16) {
-        setError('Credit card verification failure: Must be a complete 16-digit card number.');
-        setUpgrading(false);
-        playSound('error');
-        return;
-      }
-
-      // Execute Stripe PaymentIntent
-      const tierIdMap: Record<string, string> = {
-        runner: 'dare_pro_lite_monthly',
-        lite: 'dare_pro_lite_monthly',
-        elite: 'dare_pro_elite_monthly',
-        overlord: 'dare_pro_ultra_monthly',
-        ultra: 'dare_pro_ultra_monthly'
-      };
-      const tierItemId = tierIdMap[selectedTier] || 'dare_pro_lite_monthly';
-      const gbpNumeric = Number(selectedTierDetails.priceUSD.replace(/[^0-9.]/g, '')) || 1.99;
-      try {
-        let piIdToken = auth.currentUser ? await auth.currentUser.getIdToken() : null;
-        const executePaymentIntentRequest = async (token: string | null) => {
-          return await fetch('/api/stripe/create-payment-intent', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-              itemId: tierItemId,
-              amount: gbpNumeric,
-              currency: 'gbp',
-              description: `DARE PRO Subscription - ${selectedTierDetails.name}`,
-            }),
-          });
-        };
-
-        let piRes = await executePaymentIntentRequest(piIdToken);
-        if (piRes.status === 401 && auth.currentUser) {
-          piIdToken = await auth.currentUser.getIdToken(true);
-          piRes = await executePaymentIntentRequest(piIdToken);
-        }
-
-        if (!piRes.ok) {
-          const piData = await piRes.json();
-          console.warn('Payment intent notification:', piData.error);
-        }
-      } catch (stripeErr: any) {
-        console.warn('Stripe payment intent skipped:', stripeErr.message);
-      }
+      return handleStripeCheckout();
     }
 
     try {
@@ -313,8 +255,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
             tier: selectedTier,
             tierId: selectedTier,
             costCred: selectedTierDetails.priceCred,
-            paymentMode,
-            mockCard: paymentMode === 'card' ? { name: cardName } : undefined
+            paymentMode: 'cred',
           }),
         });
       };
@@ -341,23 +282,6 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
       playSound('error');
     } finally {
       setUpgrading(false);
-    }
-  };
-
-  const handleCardNumberChange = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length > 0) {
-      setCardNumber(parts.join(' '));
-    } else {
-      setCardNumber(v);
     }
   };
 
@@ -598,15 +522,41 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
 
                 {/* Credit Card checkout Form */}
                 {paymentMode === 'card' && (
-                  <div className="space-y-2.5 text-xs animate-fade-in">
+                  <div className="space-y-3 py-2 text-xs animate-fade-in">
+                    <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/30 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white text-xs">Official Stripe Checkout</span>
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                          <ShieldCheck className="h-3 w-3" /> PCI Certified
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                        Pay securely with your credit/debit card, Apple Pay, or Google Pay via Stripe's encrypted checkout page.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] text-slate-400 font-mono">
+                        <span className="rounded bg-slate-900 px-2 py-0.5 border border-slate-800">💳 Visa / Mastercard / Amex</span>
+                        <span className="rounded bg-slate-900 px-2 py-0.5 border border-slate-800">🍎 Apple Pay</span>
+                        <span className="rounded bg-slate-900 px-2 py-0.5 border border-slate-800">⚡ Google Pay</span>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={handleStripeCheckout}
                       disabled={upgrading}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold text-white shadow-lg transition-all bg-gradient-to-r from-[#635bff] to-[#7a73ff] hover:brightness-110 active:scale-95 disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold text-white shadow-lg transition-all bg-gradient-to-r from-[#635bff] to-[#7a73ff] hover:brightness-110 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                      <CreditCard className="h-4 w-4" />
-                      <span>{upgrading ? 'Connecting to Stripe...' : 'Checkout via Stripe (Cards, Apple Pay, Google Pay)'}</span>
+                      {upgrading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Connecting to Stripe...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4" />
+                          <span>Proceed to Stripe Checkout ({currentTierData?.priceUSD})</span>
+                        </>
+                      )}
                     </button>
 
                     {checkoutUrl && (
@@ -620,85 +570,6 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                         <span>Open Stripe Checkout Page ↗</span>
                       </a>
                     )}
-
-                    <div className="flex items-center gap-2 my-2 text-[10px] text-slate-500 font-mono uppercase">
-                      <div className="h-px bg-slate-800 flex-1" />
-                      <span>Or pay with card below</span>
-                      <div className="h-px bg-slate-800 flex-1" />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">
-                        Cardholder Name
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. ALEX MORGAN"
-                        required
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        className="w-full rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs text-white focus:border-indigo-500/50 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">
-                        Credit Card Number
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="•••• •••• •••• ••••"
-                        maxLength={19}
-                        required
-                        value={cardNumber}
-                        onChange={(e) => handleCardNumberChange(e.target.value)}
-                        className="w-full rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs font-mono text-white focus:border-indigo-500/50 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">
-                          Expiration Date
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="MM/YY"
-                          maxLength={5}
-                          required
-                          value={expiry}
-                          onChange={(e) => setExpiry(e.target.value)}
-                          className="w-full rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs font-mono text-white focus:border-indigo-500/50 focus:outline-none text-center"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-mono text-slate-500 uppercase font-bold mb-1">
-                          Secure CVV
-                        </label>
-                        <input
-                          type="password"
-                          placeholder="•••"
-                          maxLength={4}
-                          required
-                          value={cvv}
-                          onChange={(e) => setCvv(e.target.value)}
-                          className="w-full rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-xs font-mono text-white focus:border-indigo-500/50 focus:outline-none text-center"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2 pt-1">
-                      <input
-                        type="checkbox"
-                        id="receipt-checkbox"
-                        checked={downloadReceipt}
-                        onChange={(e) => setDownloadReceipt(e.target.checked)}
-                        className="h-3.5 w-3.5 rounded border-slate-800 bg-slate-900 text-indigo-500 focus:ring-0"
-                      />
-                      <label htmlFor="receipt-checkbox" className="text-[10px] text-slate-400 font-mono cursor-pointer select-none">
-                        Save local receipt document
-                      </label>
-                    </div>
                   </div>
                 )}
 
@@ -732,28 +603,28 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                   </div>
                 )}
 
-                {/* Checkout CTA */}
-                <button
-                  type="submit"
-                  disabled={upgrading}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold text-white shadow-md transition-all bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50"
-                >
-                  {upgrading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Verifying Payment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="h-4 w-4" />
-                      <span>
-                        {paymentMode === 'card' 
-                          ? `Authorize & Subscribe ${currentTierData?.priceUSD}` 
-                          : `Redeem ${currentTierData?.priceCred.toLocaleString()} CR (No Card Required)`}
-                      </span>
-                    </>
-                  )}
-                </button>
+                {/* Checkout CTA for In-Game Cred Mode */}
+                {paymentMode === 'cred' && (
+                  <button
+                    type="submit"
+                    disabled={upgrading}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold text-white shadow-md transition-all bg-amber-600 hover:bg-amber-500 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  >
+                    {upgrading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Redeeming Creds...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Coins className="h-4 w-4 text-amber-200" />
+                        <span>
+                          Redeem {currentTierData?.priceCred.toLocaleString()} CR (No Card Required)
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </form>
 
               {/* Direct Sales Reassurance Banner */}
@@ -806,7 +677,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                   <span className="text-indigo-400 uppercase font-semibold">{currentTierData?.name}</span>
                 </p>
                 <p className="flex justify-between">
-                  <span>Authorized Cost:</span>
+                  <span>Payment / Cost:</span>
                   <span className="text-white">
                     {paymentMode === 'card' ? currentTierData?.priceUSD : `${currentTierData?.priceCred} CR`}
                   </span>

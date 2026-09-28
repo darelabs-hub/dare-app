@@ -21,7 +21,7 @@ import { ArmoryItem, InventoryItem, ActiveBooster, UserProfile } from '../types'
 import { playSound } from '../utils/soundEffects';
 import { trackEvent } from '../utils/analytics';
 
-interface CyberArmoryModalProps {
+interface ArmoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: UserProfile;
@@ -29,7 +29,7 @@ interface CyberArmoryModalProps {
   onOpenStipendOrPro?: () => void;
 }
 
-export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
+export const ArmoryModal: React.FC<ArmoryModalProps> = ({
   isOpen,
   onClose,
   currentUser,
@@ -483,7 +483,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
                 </div>
               )}
 
-              {/* --- CYBER TITLES TAB --- */}
+              {/* --- PLAYER TITLES TAB --- */}
               {activeTab === 'titles' && (
                 <div>
                   <div className="rounded-2xl border border-indigo-500/20 bg-indigo-950/20 p-4 mb-6 flex items-center justify-between">

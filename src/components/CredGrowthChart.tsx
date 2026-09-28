@@ -163,7 +163,7 @@ export const CredGrowthChart: React.FC<CredGrowthChartProps> = ({
       id="cred-growth-visualization"
       className={`rounded-2xl border border-slate-800/80 bg-[#0c1224]/80 p-4 relative overflow-hidden backdrop-blur-sm ${className}`}
     >
-      {/* Background Cyber Ambient Glow */}
+      {/* Background Ambient Glow */}
       <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-cyan-500/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-indigo-500/5 blur-3xl pointer-events-none" />
 

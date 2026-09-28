@@ -63,7 +63,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       setJustEnabled(true);
       dismissPushBanner();
       
-      // Dispatch immediate welcome cyber push notification
+      // Dispatch immediate welcome push notification
       await dispatchSystemNotification({
         title: '⚡ DARE Uplink Connected!',
         body: 'You will now receive real-time alerts for direct challenge bounties, staking pools, and proximity drop zones.',

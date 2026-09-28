@@ -323,7 +323,7 @@ export const CredLogModal: React.FC<CredLogModalProps> = ({
           <div className="flex items-center gap-2 rounded-xl border border-cyan-500/10 bg-cyan-950/10 p-2.5 sm:p-3 text-[11px] sm:text-xs text-slate-400">
             <Info className="h-4 w-4 text-cyan-400 shrink-0" />
             <p>
-              Complete dares, earn community votes, and achieve streak milestones to raise your Cred rating and unlock cyber rank badges.
+              Complete dares, earn community votes, and achieve streak milestones to raise your Cred rating and unlock prestige rank badges.
             </p>
           </div>
         </div>

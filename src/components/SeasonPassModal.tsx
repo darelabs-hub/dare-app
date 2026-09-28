@@ -246,7 +246,7 @@ export const SeasonPassModal: React.FC<SeasonPassModalProps> = ({
                     hasElite ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                   }`}>
                     {hasElite ? <Crown className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                    {hasElite ? 'CYBER ELITE UNLOCKED' : 'ELITE PASS LOCKED'}
+                    {hasElite ? 'ELITE TRACK UNLOCKED' : 'ELITE PASS LOCKED'}
                   </span>
                   <h4 className="font-bold text-white text-sm mt-1">
                     {hasElite ? 'Double Rewards Active' : 'Unlock 10+ Elite Rewards'}
