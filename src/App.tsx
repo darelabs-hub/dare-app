@@ -160,6 +160,19 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile>(getInitialUser);
   const lastIdentifiedUidRef = React.useRef<string | null>(null);
 
+  const handleSignIn = async () => {
+    playSound('click');
+    try {
+      const res = await signIn();
+      if (res?.user) {
+        playSound('levelUp');
+        navigateTo('/app');
+      }
+    } catch (e) {
+      console.error('Sign in error:', e);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await logout();
@@ -170,7 +183,22 @@ export default function App() {
     lastIdentifiedUidRef.current = null;
     const guest = getInitialUser();
     setCurrentUser(guest);
+    navigateTo('/');
   };
+
+  // Automatically direct authenticated Google users to /app and prevent getting stuck on landing page
+  useEffect(() => {
+    if (user) {
+      const isLegalPage = currentPath === '/privacy' || 
+                          currentPath === '/privacy-policy' || 
+                          currentPath === '/terms' || 
+                          currentPath === '/terms-of-service';
+      
+      if (!isLegalPage && !currentPath.startsWith('/app')) {
+        navigateTo('/app');
+      }
+    }
+  }, [user, currentPath]);
 
   useEffect(() => {
     if (user) {
@@ -1006,7 +1034,7 @@ export default function App() {
         allUsers={users}
         isMarketingMode={!currentPath.startsWith('/app')}
         onSelectUser={(u) => setCurrentUser(u)}
-        onSignIn={signIn}
+        onSignIn={handleSignIn}
         onSignOut={handleSignOut}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
         onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
@@ -1388,7 +1416,7 @@ export default function App() {
         initialTargetUserHandle={directTargetUserHandle}
         onOpenSafetyModal={() => setLegalModalTab('safety')}
         onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
-        onSignIn={signIn}
+        onSignIn={handleSignIn}
         isAuthenticated={!!user}
         onDareCreated={(newDare) => {
           setDares((prev) => [newDare, ...prev]);
@@ -1519,7 +1547,7 @@ export default function App() {
         isOpen={isProUpgradeOpen}
         onClose={() => setIsProUpgradeOpen(false)}
         currentUser={currentUser}
-        onSignIn={signIn}
+        onSignIn={handleSignIn}
         onUpgradeSuccess={(updatedUser) => {
           setCurrentUser(updatedUser);
           setUsers((prev) => prev.map((u) => u.id === updatedUser.id ? updatedUser : u));
@@ -1558,7 +1586,7 @@ export default function App() {
         currentUser={currentUser}
         allUsers={users}
         isAuthenticated={!!user}
-        onSignIn={signIn}
+        onSignIn={handleSignIn}
         onSignOut={handleSignOut}
         initialTab={profileModalTab}
         onUpdateUser={(updated) => {
@@ -1911,7 +1939,7 @@ export default function App() {
           }}
           currentUser={currentUser}
           isAuthenticated={!!user}
-          onSignIn={signIn}
+          onSignIn={handleSignIn}
           onSignOut={handleSignOut}
         />
       )}

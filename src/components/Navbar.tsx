@@ -159,12 +159,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center cursor-pointer select-none shrink-0" 
             onClick={() => {
               if (onNavigateToPath) {
-                onNavigateToPath('/');
+                if (isAuthenticated) {
+                  onNavigateToPath('/app');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  onNavigateToPath('/');
+                }
               } else {
                 window.location.reload();
               }
             }}
-            title="DARE - Home"
+            title={isAuthenticated ? "DARE - Dashboard" : "DARE - Home"}
           >
             <DareDayLogo size={36} showText={false} />
           </div>
