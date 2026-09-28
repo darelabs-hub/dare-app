@@ -65,6 +65,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  const scrollToContent = () => {
+    setTimeout(() => {
+      const el = document.getElementById('dares-feed-container');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 80);
+  };
+
   const categoriesList = [
     { id: 'all', label: t('allChallenges'), icon: <Terminal className="h-3.5 w-3.5" /> },
     { id: 'tech', label: t('techCode'), icon: <Code2 className="h-3.5 w-3.5" /> },
@@ -75,7 +84,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   ];
 
   return (
-    <div id="dare-feed-section" className="relative overflow-hidden border-b border-pink-500/10 bg-[#07090e] pt-6 pb-4">
+    <div id="hero-banner-section" className="relative overflow-hidden border-b border-pink-500/10 bg-[#07090e] pt-6 pb-4">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Filter Navigation Bar */}
@@ -91,8 +100,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 onClick={() => {
                   onSelectTarget('all');
                   playSound('click');
+                  scrollToContent();
                 }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
                   targetFilter === 'all'
                     ? 'bg-indigo-600/25 text-indigo-200 border border-indigo-500/30 shadow-sm font-semibold'
                     : 'text-slate-400 hover:text-slate-200'
@@ -107,8 +117,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 onClick={() => {
                   onSelectTarget('public');
                   playSound('click');
+                  scrollToContent();
                 }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
                   targetFilter === 'public'
                     ? 'bg-indigo-600/25 text-indigo-200 border border-indigo-500/30 shadow-sm font-semibold'
                     : 'text-slate-400 hover:text-slate-200'
@@ -123,8 +134,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 onClick={() => {
                   onSelectTarget('direct');
                   playSound('click');
+                  scrollToContent();
                 }}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
                   targetFilter === 'direct'
                     ? 'bg-pink-600/25 text-pink-200 border border-pink-500/30 shadow-sm font-semibold'
                     : 'text-slate-400 hover:text-slate-200'
@@ -136,7 +148,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             </div>
 
             {/* Status Pills */}
-            <div className="flex items-center overflow-x-auto gap-1.5 py-1 text-xs">
+            <div className="flex items-center overflow-x-auto gap-1.5 py-1 text-xs no-scrollbar">
               {[
                 { id: 'all', label: t('tabFeed'), dot: null },
                 { id: 'friends', label: t('squadWars'), dot: 'bg-indigo-400' },
@@ -150,8 +162,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   onClick={() => {
                     onSelectTab(tab.id);
                     playSound('click');
+                    scrollToContent();
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium whitespace-nowrap transition-all ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium whitespace-nowrap transition-all cursor-pointer ${
                     activeTab === tab.id
                       ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
@@ -173,6 +186,11 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    scrollToContent();
+                  }
+                }}
                 placeholder={t('searchPlaceholder')}
                 className="w-full rounded-xl border border-slate-800 bg-[#0c1017] pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400"
               />
@@ -189,7 +207,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           </div>
 
           {/* Sector / Category Filter Chips */}
-          <div className="flex items-center overflow-x-auto gap-2 pt-1 pb-1">
+          <div className="flex items-center overflow-x-auto gap-2 pt-1 pb-1 no-scrollbar">
             {categoriesList.map((cat) => {
               const isActive = activeCategory === cat.id;
               return (
@@ -199,8 +217,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   onClick={() => {
                     onSelectCategory(cat.id);
                     playSound('click');
+                    scrollToContent();
                   }}
-                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs transition-all whitespace-nowrap cursor-pointer ${
                     isActive
                       ? `border-indigo-500 bg-indigo-500/15 text-indigo-300 font-semibold shadow-sm`
                       : 'border-slate-800/80 bg-slate-900/30 text-slate-400 hover:border-slate-700 hover:text-slate-200'

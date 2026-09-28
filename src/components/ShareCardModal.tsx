@@ -53,7 +53,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   // Theme styling definitions
   const themeStyles = {
     matrix: {
-      name: 'Cyber Matrix',
+      name: 'Neon Emerald',
       bgGradient: 'from-[#031512] via-[#041d1a] to-[#010908]',
       borderColor: 'border-emerald-500/60',
       accentText: 'text-emerald-400',

@@ -21,7 +21,8 @@ import {
   Swords,
   Target,
   Compass,
-  Edit3
+  Edit3,
+  MessageSquare
 } from 'lucide-react';
 import { UserProfile, NotificationItem } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -70,6 +71,7 @@ interface NavbarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onNavigateToPath?: (path: string) => void;
+  onOpenDareChat?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -105,6 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchQuery,
   setSearchQuery,
   onNavigateToPath,
+  onOpenDareChat,
 }) => {
   const { t } = useLanguage();
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
@@ -315,6 +318,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Swords className="h-3.5 w-3.5 text-pink-400" />
               <span>{t('squadWars')}</span>
+            </button>
+          )}
+
+          {/* Dare Chat & Bot Button */}
+          {onOpenDareChat && (
+            <button
+              onClick={() => {
+                onOpenDareChat();
+                playSound('click');
+              }}
+              className="flex items-center gap-1.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 px-2.5 py-1.5 text-xs font-bold text-indigo-300 hover:bg-indigo-900/60 transition-colors shadow-sm cursor-pointer"
+              title="Dare Chat & Assistant"
+            >
+              <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Dare Chat</span>
             </button>
           )}
 
@@ -595,7 +613,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2.5">
                         <Swords className="h-4 w-4 text-pink-400" />
-                        <span>Squad Wars Arena</span>
+                        <span>Squad Tournaments</span>
                       </div>
                       <span className="text-[10px] font-mono text-pink-400 font-bold">Active →</span>
                     </button>
@@ -619,9 +637,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <div className="flex items-center gap-2.5">
                       <Target className="h-4 w-4 text-cyan-400" />
-                      <span>Daily Missions & Ops</span>
+                      <span>Daily Dares & Challenges</span>
                     </div>
-                    <span className="text-[10px] font-mono text-cyan-400 font-bold">3 Ops →</span>
+                    <span className="text-[10px] font-mono text-cyan-400 font-bold">3 Dares →</span>
                   </button>
 
                   {onOpenDropZones && (
@@ -637,9 +655,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2.5">
                         <Compass className="h-4 w-4 text-emerald-400" />
-                        <span>Drop Zones & AR Beacons</span>
+                        <span>Local Dares & Map</span>
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold">GPS Radar →</span>
+                      <span className="text-[10px] font-mono text-emerald-400 font-bold">Explore →</span>
                     </button>
                   )}
 
@@ -656,7 +674,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2.5">
                         <ShoppingBag className="h-4 w-4 text-cyan-400" />
-                        <span>Armory & Shop</span>
+                        <span>Rewards & Shop</span>
                       </div>
                       <span className="text-[10px] font-mono text-cyan-400 font-bold">Shop →</span>
                     </button>
@@ -675,7 +693,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2.5">
                         <Zap className="h-4 w-4 text-purple-400" />
-                        <span>Season 1 Battle Pass</span>
+                        <span>Season 1 Pass</span>
                       </div>
                       <span className="text-[10px] font-mono text-purple-400 font-bold">LVL {currentUser?.seasonPassLevel || 1} →</span>
                     </button>
@@ -693,7 +711,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
                     >
                       <Coins className="h-4 w-4 text-amber-400" />
-                      <span>Cred Transaction Log</span>
+                      <span>Cred History & Activity</span>
                     </button>
                   )}
 
@@ -710,7 +728,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
                     >
                       <Map className="h-4 w-4 text-cyan-400" />
-                      <span>Location Heatmap</span>
+                      <span>Challenge Map</span>
                     </button>
                   )}
 
@@ -726,7 +744,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors text-left cursor-pointer"
                     >
                       <ShoppingBag className="h-4 w-4 text-pink-400" />
-                      <span>Gauntlet Merch & Events</span>
+                      <span>DARE Merch & Events</span>
                     </button>
                   )}
 

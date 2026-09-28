@@ -68,7 +68,27 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [bubbleCoords, setBubbleCoords] = useState<{ top: number; left: number } | null>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear any previous persistent hide so the user can see their tutorial button
+  useEffect(() => {
+    try {
+      localStorage.removeItem('dareday_hide_tour_button');
+    } catch {}
+  }, []);
+
+  // Listen for global tour trigger event from Navbar or Profile menu
+  useEffect(() => {
+    const handleTourTrigger = () => {
+      setIsDismissed(false);
+      setIsActive(true);
+      setCurrentStep(0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('dareday:open_tour', handleTourTrigger);
+    return () => window.removeEventListener('dareday:open_tour', handleTourTrigger);
+  }, []);
 
   // Maintain latest props in a ref to avoid recreating steps and triggering cascade renders
   const callbacksRef = useRef({
@@ -126,7 +146,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
       targetId: 'target-direct-btn',
       title: 'Direct Peer Challenges',
       badge: 'PEER-TO-PEER',
-      category: 'Battle Matrix',
+      category: 'Challenges',
       icon: <Flame className="h-4 w-4 text-pink-400" />,
       description: 'Filter challenges targeted specifically to your handle. Issue 1-on-1 dares directly to friends and rivals, attach custom voice directives, and settle scores for Cred.',
       hint: 'Automatically switched to Direct Dares filter',
@@ -139,12 +159,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'sectors',
       targetId: 'category-tech-btn',
-      title: 'Sector Classification Matrix',
-      badge: 'SECTORS',
-      category: 'Challenge Taxonomy',
+      title: 'Challenge Categories',
+      badge: 'CATEGORIES',
+      category: 'Categories',
       icon: <Terminal className="h-4 w-4 text-cyan-400" />,
-      description: 'Browse challenges across 5 specialized sectors: Tech & Code, Fitness & Outdoors, Social Hacks, Art & Creative, and Wild & Unusual. Switch sectors anytime to hone your strengths.',
-      hint: 'Automatically switched to Tech & Code sector',
+      description: 'Browse challenges across 5 specialized categories: Tech & Code, Fitness & Outdoors, Social & Fun, Art & Creative, and Wild & Unusual. Switch categories anytime to find dares you love.',
+      hint: 'Automatically switched to Tech & Code category',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onCloseAllModals();
@@ -155,12 +175,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'create-dare',
       targetId: 'create-dare-modal-container',
-      title: 'Custom Dare Deployment',
-      badge: 'CREATION PROTOCOL',
-      category: 'Bounty Engine',
+      title: 'Custom Dare Creation',
+      badge: 'CREATE DARE',
+      category: 'Dare Creator',
       icon: <Flame className="h-4 w-4 text-amber-400" />,
-      description: 'Deploy public bounties or target peers directly. Attach live microphone voice briefings, tune the Cred reward pool slider (15–250 CR), specify difficulty tiers, and set verification guidelines.',
-      hint: 'Automatically opened Dare Creation Terminal',
+      description: 'Create public dares or challenge friends directly. Attach live microphone audio briefings, tune the Cred reward slider (15–250 CR), specify difficulty levels, and set proof requirements.',
+      hint: 'Automatically opened Dare Creation Modal',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenCreateModal();
@@ -171,9 +191,9 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
       targetId: 'leaderboard-modal-container',
       title: 'Hall of Fame Leaderboard',
       badge: 'GLOBAL RANKINGS',
-      category: 'Competitive Arena',
+      category: 'Leaderboard',
       icon: <Trophy className="h-4 w-4 text-amber-400" />,
-      description: 'Track the top Netrunners across platform leaderboards. Inspect all-time Cred accumulation, daily streak champions, verified proof rates, and prestigious Cyber PRO status.',
+      description: 'Track the top players across platform leaderboards. Inspect all-time Cred accumulation, daily streak champions, verified proof rates, and prestigious PRO status.',
       hint: 'Automatically opened Hall of Fame Leaderboard',
       position: 'bottom',
       onEnter: () => {
@@ -184,7 +204,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
       id: 'rivalry',
       targetId: 'rivalry-view-section',
       title: 'Head-to-Head Rivalry Tracker',
-      badge: 'RIVALRY MATRIX',
+      badge: 'HEAD-TO-HEAD',
       category: 'Social Competition',
       icon: <Swords className="h-4 w-4 text-pink-400" />,
       description: 'Analyze head-to-head win/loss ratios against friends! Compare community vote dominance (Legit vs. Busted), review shared direct duel records, and throw down direct rematches.',
@@ -198,10 +218,10 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
       id: 'tournaments',
       targetId: 'squad-tournaments-modal-container',
       title: 'Squad vs. Squad Tournaments Arena',
-      badge: 'TOURNAMENT WARFARE',
-      category: 'Syndicate Warfare',
+      badge: 'TOURNAMENTS',
+      category: 'Squad Battles',
       icon: <Swords className="h-4 w-4 text-amber-400" />,
-      description: 'Community syndicates wage warfare for colossal Cred prize pots! Stake wagers on competing squads, submit verified proofs to score points for your crew, and claim pool dividends.',
+      description: 'Squads compete for huge Cred prize pots! Back competing teams, submit verified proofs to score points for your squad, and claim prize rewards.',
       hint: 'Automatically opened Squad Tournaments Arena',
       position: 'bottom',
       onEnter: () => {
@@ -213,12 +233,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'squad',
       targetId: 'squad-chat-section',
-      title: 'Encrypted Squad Comms',
-      badge: 'SQUAD NETWORK',
-      category: 'Crew Ops',
+      title: 'Squad Chat & Teamwork',
+      badge: 'SQUAD CHAT',
+      category: 'Team Chat',
       icon: <MessageSquare className="h-4 w-4 text-indigo-400" />,
-      description: 'Coordinate operations in real-time encrypted Squad Comms. Send tactical quick-transmits, accept friend requests, check member status, and collaborate on squad-wide bounties.',
-      hint: 'Automatically switched to Squad Comms tab',
+      description: 'Chat in real-time with your squad. Send messages, accept friend requests, see teammates, and collaborate on team dares.',
+      hint: 'Automatically switched to Squad Chat tab',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenProfile(callbacksRef.current.currentUser, 'squad');
@@ -227,12 +247,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'heatmap',
       targetId: 'heatmap-view-container',
-      title: 'Live World Grid Heatmap',
-      badge: 'SATELLITE RADAR',
+      title: 'Live World Challenge Map',
+      badge: 'LIVE MAP',
       category: 'Global Map',
       icon: <Map className="h-4 w-4 text-cyan-400" />,
-      description: 'Satellite radar visualizing active challenge clusters worldwide. Inspect real-time hotspot nodes in San Francisco, Tokyo, Berlin, London, and New York with live telemetry.',
-      hint: 'Automatically switched to Satellite Map tab',
+      description: 'Interactive map visualizing active challenge clusters worldwide. Inspect real-time hotspots in San Francisco, Tokyo, Berlin, London, and New York.',
+      hint: 'Automatically switched to Challenge Map tab',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenProfile(callbacksRef.current.currentUser, 'location-map');
@@ -241,12 +261,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'proof-gallery',
       targetId: 'proof-gallery-modal-container',
-      title: 'Proof Telemetry & AI Verification',
+      title: 'Proof Gallery & Reviews',
       badge: 'AI VERIFICATION',
-      category: 'Integrity Protocol',
+      category: 'Proof Verification',
       icon: <Camera className="h-4 w-4 text-emerald-400" />,
-      description: 'Inspect photo and video evidence submitted by challengers. Watch the Oracle AI evaluate authenticity with automated confidence scores and bonus Cred, alongside community Legit/Busted voting.',
-      hint: 'Automatically opened Evidence Telemetry Gallery',
+      description: 'Inspect photo and video evidence submitted by challengers. Watch AI evaluate authenticity with automated confidence scores and bonus Cred, alongside community Legit/Busted voting.',
+      hint: 'Automatically opened Proof Gallery',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenProofGallery();
@@ -255,12 +275,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'cred-log',
       targetId: 'cred-log-modal-container',
-      title: 'Cred Ledger & Financial Vault',
-      badge: 'CRED ECONOMY',
-      category: 'Wallet Telemetry',
+      title: 'Cred History & Rewards',
+      badge: 'CRED REWARDS',
+      category: 'Cred Balance',
       icon: <Coins className="h-4 w-4 text-amber-400" />,
-      description: 'Your complete immutable financial audit trail: track bounty payouts, AI bonus multipliers, penalty deductions, and streak multipliers across every single operation.',
-      hint: 'Automatically opened Cred Financial Vault',
+      description: 'Your complete transaction history: track dare payouts, AI bonus multipliers, challenge fees, and streak rewards.',
+      hint: 'Automatically opened Cred History',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenCredLog();
@@ -269,12 +289,12 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     {
       id: 'events-merch',
       targetId: 'events-merch-modal-container',
-      title: 'Cyber Gear & Convergence Events',
-      badge: 'GEAR & EVENTS',
-      category: 'Convergence Ops',
+      title: 'DARE Merch & Community Events',
+      badge: 'MERCH & EVENTS',
+      category: 'Merch & Meetups',
       icon: <ShoppingBag className="h-4 w-4 text-purple-400" />,
-      description: 'Explore limited edition physical DARE streetwear, prototype tactical hardware, and RSVP for upcoming in-person hacker community sprint meetups worldwide.',
-      hint: 'Automatically opened Gear & Events Terminal',
+      description: 'Explore limited edition physical DARE streetwear, exclusive merchandise, and RSVP for upcoming community meetups.',
+      hint: 'Automatically opened Merch & Events',
       position: 'bottom',
       onEnter: () => {
         callbacksRef.current.onOpenEventsMerch();
@@ -466,64 +486,59 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // If the user has disabled help bubbles in their settings tab, do not show launcher
-  if (currentUser.disableHelpBubbles) {
+  // If the user has disabled help bubbles or dismissed the tutorial, do not render
+  if (currentUser.disableHelpBubbles || isDismissed) {
     return null;
   }
 
   const step = steps[currentStep];
 
+  const handleDismiss = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsDismissed(true);
+    if (isActive) {
+      handleClose();
+    }
+  };
+
   return (
     <>
-      {/* Ultra-Sleek Radiating Cyber Glow Side Icon */}
+      {/* Sleek, Clearly Visible Platform Tour Tab on Screen Edge */}
       <div 
         id="help-tour-side-tab-container"
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 group flex items-center select-none"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center select-none"
       >
-        {/* Quick Hover Tooltip Pill */}
-        <div className="mr-2.5 hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-indigo-500/40 bg-[#080d1a]/95 text-xs font-mono text-indigo-200 shadow-[-5px_0_20px_rgba(99,102,241,0.3)] opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-200 pointer-events-none backdrop-blur-xl whitespace-nowrap">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-          <span className="font-semibold text-slate-200">Platform Tour Guide</span>
-        </div>
+        {/* Subtle dismiss button on the left of the tab */}
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="mr-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950/90 border border-slate-700/80 text-slate-400 hover:text-rose-400 hover:border-rose-500/50 transition-all cursor-pointer shadow-md"
+          title="Close guide tab"
+          aria-label="Hide guide tab"
+        >
+          <X className="h-3 w-3" />
+        </button>
 
-        {/* Thin Radiating Glow Symbol Trigger */}
+        {/* Visible, Polished Guide Pill */}
         <button
           onClick={isActive ? handleClose : handleStartTour}
-          className={`relative flex h-14 w-8 sm:w-9 items-center justify-center rounded-l-2xl border-l-2 border-y-2 border-r-0 backdrop-blur-xl transition-all duration-300 cursor-pointer group-hover:w-10 active:scale-95 ${
-            isActive
-              ? 'border-pink-500/70 bg-[#0d0a1a]/95 text-pink-300 shadow-[-8px_0_25px_rgba(236,72,153,0.5)]'
-              : 'border-indigo-500/60 bg-[#070b16]/90 text-indigo-300 hover:border-indigo-400 hover:text-white shadow-[-8px_0_25px_rgba(99,102,241,0.5)] hover:shadow-[-12px_0_35px_rgba(99,102,241,0.8)]'
+          className={`flex h-9 items-center gap-1.5 rounded-l-full border-l-2 border-y-2 border-r-0 border-indigo-400/80 bg-gradient-to-r from-indigo-900/95 via-indigo-950/95 to-slate-950/95 px-2.5 sm:px-3.5 text-indigo-200 hover:text-white hover:border-cyan-400 hover:from-indigo-800/95 transition-all cursor-pointer shadow-[0_0_15px_rgba(99,102,241,0.4)] backdrop-blur-md ${
+            isActive ? 'border-cyan-400 from-cyan-950 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.5)]' : ''
           }`}
-          title={isActive ? 'Exit Platform Tour' : 'Platform Tour Guide'}
+          title={isActive ? 'Close Guide' : 'Platform Tour Guide'}
           id="help-tour-launcher-btn"
           aria-label="Platform Tour Guide"
         >
-          {/* Subtle Radiating Aura Rings from Screen Edge */}
-          <span className="pointer-events-none absolute -inset-1 rounded-l-2xl bg-indigo-500/20 blur-md opacity-60 group-hover:opacity-100 transition-opacity" />
-          
-          {!isActive && (
+          {isActive ? (
             <>
-              {/* Radiating beacon wave 1 */}
-              <span className="pointer-events-none absolute left-0 w-full h-full rounded-l-2xl border border-indigo-400/40 animate-ping opacity-40" />
-              {/* Radiating beacon wave 2 */}
-              <span className="pointer-events-none absolute -left-1 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-cyan-400 via-indigo-400 to-pink-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+              <X className="h-3.5 w-3.5 text-pink-400" />
+              <span className="text-[11px] font-bold">Exit</span>
             </>
-          )}
-
-          {/* Central Glowing Symbol */}
-          <div className="relative z-10 flex items-center justify-center">
-            {isActive ? (
-              <X className="h-4 w-4 text-pink-400 transition-transform group-hover:rotate-90" />
-            ) : (
-              <Compass className="h-4 w-4 text-indigo-300 group-hover:rotate-45 group-hover:scale-110 transition-all duration-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-            )}
-          </div>
-
-          {/* Small Step Counter Badge when Tour Active */}
-          {isActive && (
-            <span className="absolute -bottom-2 -left-1 text-[8px] font-mono font-black text-pink-200 bg-pink-950 px-1 py-0.2 rounded-full border border-pink-500/40">
-              {currentStep + 1}
-            </span>
+          ) : (
+            <>
+              <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
+              <span className="text-[11px] font-bold tracking-wide">Tour</span>
+            </>
           )}
         </button>
       </div>
@@ -534,7 +549,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
           className="fixed z-[1050]" 
           style={{ top: `${bubbleCoords.top}px`, left: `${bubbleCoords.left}px` }}
         >
-          <div className="w-[360px] sm:w-[390px] max-w-[calc(100vw-24px)] rounded-2xl border-2 border-indigo-500/60 bg-[#070b13]/95 p-4 sm:p-5 shadow-[0_15px_50px_rgba(0,0,0,0.9),0_0_30px_rgba(99,102,241,0.35)] backdrop-blur-2xl animate-in zoom-in-95 duration-200 flex flex-col">
+          <div className="w-[360px] sm:w-[390px] max-w-[calc(100vw-24px)] rounded-2xl border border-indigo-500/40 bg-[#070b13]/95 p-4 sm:p-5 shadow-[0_15px_50px_rgba(0,0,0,0.9),0_0_20px_rgba(99,102,241,0.25)] backdrop-blur-2xl animate-in zoom-in-95 duration-200 flex flex-col">
             
             {/* Progress bar line across top */}
             <div className="w-full bg-slate-800/80 h-1 rounded-full mb-3.5 overflow-hidden">
@@ -544,7 +559,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
               />
             </div>
 
-            {/* Header with tactical category & step counter */}
+            {/* Header with category & step counter */}
             <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2.5 mb-3">
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-indigo-300 uppercase tracking-wider bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/30">
@@ -579,7 +594,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
                 {step.description}
               </p>
 
-              {/* Auto-switch Telemetry Notice */}
+              {/* Step Hint */}
               <div className="flex items-center gap-1.5 pt-1 text-[10px] font-mono text-cyan-300/90 bg-cyan-950/30 border border-cyan-500/20 rounded-lg px-2.5 py-1">
                 <Sparkles className="h-3 w-3 text-cyan-400 shrink-0" />
                 <span className="truncate">{step.hint}</span>
@@ -603,11 +618,11 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
             </div>
 
             {/* Footer Navigation Buttons */}
-            <div className="flex items-center justify-between pt-2 border-t border-indigo-500/20">
+            <div className="flex items-center justify-between pt-2 border-t border-indigo-500/20 gap-2">
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 0}
-                className={`flex items-center gap-1 text-xs font-mono font-bold uppercase transition-all px-2.5 py-1.5 rounded-lg ${
+                className={`flex items-center gap-1 text-xs font-mono font-bold uppercase transition-all px-2 py-1.5 rounded-lg ${
                   currentStep === 0 
                     ? 'text-slate-600 cursor-not-allowed opacity-40' 
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/80 cursor-pointer'
@@ -618,17 +633,18 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
               </button>
 
               <button
-                onClick={handleClose}
-                className="text-[11px] font-mono text-slate-400 hover:text-slate-200 transition-colors px-2 py-1"
+                onClick={handleDismissPermanently}
+                className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors px-1 py-1 cursor-pointer whitespace-nowrap"
+                title="Hide tutorial button completely"
               >
-                Skip Tour
+                Don't show again
               </button>
 
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase text-slate-950 bg-indigo-400 hover:bg-indigo-300 px-3.5 py-1.5 rounded-lg transition-all shadow-[0_0_15px_rgba(99,102,241,0.4)] cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase text-slate-950 bg-indigo-400 hover:bg-indigo-300 px-3 py-1.5 rounded-lg transition-all shadow-md cursor-pointer"
               >
-                <span>{currentStep === steps.length - 1 ? 'Finish Tour' : 'Next'}</span>
+                <span>{currentStep === steps.length - 1 ? 'Finish' : 'Next'}</span>
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>

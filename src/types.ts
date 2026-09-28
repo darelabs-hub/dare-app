@@ -1,4 +1,4 @@
-export type DareCategory = 'cyber' | 'physical' | 'social' | 'creative' | 'tech' | 'absurd';
+export type DareCategory = 'digital' | 'physical' | 'social' | 'creative' | 'tech' | 'absurd';
 
 export type DareDifficulty = 
   | 'Level 1 - Starter' 

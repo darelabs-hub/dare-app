@@ -194,14 +194,14 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
-                  ARMORY & SHOP
+                  REWARDS & SHOP
                 </h2>
                 <span className="rounded-full bg-cyan-500/20 px-2.5 py-0.5 text-[10px] font-bold text-cyan-300 border border-cyan-400/30 uppercase tracking-wider">
-                  Tactical Store
+                  Perks & Upgrades
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Spend Cred on overclock boosters, holographic avatar frames, and prestigious titles.
+                Spend Cred on XP boosters, glowing avatar frames, and prestigious player titles.
               </p>
             </div>
           </div>
@@ -211,7 +211,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
             <div className="hidden sm:flex items-center gap-2 rounded-xl bg-slate-900/90 border border-cyan-500/30 px-3.5 py-1.5 shadow-inner">
               <Coins className="h-4 w-4 text-cyan-400 animate-pulse" />
               <div className="text-right">
-                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Neural Wallet</div>
+                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Cred Balance</div>
                 <div className="text-sm font-black text-cyan-300">{currentUser.cred.toLocaleString()} <span className="text-[10px] text-cyan-500 font-bold">CR</span></div>
               </div>
             </div>
@@ -232,11 +232,11 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-amber-950/40 via-slate-900 to-cyan-950/40 border-b border-white/5 px-6 py-2.5 text-xs">
           <div className="flex items-center gap-2">
             <Flame className="h-4 w-4 text-amber-400 animate-bounce" />
-            <span className="text-slate-300">Community Staking Jackpot Pool:</span>
+            <span className="text-slate-300">Community Jackpot Pool:</span>
             <span className="font-black text-amber-300 tracking-wide text-sm">{jackpotPool.toLocaleString()} CR</span>
           </div>
           <div className="flex items-center gap-3 text-[11px] text-slate-400">
-            <span>10% of Armory trades feed the global jackpot</span>
+            <span>10% of Shop purchases support the jackpot pool</span>
             {onOpenStipendOrPro && (
               <button
                 onClick={() => {
@@ -245,7 +245,7 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
                 }}
                 className="text-cyan-400 hover:text-cyan-300 font-bold underline cursor-pointer"
               >
-                Claim Daily Stipend
+                Claim Daily Bonus
               </button>
             )}
           </div>
@@ -262,9 +262,9 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
         {/* Tabs Bar */}
         <div className="flex items-center gap-1 border-b border-white/10 px-6 pt-3 overflow-x-auto no-scrollbar bg-slate-900/50">
           {[
-            { id: 'boosters', label: 'Overclock Boosters', icon: Zap, count: boosters.length },
-            { id: 'cosmetics', label: 'Holo-Frames', icon: Sparkles, count: cosmetics.length },
-            { id: 'titles', label: 'Cyber Titles', icon: Crown, count: titles.length },
+            { id: 'boosters', label: 'XP Boosters', icon: Zap, count: boosters.length },
+            { id: 'cosmetics', label: 'Avatar Frames', icon: Sparkles, count: cosmetics.length },
+            { id: 'titles', label: 'Player Titles', icon: Crown, count: titles.length },
             { id: 'inventory', label: 'My Inventory', icon: Package, count: userInventory.length, badge: activeBoosters.length ? `${activeBoosters.length} Active` : undefined },
           ].map(tab => {
             const Icon = tab.icon;
@@ -580,11 +580,11 @@ export const CyberArmoryModal: React.FC<CyberArmoryModalProps> = ({
                   {/* Active Boosters Sub-section */}
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-2">
-                      <Zap className="h-4 w-4" /> Active Telemetry Boosters ({activeBoosters.length})
+                      <Zap className="h-4 w-4" /> Active Boosters ({activeBoosters.length})
                     </h3>
                     {activeBoosters.length === 0 ? (
                       <div className="rounded-2xl border border-white/5 bg-slate-900/50 p-4 text-xs text-slate-400 text-center">
-                        No active boosters currently humming. Activate a 2x Overclock Chip or Cryo-Shield below!
+                        No active boosters running. Activate an XP Booster or Streak Shield below!
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

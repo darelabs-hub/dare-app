@@ -156,7 +156,7 @@ export const HeatmapView: React.FC<HeatmapViewProps> = ({ dares = [], onOpenDrop
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Cyber Radar
+                Challenge Radar
               </button>
               <button
                 type="button"
@@ -167,7 +167,7 @@ export const HeatmapView: React.FC<HeatmapViewProps> = ({ dares = [], onOpenDrop
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Satellite GMap
+                Satellite Map
               </button>
             </div>
           )}

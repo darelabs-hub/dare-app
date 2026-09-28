@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { auth } from '../lib/firebase';
 import { Bot, Sparkles, Zap, X, ShieldCheck, Flame, ChevronRight, RefreshCw } from 'lucide-react';
 import { DareCategory, DareDifficulty, DareItem, UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
+import { auth } from '../lib/firebase';
 
 interface AiDareLabModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export const AiDareLabModal: React.FC<AiDareLabModalProps> = ({
   onAcceptDare,
   onOpenCreateWithDare,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<DareCategory>('cyber');
+  const [selectedCategory, setSelectedCategory] = useState<DareCategory>('social');
   const [selectedDifficulty, setSelectedDifficulty] = useState<DareDifficulty>('Level 2 - Moderate');
   const [generating, setGenerating] = useState(false);
   const [generatedDare, setGeneratedDare] = useState<DareItem | null>(null);
@@ -33,44 +33,40 @@ export const AiDareLabModal: React.FC<AiDareLabModalProps> = ({
       setError(null);
       playSound('oracle');
 
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        throw new Error('Please sign in to generate personalized AI challenges.');
+      }
+
+      let idToken = await firebaseUser.getIdToken();
       const idempotencyKey = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-      let token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      const executeRequest = async (token: string) => {
+        return await fetch('/api/ai-dares/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            category: selectedCategory,
+            difficulty: selectedDifficulty,
+            idempotencyKey,
+          }),
+        });
+      };
 
-let res = await fetch('/api/ai-dares/generate', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  },
-  body: JSON.stringify({
-    category: selectedCategory,
-    difficulty: selectedDifficulty,
-    idempotencyKey,
-  }),
-});
+      let res = await executeRequest(idToken);
 
-if (res.status === 401 && auth.currentUser) {
-  try {
-    token = await auth.currentUser.getIdToken(true);
-    res = await fetch('/api/ai-dares/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({
-        category: selectedCategory,
-        difficulty: selectedDifficulty,
-        idempotencyKey,
-      }),
-    });
-  } catch (_refreshErr) {}
-}
+      // Handle token expiration: retry once after forcing a token refresh
+      if (res.status === 401 && auth.currentUser) {
+        idToken = await auth.currentUser.getIdToken(true);
+        res = await executeRequest(idToken);
+      }
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to synthesize AI dare');
+        throw new Error(data.error || 'Failed to generate dare idea');
       }
 
       if (data.dare) {
@@ -78,11 +74,20 @@ if (res.status === 401 && auth.currentUser) {
         playSound('complete');
       }
     } catch (err: any) {
-      setError(err.message || 'AI Oracle generation failed');
+      setError(err.message || 'Unable to generate challenge right now');
       playSound('error');
     } finally {
       setGenerating(false);
     }
+  };
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    social: '🎉 Social & Fun',
+    physical: '⚡ Fitness & Action',
+    creative: '🎨 Creative & Arts',
+    tech: '🧠 Skills & Trivia',
+    absurd: '🤪 Wild & Funny',
+    cyber: '💻 Code & Tech',
   };
 
   return (
@@ -100,10 +105,10 @@ if (res.status === 401 && auth.currentUser) {
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight text-white font-tech flex items-center gap-2">
-                AI DARE LAB <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/30">Neural Oracle v4.2</span>
+                AI DARE LAB <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/30">Instant Generator</span>
               </h2>
               <p className="text-xs text-slate-300">
-                Synthesize custom AI challenges on demand with zero cold-start delay.
+                Generate fresh, unexpected challenge ideas instantly powered by AI.
               </p>
             </div>
           </div>
@@ -120,34 +125,34 @@ if (res.status === 401 && auth.currentUser) {
           {!generatedDare ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-fuchsia-300 mb-2">Select Neural Domain</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['cyber', 'physical', 'social', 'creative', 'tech', 'absurd'] as DareCategory[]).map(cat => (
+                <label className="block text-xs font-mono text-fuchsia-300 mb-2">Choose Category</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {(['social', 'physical', 'creative', 'tech', 'absurd', 'cyber'] as DareCategory[]).map(cat => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => { playSound('click'); setSelectedCategory(cat); }}
-                      className={`rounded-xl border p-2.5 text-xs font-mono capitalize transition-all cursor-pointer ${
+                      className={`rounded-xl border p-2.5 text-xs font-medium transition-all cursor-pointer text-left sm:text-center ${
                         selectedCategory === cat
                           ? 'border-fuchsia-500 bg-fuchsia-950/60 text-white shadow-[0_0_15px_rgba(217,70,239,0.3)]'
                           : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
                       }`}
                     >
-                      {cat}
+                      {CATEGORY_LABELS[cat] || cat}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-mono text-fuchsia-300 mb-2">Difficulty Tier</label>
+                <label className="block text-xs font-mono text-fuchsia-300 mb-2">Challenge Level</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['Level 1 - Starter', 'Level 2 - Moderate', 'Level 3 - Intense', 'Level 4 - Elite'] as DareDifficulty[]).map(diff => (
                     <button
                       key={diff}
                       type="button"
                       onClick={() => { playSound('click'); setSelectedDifficulty(diff); }}
-                      className={`rounded-xl border p-2.5 text-xs font-mono transition-all cursor-pointer ${
+                      className={`rounded-xl border p-2.5 text-xs font-medium transition-all cursor-pointer ${
                         selectedDifficulty === diff
                           ? 'border-cyan-500 bg-cyan-950/60 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]'
                           : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
@@ -173,7 +178,7 @@ if (res.status === 401 && auth.currentUser) {
                 {generating ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Synthesizing Neural Challenge...</span>
+                    <span>Creating your challenge...</span>
                   </>
                 ) : (
                   <>
@@ -188,7 +193,7 @@ if (res.status === 401 && auth.currentUser) {
               <div className="rounded-2xl border border-fuchsia-500/50 bg-slate-900/90 p-4 relative overflow-hidden shadow-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-fuchsia-300 bg-fuchsia-500/20 border border-fuchsia-500/40 px-2.5 py-0.5 rounded-md">
-                    <Bot className="h-3 w-3 text-fuchsia-400" /> AI DARE LAB
+                    <Bot className="h-3 w-3 text-fuchsia-400" /> AI Challenge
                   </span>
                   <span className="text-[10px] font-mono text-cyan-300 uppercase px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30">
                     {generatedDare.category} • {generatedDare.difficulty}
@@ -201,8 +206,8 @@ if (res.status === 401 && auth.currentUser) {
                   {generatedDare.description}
                 </p>
                 <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-mono">
-                  <span className="text-cyan-300 font-bold">Bounty: +{generatedDare.rewardCred} Cred</span>
-                  <span className="text-slate-400">Verified by DARE AI</span>
+                  <span className="text-cyan-300 font-bold">Reward: +{generatedDare.rewardCred} Cred</span>
+                  <span className="text-slate-400">Ready to Take</span>
                 </div>
               </div>
 
@@ -216,7 +221,7 @@ if (res.status === 401 && auth.currentUser) {
                   className="min-h-[44px] rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 py-3 px-4 text-xs font-black text-slate-950 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                 >
                   <Zap className="h-4 w-4" />
-                  <span>Accept AI Dare</span>
+                  <span>Accept This Dare</span>
                 </button>
 
                 <button
@@ -240,7 +245,7 @@ if (res.status === 401 && auth.currentUser) {
                   }}
                   className="w-full text-center text-xs font-mono text-fuchsia-300 hover:underline pt-1 cursor-pointer"
                 >
-                  Dare a Friend with this AI Challenge →
+                  Dare a Friend with this Challenge →
                 </button>
               )}
             </div>

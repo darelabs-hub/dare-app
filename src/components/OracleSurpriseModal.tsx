@@ -39,7 +39,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
     recommendedCred: number;
     category: string;
   } | null>(null);
-  const [category, setCategory] = useState<DareCategory>('cyber');
+  const [category, setCategory] = useState<DareCategory>('social');
   const [targetType, setTargetType] = useState<'public' | 'direct'>('public');
   const [targetHandle, setTargetHandle] = useState('');
   const [customVibe, setCustomVibe] = useState('');
@@ -57,7 +57,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category: cat,
-          difficulty: 'Tier 3 - Overclocked',
+          difficulty: 'Level 2 - Moderate',
           vibe: vibePayload,
           targetType,
           targetUserHandle: targetHandle,
@@ -95,12 +95,12 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
           description: generatedDare.description,
           proofRequirement: generatedDare.proofRequirement,
           category: generatedDare.category || category,
-          difficulty: generatedDare.recommendedDifficulty || 'Tier 3 - Overclocked',
+          difficulty: generatedDare.recommendedDifficulty || 'Level 2 - Moderate',
           rewardCred: generatedDare.recommendedCred || 80,
           targetType,
           targetUserHandle: targetType === 'direct' ? targetHandle : undefined,
           creatorId: currentUser.id,
-          isHolographic: currentUser.isPro, // PRO users can automatically deploy holographic dares!
+          isHolographic: currentUser.isPro, // PRO users can automatically deploy spotlight dares!
         }),
       });
       if (res.ok) {
@@ -126,11 +126,11 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
               <Sparkles className="h-5 w-5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                AI Challenge <span className="text-indigo-400">Oracle</span>
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                AI Dare <span className="text-indigo-400">Assistant</span>
               </h2>
               <p className="text-xs text-slate-400">
-                Generate creative customized challenges
+                Generate custom challenge ideas tailored for you or your friends
               </p>
             </div>
           </div>
@@ -147,7 +147,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide flex items-center gap-1">
               <Sparkles className="h-3 w-3 text-indigo-400" />
-              <span>Custom Oracle Instructions</span>
+              <span>Custom AI Instructions</span>
             </span>
             {currentUser.isPro ? (
               <span className="rounded bg-indigo-500/20 border border-indigo-500/50 px-1 py-0.2 text-[8px] font-bold text-indigo-300 uppercase tracking-wide scale-90">
@@ -172,7 +172,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Specify target theme/vibe (e.g. coffee shop speedrun, fitness routine, art sketch)"
+                placeholder="Specify theme (e.g. coffee shop speedrun, fitness routine, funny prank)"
                 value={customVibe}
                 onChange={(e) => setCustomVibe(e.target.value)}
                 className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/50 focus:outline-none"
@@ -204,13 +204,14 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
           )}
         </div>
 
-        {/* Category Picker for AI Oracle */}
+        {/* Category Picker for AI Dare */}
         <div className="mt-4 flex items-center justify-between gap-2 overflow-x-auto text-xs pb-1">
           {[
-            { id: 'cyber', label: 'Tech & Code' },
             { id: 'social', label: 'Social & Fun' },
-            { id: 'physical', label: 'Fitness' },
-            { id: 'absurd', label: 'Wild Cards' },
+            { id: 'physical', label: 'Fitness & Action' },
+            { id: 'creative', label: 'Creative & Arts' },
+            { id: 'tech', label: 'Skills & Brain' },
+            { id: 'absurd', label: 'Wild & Funny' },
           ].map((c) => (
             <button
               key={c.id}
@@ -235,7 +236,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
             <div className="flex flex-col items-center justify-center h-48 space-y-3">
               <Loader2 className="h-8 w-8 text-indigo-450 animate-spin" />
               <div className="text-xs text-indigo-300 animate-pulse">
-                Consulting Challenge Oracle...
+                Generating challenge idea...
               </div>
             </div>
           ) : generatedDare ? (
@@ -246,7 +247,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
                 </span>
                 <span className="flex items-center gap-1 text-xs font-bold text-amber-300">
                   <Coins className="h-3.5 w-3.5 text-amber-400" />
-                  {generatedDare.recommendedCred} Cred Bounty
+                  {generatedDare.recommendedCred} Cred Reward
                 </span>
               </div>
 
@@ -259,7 +260,7 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
               </p>
 
               <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-[11px] text-slate-400">
-                <span className="text-indigo-400 font-bold block mb-0.5">Proof Verification:</span>
+                <span className="text-indigo-400 font-bold block mb-0.5">Proof Requirement:</span>
                 {generatedDare.proofRequirement}
               </div>
             </div>
@@ -272,17 +273,17 @@ export const OracleSurpriseModal: React.FC<OracleSurpriseModalProps> = ({
             type="button"
             disabled={loading}
             onClick={() => fetchSurge()}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs text-slate-300 hover:border-indigo-500/45 hover:text-indigo-300 transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs text-slate-300 hover:border-indigo-500/45 hover:text-indigo-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Re-roll Challenge</span>
+            <span>New Idea</span>
           </button>
 
           <button
             type="button"
             disabled={loading || !generatedDare}
             onClick={handleDeploy}
-            className="flex items-center gap-2 rounded-xl bg-indigo-650 px-5 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-indigo-550 transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-indigo-650 px-5 py-2.5 text-xs font-semibold text-white shadow-md hover:bg-indigo-550 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             <Flame className="h-4 w-4" />
             <span>Post Challenge</span>
