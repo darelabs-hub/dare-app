@@ -28,7 +28,8 @@ import {
   Clock,
   Layers,
   Radio,
-  CheckCheck
+  CheckCheck,
+  Plus
 } from 'lucide-react';
 import { UserProfile, DareItem } from '../types';
 import { playSound } from '../utils/soundEffects';
