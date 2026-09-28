@@ -144,17 +144,20 @@ export const DareDayLogo: React.FC<DareDayLogoProps> = ({
 
       {/* Subtitle / Tagline Badge */}
       {showText && (
-        <div className="hidden sm:flex flex-col leading-tight border-l border-slate-800 pl-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-pink-400 uppercase">
+        <div className="flex flex-col justify-center leading-none border-l border-slate-800/90 pl-2.5 sm:pl-3 select-none">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[9.5px] sm:text-[10.5px] font-black tracking-widest text-[#ff2a9d] uppercase">
               PROTOCOL
             </span>
-            <span className="rounded bg-pink-500/20 border border-pink-500/30 px-1 py-0.2 text-[8px] font-mono font-bold text-pink-300">
+            <span className="rounded bg-pink-500/20 border border-pink-500/40 px-1 py-[1px] text-[7.5px] sm:text-[8px] font-mono font-bold text-pink-300 tracking-wider">
               PWA
             </span>
           </div>
-          <span className="text-[9px] font-bold tracking-[0.16em] text-slate-400 uppercase">
-            GOOD HABITS. BETTER FRIENDS.
+          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.14em] text-slate-400 uppercase leading-tight">
+            GOOD HABITS.
+          </span>
+          <span className="text-[8px] sm:text-[9px] font-black tracking-[0.14em] text-slate-400 uppercase leading-tight">
+            BETTER FRIENDS.
           </span>
         </div>
       )}

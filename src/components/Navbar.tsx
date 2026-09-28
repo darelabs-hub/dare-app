@@ -171,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title={isAuthenticated ? "DARE - Dashboard" : "DARE - Home"}
           >
-            <DareDayLogo size={36} showText={false} />
+            <DareDayLogo size={34} showText={true} />
           </div>
 
           {/* Minimal Clean Navigation Links (Never wrapping or colliding) */}
