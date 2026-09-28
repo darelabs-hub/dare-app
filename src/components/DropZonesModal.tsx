@@ -142,7 +142,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
 
   // Deploy New Zone Form State
   const [deployName, setDeployName] = useState('');
-  const [deployCategory, setDeployCategory] = useState<DareCategory>('cyber');
+  const [deployCategory, setDeployCategory] = useState<DareCategory>('digital');
   const [deployArchetype, setDeployArchetype] = useState<ARBeaconType>('quantum_vault');
   const [deployBounty, setDeployBounty] = useState<number>(250);
   const [deployRadius, setDeployRadius] = useState<number>(200);
@@ -1105,10 +1105,10 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                 <div className="py-16 text-center text-xs font-mono text-slate-400 rounded-2xl border border-white/10 bg-slate-900/40 p-8 flex flex-col items-center justify-center space-y-2">
                   <Radio className="h-8 w-8 text-cyan-500/50 animate-pulse mb-1" />
                   <p className="font-bold text-sm text-slate-300">
-                    No drop zones or AR beacons deployed in this area yet.
+                    No dare spots or challenge beacons in this area yet.
                   </p>
                   <p className="text-[11px] text-slate-500 max-w-sm">
-                    Be the pioneer: fund and deploy an AR geofenced drop beacon to broadcast bounties to operatives nearby.
+                    Be the first: plant a challenge at this location to challenge players nearby!
                   </p>
                 </div>
               ) : (
@@ -1417,7 +1417,7 @@ export const DropZonesModal: React.FC<DropZonesModalProps> = ({
                     />
                     <div>
                       <div className="font-bold text-white text-xs">Tactical Snapshot Verified</div>
-                      <div className="text-[11px] text-slate-400 font-mono">Proof stamped with GPS telemetry and AR overlay</div>
+                      <div className="text-[11px] text-slate-400 font-mono">Proof stamped with GPS location & photo overlay</div>
                     </div>
                   </div>
 

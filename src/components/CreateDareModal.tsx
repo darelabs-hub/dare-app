@@ -32,6 +32,9 @@ interface CreateDareModalProps {
   allUsers: UserProfile[];
   onDareCreated: (newDareData: any) => void;
   onOpenSafetyModal?: () => void;
+  onOpenProUpgrade?: () => void;
+  onSignIn?: () => void;
+  isAuthenticated?: boolean;
   initialTargetType?: 'public' | 'direct';
   initialTargetUserHandle?: string;
 }
@@ -43,13 +46,16 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
   allUsers,
   onDareCreated,
   onOpenSafetyModal,
+  onOpenProUpgrade,
+  onSignIn,
+  isAuthenticated,
   initialTargetType,
   initialTargetUserHandle,
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [proofRequirement, setProofRequirement] = useState('');
-  const [category, setCategory] = useState<DareCategory>('cyber');
+  const [category, setCategory] = useState<DareCategory>('social');
   const [difficulty, setDifficulty] = useState<DareDifficulty>('Level 2 - Moderate');
   const [rewardCred, setRewardCred] = useState(50);
   const [expiresInHours, setExpiresInHours] = useState(48);
@@ -238,7 +244,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
       playSound('complete');
     } catch (err) {
       console.error(err);
-      setErrorMsg('Cyber Oracle telemetry blip. Try again or enter manually.');
+      setErrorMsg('Unable to generate dare idea right now. Please try again or type your own.');
     } finally {
       setIsGeneratingAI(false);
     }
@@ -586,7 +592,7 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
             {/* Category */}
             <div>
               <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
-                Sector / Category
+                Category
               </label>
               <select
                 id="dare-category-select"
@@ -594,11 +600,11 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
                 onChange={(e) => setCategory(e.target.value as DareCategory)}
                 className="w-full rounded-xl border border-slate-800 bg-[#07090e] px-3 py-2 text-xs text-slate-200 focus:border-indigo-500 focus:outline-none"
               >
-                <option value="cyber">Code & Tech</option>
-                <option value="physical">Fitness & Outdoors</option>
-                <option value="social">Social & Interaction</option>
-                <option value="creative">Creative & Media</option>
-                <option value="absurd">Wild Cards</option>
+                <option value="social">Social & Fun</option>
+                <option value="physical">Fitness & Action</option>
+                <option value="creative">Creative & Arts</option>
+                <option value="tech">Skills & Brain</option>
+                <option value="absurd">Wild & Funny</option>
               </select>
             </div>
 
@@ -668,6 +674,38 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
             </div>
           </div>
 
+          {/* PRO Multiplier & Verified Gold Spotlight Teaser */}
+          <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-transparent p-3 shadow-inner">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black shadow-md">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-200">
+                    <span>PRO Multiplier Active</span>
+                    <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-mono text-amber-300 border border-amber-400/30">2X XP</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    PRO Members unlock 2X Cred Multipliers & Verified Gold Spotlight across all feeds.
+                  </p>
+                </div>
+              </div>
+              {onOpenProUpgrade && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('pop');
+                    onOpenProUpgrade();
+                  }}
+                  className="shrink-0 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-slate-950 shadow hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                >
+                  Upgrade
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Bounty Expiration Window (Countdown Urgency) */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
             <div className="flex items-center justify-between text-xs mb-2">
@@ -706,6 +744,28 @@ export const CreateDareModal: React.FC<CreateDareModalProps> = ({
               ))}
             </div>
           </div>
+
+          {/* Guest Account Preservation Hook */}
+          {!isAuthenticated && onSignIn && (
+            <div className="flex items-center justify-between rounded-xl border border-indigo-500/30 bg-indigo-950/40 p-3 text-xs text-indigo-200">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-indigo-400 shrink-0" />
+                <span className="text-[11px] text-slate-300">
+                  Creating as a <strong className="text-white">Guest</strong>. Sign in to save your Cred & claim your spot on the Global Leaderboard.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('pop');
+                  onSignIn();
+                }}
+                className="shrink-0 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 px-3 py-1.5 text-[11px] font-bold text-white shadow transition-all active:scale-95 cursor-pointer ml-3"
+              >
+                Sign In
+              </button>
+            </div>
+          )}
 
           {/* Safety Guidelines */}
           <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-[#070a10] px-3.5 py-2 text-[11px] font-mono text-slate-400">

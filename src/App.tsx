@@ -33,7 +33,7 @@ import { DropZonesModal } from './components/DropZonesModal';
 import { DropZonesSection } from './components/DropZonesSection';
 import { ShareCardModal } from './components/ShareCardModal';
 import { PushNotificationBanner } from './components/PushNotificationBanner';
-import { CyberSystemAlertHUD } from './components/CyberSystemAlertHUD';
+import { SystemAlertHUD } from './components/SystemAlertHUD';
 import { HelpBubbleSystem } from './components/HelpBubbleSystem';
 import { Footer } from './components/Footer';
 import { DareCoachModal } from './components/DareCoachModal';
@@ -42,6 +42,7 @@ import { SocialActivityFeed } from './components/SocialActivityFeed';
 import { ConfettiEffect, triggerConfetti } from './components/ConfettiEffect';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { DareChatModal } from './components/DareChatModal';
 import { APIProvider } from '@vis.gl/react-google-maps';
 import { useAuth } from './hooks/useAuth';
 import { db } from './lib/firebase';
@@ -85,7 +86,7 @@ export default function App() {
       const lastCustom = localStorage.getItem('dareday_last_custom_profile');
       if (lastCustom) {
         const parsed = JSON.parse(lastCustom);
-        if (parsed && parsed.id && parsed.name && parsed.name !== 'Guest Operative') {
+        if (parsed && parsed.id && parsed.name && parsed.name !== 'Guest Player' && parsed.name !== 'Guest Operative') {
           return parsed;
         }
       }
@@ -107,12 +108,12 @@ export default function App() {
     const guest: UserProfile = {
       id: `guest_${randomSuffix}`,
       handle: `@guest_${randomNum}`,
-      name: 'Guest Operative',
+      name: 'Guest Player',
       avatar: '/logo.png',
       cred: 0,
       xp: 0,
       level: 1,
-      rank: 'New Recruit',
+      rank: 'Challenger',
       completedDaresCount: 0,
       createdDaresCount: 0,
       streak: 0,
@@ -205,6 +206,7 @@ export default function App() {
   const [isLiveDuelsOpen, setIsLiveDuelsOpen] = useState(false);
   const [isDropZonesOpen, setIsDropZonesOpen] = useState(false);
   const [isAiDareLabOpen, setIsAiDareLabOpen] = useState(false);
+  const [isDareChatOpen, setIsDareChatOpen] = useState(false);
   const [dropZonesInitialTab, setDropZonesInitialTab] = useState<'radar' | 'ar_scanner' | 'deploy'>('radar');
   const [dropZonesTargetZone, setDropZonesTargetZone] = useState<DropZone | null>(null);
 
@@ -412,19 +414,23 @@ export default function App() {
         
         const defaultName = isDareOpsAccount 
           ? 'DARE_OPS' 
-          : (user.displayName || 'DARE Operative');
+          : (user.displayName || 'DARE Member');
 
         // Check Firestore saved data first
         const isSavedNameValid = savedData?.name && 
           savedData.name !== 'Guest Operative' && 
+          savedData.name !== 'Guest Player' && 
           savedData.name !== 'Active Operative' && 
           savedData.name !== 'DARE Operative' && 
+          savedData.name !== 'DARE Member' && 
           (isDareOpsAccount ? (savedData.name !== 'jay' && savedData.name !== 'daydarelabs' && savedData.name !== 'dareday labs') : true);
 
         const isLocalNameValid = localCustom?.name && 
           localCustom.name !== 'Guest Operative' && 
+          localCustom.name !== 'Guest Player' && 
           localCustom.name !== 'Active Operative' && 
           localCustom.name !== 'DARE Operative' && 
+          localCustom.name !== 'DARE Member' && 
           (isDareOpsAccount ? (localCustom.name !== 'jay' && localCustom.name !== 'daydarelabs' && localCustom.name !== 'dareday labs') : true);
 
         const resolvedName = isSavedNameValid 
@@ -894,17 +900,17 @@ export default function App() {
       const dareUser: UserProfile = {
         id: target.id || `u_${Date.now().toString(36)}`,
         handle: target.handle?.startsWith('@') ? target.handle : `@${target.handle || 'operative'}`,
-        name: target.name || 'DARE Operative',
+        name: target.name || 'DARE Member',
         avatar: target.avatar || '/logo.png',
         cred: target.cred || 0,
         xp: target.xp || 0,
         level: target.level || 1,
-        rank: target.rank || (target.isPro ? 'Syndicate Veteran' : 'New Recruit'),
+        rank: target.rank || (target.isPro ? 'Pro Challenger' : 'Challenger'),
         completedDaresCount: dares.filter((d) => d.acceptedBy?.id === target.id && d.status === 'verified').length,
         createdDaresCount: dares.filter((d) => d.creator.id === target.id).length || (isCreator ? 1 : 0),
         streak: target.streak || 0,
         lastActiveDate: target.lastActiveDate || new Date().toISOString().split('T')[0],
-        badges: target.badges || (target.isPro ? ['👑 PRO Operative'] : []),
+        badges: target.badges || (target.isPro ? ['👑 PRO Member'] : []),
         isPro: !!target.isPro,
         proTier: target.proTier || (target.isPro ? 'ultra' : null),
         inventory: target.inventory || [],
@@ -1005,6 +1011,7 @@ export default function App() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         onNavigateToPath={navigateTo}
+        onOpenDareChat={() => setIsDareChatOpen(true)}
       />
 
       {/* Route Separation: Public Marketing Landing Page (/) vs Authenticated/Application Dashboard (/app) */}
@@ -1032,13 +1039,34 @@ export default function App() {
           onExploreChallenges={() => {
             navigateTo('/app');
           }}
-          onOpenCreateModal={() => setIsCreateModalOpen(true)}
-          onOpenDropZones={() => handleOpenDropZones('radar')}
-          onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
-          onOpenTournaments={() => setIsTournamentsOpen(true)}
-          onOpenLeaderboard={() => setIsLeaderboardOpen(true)}
-          onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
-          onOpenArmory={() => setIsArmoryOpen(true)}
+          onOpenCreateModal={() => {
+            navigateTo('/app');
+            setIsCreateModalOpen(true);
+          }}
+          onOpenDropZones={() => {
+            navigateTo('/app');
+            handleOpenDropZones('radar');
+          }}
+          onOpenLiveDuels={() => {
+            navigateTo('/app');
+            setIsLiveDuelsOpen(true);
+          }}
+          onOpenTournaments={() => {
+            navigateTo('/app');
+            setIsTournamentsOpen(true);
+          }}
+          onOpenLeaderboard={() => {
+            navigateTo('/app');
+            setIsLeaderboardOpen(true);
+          }}
+          onOpenProUpgrade={() => {
+            navigateTo('/app');
+            setIsProUpgradeOpen(true);
+          }}
+          onOpenArmory={() => {
+            navigateTo('/app');
+            setIsArmoryOpen(true);
+          }}
           onAcceptDare={handleAcceptDare}
           onViewProof={(dare) => setProofViewingDare(dare)}
           dares={dares}
@@ -1162,24 +1190,24 @@ export default function App() {
         )}
 
         {/* Dares Grid */}
-        <div id="dare-feed-section">
+        <div id="dares-feed-container" className="scroll-mt-24">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400 bg-cyan-950/40 glow-cyan">
               <Sparkles className="h-7 w-7 text-cyan-400 animate-spin" />
             </div>
             <div className="font-mono text-sm text-cyan-300 animate-pulse tracking-wider">
-              SCANNING GRID FOR ACTIVE BOUNTIES...
+              Loading challenges...
             </div>
           </div>
         ) : dares.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center rounded-2xl border border-slate-800 bg-[#0b0f19]/60 p-8">
             <Terminal className="h-12 w-12 text-slate-600 mb-3" />
             <h3 className="font-tech text-xl font-bold text-slate-300">
-              NO ACTIVE DARES DETECTED IN THIS SECTOR
+              NO CHALLENGES FOUND
             </h3>
             <p className="mt-1 text-xs text-slate-400 max-w-md">
-              No dares match the selected filters or search terms. Be the catalyst and deploy a new challenge to the network!
+              No dares match the selected filters or search terms. Try clearing filters or create a brand new dare!
             </p>
             <div className="mt-5 flex gap-3">
               <button
@@ -1189,21 +1217,57 @@ export default function App() {
                   setTargetFilter('all');
                   setSearchQuery('');
                 }}
-                className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white"
+                className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer"
               >
                 Reset All Filters
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 glow-cyan"
+                className="flex items-center gap-1.5 rounded-xl bg-cyan-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-cyan-400 glow-cyan cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
-                <span>Deploy Dare</span>
+                <span>Create Dare</span>
               </button>
             </div>
           </div>
         ) : (
           <div>
+            {/* Feed Section Title & Active Filter Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-800/80">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  {activeTab === 'review' && '📸 Proof Gallery & Voting'}
+                  {activeTab === 'verified' && '🏆 Hall of Fame'}
+                  {activeTab === 'friends' && '⚔️ Squad Battles & Duels'}
+                  {activeTab === 'open' && '🎯 Open Dares'}
+                  {activeTab === 'all' && (targetFilter === 'direct' ? '🔥 Direct Challenges' : targetFilter === 'public' ? '🌐 Public Challenges' : '⚡ All Challenges')}
+                </h2>
+                <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/70 border border-cyan-500/40 px-2.5 py-0.5 rounded-full shadow-sm">
+                  {dares.length} {dares.length === 1 ? 'Dare' : 'Dares'}
+                </span>
+                {activeCategory !== 'all' && (
+                  <span className="text-xs font-mono text-purple-300 bg-purple-950/60 border border-purple-500/40 px-2.5 py-0.5 rounded-full capitalize">
+                    {activeCategory}
+                  </span>
+                )}
+              </div>
+
+              {(activeTab !== 'all' || activeCategory !== 'all' || targetFilter !== 'all' || searchQuery) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('all');
+                    setActiveCategory('all');
+                    setTargetFilter('all');
+                    setSearchQuery('');
+                  }}
+                  className="text-xs font-medium text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <span>Reset Filters</span>
+                  <span className="text-slate-600">✕</span>
+                </button>
+              )}
+            </div>
             {highlightedDareId && (
               <div 
                 id="direct-dare-link-banner"
@@ -1297,6 +1361,9 @@ export default function App() {
         allUsers={users}
         initialTargetUserHandle={directTargetUserHandle}
         onOpenSafetyModal={() => setLegalModalTab('safety')}
+        onOpenProUpgrade={() => setIsProUpgradeOpen(true)}
+        onSignIn={signIn}
+        isAuthenticated={!!user}
         onDareCreated={(newDare) => {
           setDares((prev) => [newDare, ...prev]);
           fetchStats();
@@ -1440,8 +1507,8 @@ export default function App() {
         onDismiss={() => setShareToast(null)}
       />
 
-      {/* Cyber In-App Telemetry & Push System Alert HUD */}
-      <CyberSystemAlertHUD />
+      {/* In-App Telemetry & Push System Alert HUD */}
+      <SystemAlertHUD />
 
       {/* Cyber Expiry Reminder Push Toast */}
       <ExpiryNotificationToast
@@ -1600,6 +1667,13 @@ export default function App() {
           setIsSeasonPassOpen(false);
           setIsArmoryOpen(true);
         }}
+      />
+
+      {/* Dare Chat & Bot Modal */}
+      <DareChatModal
+        isOpen={isDareChatOpen}
+        onClose={() => setIsDareChatOpen(false)}
+        currentUser={currentUser}
       />
 
       {/* High-Roller Dare Staking Modal */}

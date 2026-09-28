@@ -191,7 +191,7 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
                 <Bot className="h-5 w-5 text-cyan-400 animate-pulse" />
                 <div>
                   <span className="font-tech font-bold text-sm tracking-wider text-cyan-300 block">
-                    NEURAL ARBITER VERDICT
+                    AI VERIFICATION VERDICT
                   </span>
                   {proof.aiJudgement.refereeModel && (
                     <span className="text-[10px] font-mono text-slate-400">
@@ -310,18 +310,18 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
               </div>
             )}
 
-            {/* Proof Telemetry Metadata if present */}
+            {/* Proof Metadata if present */}
             {proof.telemetry && (
               <div className="mt-2.5 pt-2 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] font-mono text-slate-400">
                 {proof.telemetry.deviceType && (
                   <div>
-                    <span className="text-slate-500">RIG: </span>
+                    <span className="text-slate-500">DEVICE: </span>
                     <span className="text-cyan-300">{proof.telemetry.deviceType}</span>
                   </div>
                 )}
                 {proof.telemetry.verifiedLocation && (
                   <div>
-                    <span className="text-slate-500">COORDS: </span>
+                    <span className="text-slate-500">LOCATION: </span>
                     <span className="text-indigo-300">{proof.telemetry.verifiedLocation}</span>
                   </div>
                 )}
@@ -335,7 +335,7 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
             )}
 
             <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-              <span className="text-slate-400 font-mono">Cred Bounty Awarded:</span>
+              <span className="text-slate-400 font-mono">Cred Reward Awarded:</span>
               <span className="font-mono font-bold text-amber-300 flex items-center gap-1">
                 <Coins className="h-3.5 w-3.5 text-amber-400" />
                 +{dare.rewardCred} Base + {proof.aiJudgement.bonusCred} Bonus Cred
@@ -344,11 +344,11 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
           </div>
         )}
 
-        {/* Community Consensus Voting Matrix */}
+        {/* Community Consensus Voting */}
         <div className="mt-4 rounded-xl border border-slate-800 bg-[#07090e] p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
-              Community Consensus ({totalVotes} votes)
+              Community Votes ({totalVotes} votes)
             </span>
             <span className="text-xs font-mono text-emerald-400">
               {legitPercent}% Approved
@@ -402,7 +402,7 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
           {onRequestRematch && proof.submittedByHandle && proof.submittedByHandle !== currentUser.handle && (
             <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 flex-wrap">
               <span className="text-[11px] font-mono text-slate-400">
-                Want to settle the score with <strong className="text-white">{proof.submittedByHandle}</strong>?
+                Want to challenge <strong className="text-white">{proof.submittedByHandle}</strong> to a rematch?
               </span>
               <button
                 type="button"
@@ -431,9 +431,9 @@ export const ProofViewerModal: React.FC<ProofViewerModalProps> = ({
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-2 text-xs font-semibold text-slate-300 hover:text-white"
+            className="rounded-xl border border-slate-800 bg-slate-900 px-5 py-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer"
           >
-            Close Matrix
+            Close Viewer
           </button>
         </div>
 

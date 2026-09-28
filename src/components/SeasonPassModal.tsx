@@ -112,7 +112,7 @@ export const SeasonPassModal: React.FC<SeasonPassModalProps> = ({
 
   const handleUpgradeElite = async () => {
     if (currentUser.cred < 2000 && !currentUser.isPro) {
-      setFeedback('Insufficient Cred (2,000 CR needed) to unlock Cyber Elite Pass.');
+      setFeedback('Insufficient Cred (2,000 CR needed) to unlock Elite Season Pass.');
       playSound('error');
       setTimeout(() => setFeedback(null), 4000);
       return;
@@ -133,7 +133,7 @@ export const SeasonPassModal: React.FC<SeasonPassModalProps> = ({
       } else {
         onUserUpdate(data.user);
         playSound('purchase');
-        setFeedback('👑 Cyber Elite Battle Pass Unlocked! Claim your elite track rewards.');
+        setFeedback('👑 Elite Season Pass Unlocked! Claim your elite track rewards.');
         if (passData) {
           setPassData({ ...passData, hasElitePass: true });
         }
@@ -210,7 +210,7 @@ export const SeasonPassModal: React.FC<SeasonPassModalProps> = ({
                   </div>
                   <div>
                     <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Current Pass Tier</div>
-                    <h3 className="font-black text-white text-base">Tier {userLevel} Operative</h3>
+                    <h3 className="font-black text-white text-base">Tier {userLevel} Player</h3>
                   </div>
                 </div>
                 <div className="text-right">

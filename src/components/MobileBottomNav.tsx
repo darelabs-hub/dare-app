@@ -15,7 +15,9 @@ import {
   X,
   Zap,
   Target,
-  Compass
+  Compass,
+  MessageCircle,
+  Sparkles
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { playSound } from '../utils/soundEffects';
@@ -34,6 +36,8 @@ interface MobileBottomNavProps {
   onOpenCredLog?: () => void;
   onOpenProUpgrade?: () => void;
   onOpenEventsMerch?: () => void;
+  onOpenMessages?: () => void;
+  unreadMessagesCount?: number;
   currentUser: UserProfile;
   isAuthenticated?: boolean;
   onSignIn?: () => void;
@@ -54,6 +58,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenCredLog,
   onOpenProUpgrade,
   onOpenEventsMerch,
+  onOpenMessages,
+  unreadMessagesCount = 0,
   currentUser,
   isAuthenticated = false,
   onSignIn,
@@ -164,7 +170,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
             {/* Quick Action Shortcuts Grid */}
             <div className="space-y-1.5">
-              {/* Daily Missions */}
+              {/* Daily Dares */}
               <button
                 type="button"
                 onClick={() => {
@@ -184,14 +190,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <Target className="h-4 w-4 animate-pulse" />
                   </div>
                   <div>
-                    <div className="text-cyan-200">Daily Missions & Ops</div>
-                    <div className="text-[10px] text-cyan-400/80 font-normal">3 Contracts • Daily Trifecta Safe</div>
+                    <div className="text-cyan-200">Daily Dares & Challenges</div>
+                    <div className="text-[10px] text-cyan-400/80 font-normal">3 Challenges • Bonus Chest (+500 CR)</div>
                   </div>
                 </div>
                 <span className="text-[10px] font-mono text-cyan-400 font-bold">Open →</span>
               </button>
 
-              {/* 1. Cyber Armory */}
+              {/* 1. Rewards & Shop */}
               <button
                 type="button"
                 onClick={() => {
@@ -206,8 +212,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <ShoppingBag className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-cyan-200">Armory & Shop</div>
-                    <div className="text-[10px] text-cyan-400/80 font-normal">Chips, Frames & Tactical Items</div>
+                    <div className="text-cyan-200">Rewards & Shop</div>
+                    <div className="text-[10px] text-cyan-400/80 font-normal">XP Boosters, Frames & Badges</div>
                   </div>
                 </div>
                 {currentUser.inventory && currentUser.inventory.length > 0 && (
@@ -217,7 +223,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 )}
               </button>
 
-              {/* 2. Full Dossier / Profile */}
+              {/* 2. Full Profile & Stats */}
               <button
                 type="button"
                 onClick={() => {
@@ -229,7 +235,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               >
                 <div className="flex items-center gap-2.5">
                   <User className="h-4 w-4 text-indigo-400" />
-                  <span>Agent Dossier & Activity Heatmap</span>
+                  <span>My Profile & Challenge Stats</span>
                 </div>
                 <span className="text-[10px] font-mono text-indigo-400">View →</span>
               </button>
@@ -252,7 +258,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 </button>
               )}
 
-              {/* Geofenced Drop Zones & AR Beacons */}
+              {/* Local Dares & Map */}
               {onOpenDropZones && (
                 <button
                   type="button"
@@ -265,13 +271,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <Compass className="h-4 w-4 text-emerald-400" />
-                    <span>Drop Zones & AR Beacons</span>
+                    <span>Local Dares & Map</span>
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold">GPS Radar →</span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold">Explore →</span>
                 </button>
               )}
 
-              {/* 3. Squad Wars & Tournaments */}
+              {/* 3. Squad Tournaments */}
               {onOpenTournaments && (
                 <button
                   type="button"
@@ -284,13 +290,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <Swords className="h-4 w-4 text-pink-400" />
-                    <span>Squad Wars Tournament Arena</span>
+                    <span>Squad Tournaments & Battles</span>
                   </div>
                   <span className="text-[10px] font-mono text-pink-400">Live →</span>
                 </button>
               )}
 
-              {/* 4. Cred Ledger & Audit */}
+              {/* 4. Cred History & Balance */}
               {onOpenCredLog && (
                 <button
                   type="button"
@@ -303,13 +309,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <Coins className="h-4 w-4 text-amber-400" />
-                    <span>Cred Ledger & Audit Trail</span>
+                    <span>Cred History & Balance</span>
                   </div>
                   <span className="text-[10px] font-mono text-amber-400 font-bold">{currentUser.cred} CR</span>
                 </button>
               )}
 
-              {/* 5. Cyber PRO Upgrade */}
+              {/* 5. PRO Upgrade */}
               {onOpenProUpgrade && (
                 <button
                   type="button"
@@ -324,11 +330,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                     <Crown className="h-4 w-4 text-amber-400" />
                     <span>{currentUser.isPro ? 'Manage PRO Membership' : 'Upgrade to PRO'}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-amber-400">⚡ 2x Cred</span>
+                  <span className="text-[10px] font-mono text-amber-400">⚡ 2x Rewards</span>
                 </button>
               )}
 
-              {/* 6. Physical Swag & Community Events */}
+              {/* 6. DARE Merch & Community Events */}
               {onOpenEventsMerch && (
                 <button
                   type="button"
@@ -341,11 +347,53 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 >
                   <div className="flex items-center gap-2.5">
                     <ShoppingBag className="h-4 w-4 text-purple-400" />
-                    <span>Physical Swag & Sprints</span>
+                    <span>DARE Merch & Events</span>
                   </div>
-                  <span className="text-[10px] font-mono text-purple-400">RSVP →</span>
+                  <span className="text-[10px] font-mono text-purple-400">Explore →</span>
                 </button>
               )}
+
+              {/* Direct Messages (Chat) */}
+              {onOpenMessages && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileMenuOpen(false);
+                    playSound('pop');
+                    onOpenMessages();
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-sky-300 hover:bg-sky-950/40 hover:text-white transition-colors text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <MessageCircle className="h-4 w-4 text-sky-400" />
+                    <span>Direct Messages (Chat)</span>
+                  </div>
+                  {unreadMessagesCount > 0 ? (
+                    <span className="rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-mono font-bold text-slate-950 animate-pulse">
+                      {unreadMessagesCount} new
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-mono text-sky-400">Chat →</span>
+                  )}
+                </button>
+              )}
+
+              {/* Platform Tour & Guide Launcher */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  playSound('click');
+                  window.dispatchEvent(new CustomEvent('dareday:open_tour'));
+                }}
+                className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-950/40 hover:text-white transition-colors text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="h-4 w-4 text-cyan-400" />
+                  <span>Platform Tour & Guide</span>
+                </div>
+                <span className="text-[10px] font-mono text-indigo-400">Start →</span>
+              </button>
             </div>
           </div>
         </>
@@ -392,14 +440,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             <div className="relative">
               <Trophy className="h-5 w-5 text-amber-400/90" />
             </div>
-            <span className="text-[10px] font-bold tracking-tight mt-1 text-slate-300">Apex</span>
+            <span className="text-[10px] font-bold tracking-tight mt-1 text-slate-300">Leaderboard</span>
           </button>
 
-          {/* 3. Center CTA: Deploy Dare */}
+          {/* 3. Center CTA: Create Dare */}
           <div className="flex justify-center -mt-4">
             <button
               type="button"
-              aria-label="Deploy New Dare"
+              aria-label="Create New Dare"
               onClick={() => {
                 setIsProfileMenuOpen(false);
                 playSound('laser');
@@ -427,7 +475,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                 ★
               </span>
             </div>
-            <span className="text-[10px] font-bold tracking-tight mt-1 text-amber-300">Pass</span>
+            <span className="text-[10px] font-bold tracking-tight mt-1 text-amber-300">Season Pass</span>
           </button>
 
           {/* 5. Spacious Profile Dropdown Trigger */}

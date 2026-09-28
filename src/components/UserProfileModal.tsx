@@ -255,7 +255,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     // Format & validate handle
     const handleRegex = /^@[a-zA-Z0-9_]{3,24}$/;
     if (!handleRegex.test(formattedHandle)) {
-      setSaveError('Username must be 3-24 characters using letters, numbers, and underscores (e.g. @cyber_runner).');
+      setSaveError('Username must be 3-24 characters using letters, numbers, and underscores (e.g. @dare_alex).');
       setIsSaving(false);
       return;
     }
@@ -265,7 +265,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       (u) => u.id !== user.id && u.handle.toLowerCase() === formattedHandle.toLowerCase()
     );
     if (isTaken) {
-      setSaveError(`Username ${formattedHandle} is already claimed by another operative on the Grid.`);
+      setSaveError(`Username ${formattedHandle} is already taken. Please choose another.`);
       setIsSaving(false);
       return;
     }
@@ -338,11 +338,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           onUpdateUser(savedUser);
         }
         playSound('oracle');
-        setSaveMessage('Operative identity & profile picture successfully updated on the Grid!');
+        setSaveMessage('Profile picture and details successfully updated!');
         setTimeout(() => setSaveMessage(null), 4000);
       } else {
         const errData = await res.json().catch(() => ({}));
-        setSaveError(errData.error || 'Failed to update profile telemetry.');
+        setSaveError(errData.error || 'Failed to update profile.');
       }
     } catch (err: any) {
       console.warn('Profile update fallback:', err);
@@ -1535,7 +1535,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                             <span className="text-xs font-mono text-indigo-400 font-semibold">{editHandle.startsWith('@') ? editHandle : `@${editHandle}`}</span>
                           </div>
                           <p className="text-[11px] text-slate-400 font-mono">
-                            Upload a standard JPEG or PNG photo from your device for your operative avatar.
+                            Upload a standard JPEG or PNG photo from your device for your profile avatar.
                           </p>
                           <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                             <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-indigo-500/50 bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 text-xs font-bold font-mono transition-all cursor-pointer shadow-sm active:scale-95">
@@ -1566,7 +1566,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                           <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <span>Username (@handle)</span>
                           </label>
-                          <span className="text-[10px] font-mono text-indigo-400 font-bold">Grid Identifier</span>
+                          <span className="text-[10px] font-mono text-indigo-400 font-bold">Your Handle</span>
                         </div>
                         <div className="relative flex items-center">
                           <span className="absolute left-3 font-mono text-xs font-bold text-indigo-400 pointer-events-none">
@@ -1580,7 +1580,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                               setEditHandle(`@${cleaned}`);
                               setSaveError(null);
                             }}
-                            placeholder="username_operative"
+                            placeholder="username"
                             maxLength={24}
                             className="w-full rounded-lg border border-slate-800 bg-slate-950 pl-7 pr-3 py-2 text-xs font-mono text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
                             required

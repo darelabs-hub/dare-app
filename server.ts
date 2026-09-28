@@ -100,15 +100,22 @@ try {
   const existingApps = getApps();
   let app: any;
   if (!existingApps || existingApps.length === 0) {
-    app = initializeApp({
+    const appOptions: any = {
       projectId: firebaseConfig.projectId,
-      credential: credential || undefined,
-    });
+    };
+    if (credential) {
+      appOptions.credential = credential;
+    }
+    app = initializeApp(appOptions);
   } else {
     app = getApp();
   }
   db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
-  adminAuth = getAdminAuth(app);
+  try {
+    adminAuth = getAdminAuth(app);
+  } catch (_authErr) {
+    adminAuth = null;
+  }
 } catch (e) {
   console.warn('Firebase Admin init warning (falling back to memory store):', e);
 }
@@ -925,6 +932,110 @@ const squadChatMessages: Array<{
   text: string;
   timestamp: string;
 }> = [];
+
+// Sample Users for Twitter / X-style DMs
+const sampleRecipients = [
+  {
+    id: 'user_elena',
+    name: 'Elena Rostova',
+    handle: '@elena_dev',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    isPro: true,
+    isOnline: true,
+    bio: 'Fullstack runner & dare champion. Always down for high-stakes fitness & code challenges.',
+  },
+  {
+    id: 'user_marcus',
+    name: 'Marcus Vance',
+    handle: '@marcus_hacks',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    isPro: true,
+    isOnline: true,
+    bio: 'Extreme sport enthusiast & creative builder. Let’s collaborate in Squad Tournaments!',
+  },
+  {
+    id: 'user_sarah',
+    name: 'Sarah Jenkins',
+    handle: '@sarah_sky',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    isPro: false,
+    isOnline: false,
+    bio: 'Photographer & urban explorer. Ready to review and vote on daily proof submissions.',
+  },
+  {
+    id: 'user_dare_community',
+    name: 'DARE Challengers Squad',
+    handle: '@squad_dare',
+    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&auto=format&fit=crop&q=80',
+    isPro: true,
+    isOnline: true,
+    bio: 'Official global community group chat. Coordinate tournaments, share tips, and wager Cred.',
+  }
+];
+
+// In-Memory Twitter / X-style Direct Messages Store
+const directMessages: Array<{
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderHandle: string;
+  senderName: string;
+  senderAvatar: string;
+  recipientId?: string;
+  recipientHandle?: string;
+  text: string;
+  timestamp: string;
+  status: 'sent' | 'delivered' | 'read';
+  reactions?: Record<string, string[]>;
+  dareAttachment?: {
+    id: string;
+    title: string;
+    credReward: number;
+    category: string;
+  };
+}> = [
+  {
+    id: 'dm_1',
+    conversationId: 'conv_elena',
+    senderId: 'user_elena',
+    senderHandle: '@elena_dev',
+    senderName: 'Elena Rostova',
+    senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    text: 'Hey! Are you planning to attempt the 50 pushups challenge today? 💪',
+    timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+    status: 'read',
+    reactions: { '🔥': ['user_elena'] }
+  },
+  {
+    id: 'dm_2',
+    conversationId: 'conv_marcus',
+    senderId: 'user_marcus',
+    senderHandle: '@marcus_hacks',
+    senderName: 'Marcus Vance',
+    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    text: 'Dropped a new public bounty for 100 Cred! Let me know if you want to team up in the Squad Tournament ⚔️',
+    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    status: 'read',
+    dareAttachment: {
+      id: 'dare_sample_1',
+      title: 'Run a 5K under 25 minutes',
+      credReward: 100,
+      category: 'physical'
+    }
+  },
+  {
+    id: 'dm_3',
+    conversationId: 'conv_sarah',
+    senderId: 'user_sarah',
+    senderHandle: '@sarah_sky',
+    senderName: 'Sarah Jenkins',
+    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    text: 'Loved your proof submission! The Gemini AI gave it a 98% verification score 🎉',
+    timestamp: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
+    status: 'read',
+    reactions: { '❤️': ['user_sarah'] }
+  }
+];
 
 // Bootstrap loader: hydrate runtime stores from Firestore on startup
 async function loadAllInitialDataFromFirestore() {
@@ -2011,6 +2122,191 @@ Output ONLY valid JSON matching this schema:
     }
   });
 
+  // ==========================================
+  // Twitter / X-style Direct Messages API Endpoints
+  // ==========================================
+  app.get('/api/dm/conversations', (req, res) => {
+    try {
+      const currentUserId = (req.query.userId as string) || 'guest';
+      const convMap = new Map<string, any>();
+
+      // Populate sample conversation threads
+      for (const rec of sampleRecipients) {
+        const convId = `conv_${rec.id.replace('user_', '')}`;
+        const threadMsgs = directMessages.filter(m => m.conversationId === convId);
+        const lastMsg = threadMsgs[threadMsgs.length - 1];
+
+        convMap.set(convId, {
+          id: convId,
+          type: rec.id.includes('squad') ? 'group' : 'direct',
+          title: rec.name,
+          participants: [rec],
+          lastMessage: lastMsg || {
+            id: `init_${convId}`,
+            conversationId: convId,
+            senderId: rec.id,
+            senderName: rec.name,
+            senderHandle: rec.handle,
+            senderAvatar: rec.avatar,
+            text: `Connected on DARE. Say hello or challenge ${rec.name}!`,
+            timestamp: new Date().toISOString(),
+            status: 'read'
+          },
+          unreadCount: threadMsgs.filter(m => m.senderId !== currentUserId && m.status !== 'read').length,
+          updatedAt: lastMsg?.timestamp || new Date().toISOString(),
+          isPinned: rec.id === 'user_dare_community'
+        });
+      }
+
+      // Populate any dynamically created threads
+      for (const msg of directMessages) {
+        if (!convMap.has(msg.conversationId)) {
+          convMap.set(msg.conversationId, {
+            id: msg.conversationId,
+            type: 'direct',
+            title: msg.senderName,
+            participants: [{
+              id: msg.senderId,
+              name: msg.senderName,
+              handle: msg.senderHandle,
+              avatar: msg.senderAvatar,
+              isOnline: true
+            }],
+            lastMessage: msg,
+            unreadCount: msg.senderId !== currentUserId && msg.status !== 'read' ? 1 : 0,
+            updatedAt: msg.timestamp,
+            isPinned: false
+          });
+        } else {
+          const c = convMap.get(msg.conversationId);
+          c.lastMessage = msg;
+          c.updatedAt = msg.timestamp;
+        }
+      }
+
+      const list = Array.from(convMap.values()).sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      });
+
+      res.json({ success: true, conversations: list });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to fetch conversations' });
+    }
+  });
+
+  app.get('/api/dm/messages', (req, res) => {
+    try {
+      const convId = req.query.conversationId as string;
+      const userId = (req.query.userId as string) || '';
+      if (!convId) {
+        return res.status(400).json({ error: 'conversationId is required' });
+      }
+
+      // Mark unread messages in this conversation as read
+      for (const m of directMessages) {
+        if (m.conversationId === convId && m.senderId !== userId) {
+          m.status = 'read';
+        }
+      }
+
+      const msgs = directMessages.filter(m => m.conversationId === convId);
+      res.json({ success: true, messages: msgs });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to fetch messages' });
+    }
+  });
+
+  app.post('/api/dm/send', (req, res) => {
+    try {
+      const { conversationId, senderId, senderName, senderHandle, senderAvatar, recipientId, recipientHandle, text, dareAttachment } = req.body;
+      if (!text && !dareAttachment) {
+        return res.status(400).json({ error: 'Message content or dare attachment is required' });
+      }
+
+      const convId = conversationId || (recipientId ? `conv_${recipientId.replace('user_', '')}` : `conv_${Date.now()}`);
+
+      const newMsg = {
+        id: `dm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        conversationId: convId,
+        senderId: senderId || 'current_user',
+        senderName: senderName || 'Dare Player',
+        senderHandle: senderHandle || '@player',
+        senderAvatar: senderAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        recipientId,
+        recipientHandle,
+        text: text ? String(text).trim().substring(0, 1000) : '',
+        timestamp: new Date().toISOString(),
+        status: 'delivered' as const,
+        reactions: {},
+        dareAttachment
+      };
+
+      directMessages.push(newMsg);
+
+      // Automated simulated friendly response if chatting with a sample user
+      const sampleMatch = sampleRecipients.find(r => r.id === recipientId || convId.includes(r.id.replace('user_', '')));
+      if (sampleMatch && !dareAttachment) {
+        setTimeout(() => {
+          const autoReplies = [
+            `Haha, challenge accepted! Let's see what you've got 🔥`,
+            `On it! Check the feed later today for my proof submission 📸`,
+            `Awesome! Stake some Cred on it and let's make it interesting ⚔️`,
+            `Totally agree! Good luck on your daily dares today 🚀`,
+            `Great to connect on DARE! Let's climb the leaderboard 👑`
+          ];
+          const replyText = autoReplies[Math.floor(Math.random() * autoReplies.length)];
+          const replyMsg = {
+            id: `dm_reply_${Date.now()}`,
+            conversationId: convId,
+            senderId: sampleMatch.id,
+            senderName: sampleMatch.name,
+            senderHandle: sampleMatch.handle,
+            senderAvatar: sampleMatch.avatar,
+            recipientId: senderId,
+            text: replyText,
+            timestamp: new Date().toISOString(),
+            status: 'sent' as const,
+            reactions: {}
+          };
+          directMessages.push(replyMsg);
+        }, 1200);
+      }
+
+      res.json({ success: true, message: newMsg, conversationId: convId });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to send message' });
+    }
+  });
+
+  app.post('/api/dm/react', (req, res) => {
+    try {
+      const { messageId, emoji, userId } = req.body;
+      const msg = directMessages.find(m => m.id === messageId);
+      if (!msg) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+
+      if (!msg.reactions) msg.reactions = {};
+      if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+      const userIndex = msg.reactions[emoji].indexOf(userId);
+      if (userIndex > -1) {
+        msg.reactions[emoji].splice(userIndex, 1);
+        if (msg.reactions[emoji].length === 0) {
+          delete msg.reactions[emoji];
+        }
+      } else {
+        msg.reactions[emoji].push(userId);
+      }
+
+      res.json({ success: true, reactions: msg.reactions });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to update reaction' });
+    }
+  });
+
   // Get dares with filtering & search
   app.get('/api/dares', (req, res) => {
     const { tab, category, target, search, userId } = req.query;
@@ -2169,7 +2465,7 @@ Output ONLY valid JSON matching this schema:
   });
 
   // Accept a dare
-  app.post('/api/dares/:id/accept', async (req, res) => {
+  app.post('/api/dares/:id/accept', (req, res) => {
     const dare = dares.find(d => d.id === req.params.id);
     if (!dare) return res.status(404).json({ error: 'Dare not found' });
 
@@ -2190,8 +2486,8 @@ Output ONLY valid JSON matching this schema:
     dare.acceptedAt = new Date().toISOString();
     dare.expiresAt = new Date(Date.now() + 86400000 * 2).toISOString(); // 48h limit
     recordUserActivity(user);
-    await saveDareToFirestore(dare);
-    await saveUserToFirestore(user);
+    saveDareToFirestore(dare);
+    saveUserToFirestore(user);
 
     // Notify the dare creator that someone accepted their dare!
     if (dare.creator && dare.creator.id !== user.id) {

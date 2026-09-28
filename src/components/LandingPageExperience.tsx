@@ -81,17 +81,17 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
   const dailyDareCred = dailyMission?.dare?.credReward || 50;
 
   const handleAcceptDailyHero = () => {
-  trackEvent({
-    event: 'landing_cta_clicked',
-    category: 'navigation',
-    label: 'daily_mission',
-    metadata: {
-      dareTitle: dailyDareTitle,
-      category: dailyDareCategory,
-      credReward: dailyDareCred,
-    },
-  });
-  playSound('levelUp');
+    trackEvent({
+      event: 'landing_cta_clicked',
+      category: 'navigation',
+      label: 'daily_mission',
+      metadata: {
+        dareTitle: dailyDareTitle,
+        category: dailyDareCategory,
+        credReward: dailyDareCred,
+      },
+    });
+    playSound('levelUp');
     setIsDailyAccepted(true);
     if (dailyMission?.dare) {
       onStartMission(dailyMission.dare);
@@ -125,9 +125,9 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
     {
       num: '01',
       tag: 'CHALLENGE',
-      title: 'Deploy the Dare',
-      quote: '"I DARE @josh to reach the viewpoint before sunset." (Example Dare)',
-      desc: 'Target a specific friend, your squad, or broadcast a bounty to the entire city grid.',
+      title: 'Send the Dare',
+      quote: '"I DARE @josh to run a 5k before sunset." (Example Dare)',
+      desc: 'Challenge a specific friend, your friend group, or post a dare for the entire community.',
       icon: <Target className="h-5 w-5 text-pink-400" />,
       color: 'from-pink-500/20 via-pink-500/10 to-transparent border-pink-500/40',
       badgeColor: 'bg-pink-500/20 text-pink-300 border-pink-500/30'
@@ -167,7 +167,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
       tag: 'EARN',
       title: 'Bank Your Cred',
       quote: '🏆 +50 CRED AWARDED · 7-DAY STREAK EXTENDED (Sample Reward)',
-      desc: 'Level up your profile rank, climb the global leaderboard, unlock rare Cyber Armory gear, and pass the dare on.',
+      desc: 'Level up your profile rank, climb the global leaderboard, unlock avatar frames and shop rewards, and pass the dare on.',
       icon: <Trophy className="h-5 w-5 text-emerald-400" />,
       color: 'from-emerald-500/20 via-emerald-500/10 to-transparent border-emerald-500/40',
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
@@ -231,14 +231,14 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               <button
                 type="button"
                 onClick={() => {
-  trackEvent({
-    event: 'landing_cta_clicked',
-    category: 'navigation',
-    label: 'start_dare',
-  });
-  playSound('pop');
-  onOpenCreateModal();
-}}
+                  trackEvent({
+                    event: 'landing_cta_clicked',
+                    category: 'navigation',
+                    label: 'start_dare',
+                  });
+                  playSound('pop');
+                  onOpenCreateModal();
+                }}
                 className="group relative flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#FF007F] via-[#FF3366] to-[#FF5533] px-7 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black tracking-wide text-white uppercase transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(255,0,127,0.45)] cursor-pointer overflow-hidden border border-pink-400/40"
               >
                 <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -250,13 +250,13 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               <button
                 type="button"
                 onClick={() => {
-  trackEvent({
-    event: 'landing_cta_clicked',
-    category: 'navigation',
-    label: 'explore_challenges',
-  });
-  scrollToFeed();
-}}
+                  trackEvent({
+                    event: 'landing_cta_clicked',
+                    category: 'navigation',
+                    label: 'explore_challenges',
+                  });
+                  scrollToFeed();
+                }}
                 className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/90 backdrop-blur-md px-6 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-slate-200 transition-all hover:border-pink-500/50 hover:bg-slate-800 hover:text-white active:scale-95 cursor-pointer shadow-lg"
               >
                 <Compass className="h-4 w-4 sm:h-5 sm:w-5 text-pink-400 shrink-0" />
@@ -736,7 +736,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                   <div className="flex items-center gap-2 text-purple-400 font-bold text-sm mb-1">
                     <Users className="h-4 w-4 shrink-0" /> 👥 Community Dares
                   </div>
-                  <p className="text-xs text-slate-400">Open bounties created by local creators and squads waiting for contenders.</p>
+                  <p className="text-xs text-slate-400">Open challenges created by creators and friends waiting for takers.</p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-[#11111A] border border-slate-800">
@@ -1115,7 +1115,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               }}
               className="px-5 sm:px-6 py-3 rounded-xl border border-amber-500/40 bg-amber-950/30 text-amber-300 font-bold text-xs uppercase tracking-wider hover:bg-amber-950/60 transition-all cursor-pointer"
             >
-              🛡 Open Cyber Armory
+              🛍 Open Rewards & Shop
             </button>
             <button
               onClick={() => {
@@ -1368,7 +1368,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
           </div>
 
           <div className="mt-8 text-center text-xs font-mono text-slate-400">
-            <span>Illustrative community showcases · Explore live bounties and connect with verified operatives in /app</span>
+            <span>Community highlights · Explore live challenges and connect with friends in /app</span>
           </div>
 
         </div>
@@ -1406,14 +1406,14 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             <button
               type="button"
               onClick={() => {
-  trackEvent({
-    event: 'landing_cta_clicked',
-    category: 'navigation',
-    label: 'start_dare_bottom',
-  });
-  playSound('pop');
-  onOpenCreateModal();
-}}
+                trackEvent({
+                  event: 'landing_cta_clicked',
+                  category: 'navigation',
+                  label: 'start_dare_bottom',
+                });
+                playSound('pop');
+                onOpenCreateModal();
+              }}
               className="flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#FF007F] via-[#FF3366] to-[#FF5533] px-8 sm:px-10 py-4 sm:py-5 text-sm sm:text-lg font-black tracking-wide text-white uppercase shadow-[0_0_35px_rgba(255,0,127,0.5)] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-pink-400/40"
             >
               <Flame className="h-5 sm:h-6 w-5 sm:w-6 text-amber-200" />
@@ -1421,16 +1421,15 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             </button>
 
             <button
-             
-  type="button"
-  onClick={() => {
-    trackEvent({
-      event: 'landing_cta_clicked',
-      category: 'navigation',
-      label: 'explore_challenges_bottom',
-    });
-    scrollToFeed();
-  }}
+              type="button"
+              onClick={() => {
+                trackEvent({
+                  event: 'landing_cta_clicked',
+                  category: 'navigation',
+                  label: 'explore_challenges_bottom',
+                });
+                scrollToFeed();
+              }}
               className="flex items-center justify-center gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-7 sm:px-8 py-4 sm:py-5 text-sm sm:text-lg font-bold text-slate-200 hover:text-white hover:border-pink-500/50 active:scale-95 transition-all cursor-pointer"
             >
               <Compass className="h-5 sm:h-6 w-5 sm:w-6 text-pink-400" />

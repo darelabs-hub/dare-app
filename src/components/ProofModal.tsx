@@ -141,7 +141,7 @@ export const ProofModal: React.FC<ProofModalProps> = ({
       }, 1000);
     } catch (err) {
       console.warn('Audio recording unavailable:', err);
-      setErrorMsg('Microphone access denied. You can proceed with written telemetry.');
+      setErrorMsg('Microphone access denied. You can proceed with text description.');
       playSound('error');
     }
   };
@@ -631,7 +631,7 @@ export const ProofModal: React.FC<ProofModalProps> = ({
           <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs text-indigo-200 flex items-start gap-2">
             <Sparkles className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-indigo-300">Auto-Validation:</span> Upon submission, Gemini Multimodal Arbiter will finalize your verified execution, log telemetry onto the blockchain ledger, and instantly disburse Cred & XP!
+              <span className="font-semibold text-indigo-300">Instant AI Review:</span> Once submitted, smart verification will review your proof video or photo and immediately award your Cred & XP!
             </div>
           </div>
 
