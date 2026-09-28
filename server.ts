@@ -933,47 +933,7 @@ const squadChatMessages: Array<{
   timestamp: string;
 }> = [];
 
-// Sample Users for Twitter / X-style DMs
-const sampleRecipients = [
-  {
-    id: 'user_elena',
-    name: 'Elena Rostova',
-    handle: '@elena_dev',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    isPro: true,
-    isOnline: true,
-    bio: 'Fullstack runner & dare champion. Always down for high-stakes fitness & code challenges.',
-  },
-  {
-    id: 'user_marcus',
-    name: 'Marcus Vance',
-    handle: '@marcus_hacks',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    isPro: true,
-    isOnline: true,
-    bio: 'Extreme sport enthusiast & creative builder. Let’s collaborate in Squad Tournaments!',
-  },
-  {
-    id: 'user_sarah',
-    name: 'Sarah Jenkins',
-    handle: '@sarah_sky',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    isPro: false,
-    isOnline: false,
-    bio: 'Photographer & urban explorer. Ready to review and vote on daily proof submissions.',
-  },
-  {
-    id: 'user_dare_community',
-    name: 'DARE Challengers Squad',
-    handle: '@squad_dare',
-    avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150&auto=format&fit=crop&q=80',
-    isPro: true,
-    isOnline: true,
-    bio: 'Official global community group chat. Coordinate tournaments, share tips, and wager Cred.',
-  }
-];
-
-// In-Memory Twitter / X-style Direct Messages Store
+// In-Memory Twitter / X-style Direct Messages Store (Real users only)
 const directMessages: Array<{
   id: string;
   conversationId: string;
@@ -993,49 +953,7 @@ const directMessages: Array<{
     credReward: number;
     category: string;
   };
-}> = [
-  {
-    id: 'dm_1',
-    conversationId: 'conv_elena',
-    senderId: 'user_elena',
-    senderHandle: '@elena_dev',
-    senderName: 'Elena Rostova',
-    senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    text: 'Hey! Are you planning to attempt the 50 pushups challenge today? 💪',
-    timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
-    status: 'read',
-    reactions: { '🔥': ['user_elena'] }
-  },
-  {
-    id: 'dm_2',
-    conversationId: 'conv_marcus',
-    senderId: 'user_marcus',
-    senderHandle: '@marcus_hacks',
-    senderName: 'Marcus Vance',
-    senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    text: 'Dropped a new public bounty for 100 Cred! Let me know if you want to team up in the Squad Tournament ⚔️',
-    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
-    status: 'read',
-    dareAttachment: {
-      id: 'dare_sample_1',
-      title: 'Run a 5K under 25 minutes',
-      credReward: 100,
-      category: 'physical'
-    }
-  },
-  {
-    id: 'dm_3',
-    conversationId: 'conv_sarah',
-    senderId: 'user_sarah',
-    senderHandle: '@sarah_sky',
-    senderName: 'Sarah Jenkins',
-    senderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    text: 'Loved your proof submission! The Gemini AI gave it a 98% verification score 🎉',
-    timestamp: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
-    status: 'read',
-    reactions: { '❤️': ['user_sarah'] }
-  }
-];
+}> = [];
 
 // Bootstrap loader: hydrate runtime stores from Firestore on startup
 async function loadAllInitialDataFromFirestore() {
@@ -2130,46 +2048,26 @@ Output ONLY valid JSON matching this schema:
       const currentUserId = (req.query.userId as string) || 'guest';
       const convMap = new Map<string, any>();
 
-      // Populate sample conversation threads
-      for (const rec of sampleRecipients) {
-        const convId = `conv_${rec.id.replace('user_', '')}`;
-        const threadMsgs = directMessages.filter(m => m.conversationId === convId);
-        const lastMsg = threadMsgs[threadMsgs.length - 1];
-
-        convMap.set(convId, {
-          id: convId,
-          type: rec.id.includes('squad') ? 'group' : 'direct',
-          title: rec.name,
-          participants: [rec],
-          lastMessage: lastMsg || {
-            id: `init_${convId}`,
-            conversationId: convId,
-            senderId: rec.id,
-            senderName: rec.name,
-            senderHandle: rec.handle,
-            senderAvatar: rec.avatar,
-            text: `Connected on DARE. Say hello or challenge ${rec.name}!`,
-            timestamp: new Date().toISOString(),
-            status: 'read'
-          },
-          unreadCount: threadMsgs.filter(m => m.senderId !== currentUserId && m.status !== 'read').length,
-          updatedAt: lastMsg?.timestamp || new Date().toISOString(),
-          isPinned: rec.id === 'user_dare_community'
-        });
-      }
-
-      // Populate any dynamically created threads
+      // Populate conversation threads from genuine messages
       for (const msg of directMessages) {
+        if (currentUserId && msg.senderId !== currentUserId && msg.recipientId !== currentUserId) {
+          continue;
+        }
+
         if (!convMap.has(msg.conversationId)) {
+          const isSender = msg.senderId === currentUserId;
+          const otherUserId = isSender ? msg.recipientId : msg.senderId;
+          const otherUser = initialUsers.find(u => u.id === otherUserId || u.handle === (isSender ? msg.recipientHandle : msg.senderHandle));
+
           convMap.set(msg.conversationId, {
             id: msg.conversationId,
             type: 'direct',
-            title: msg.senderName,
+            title: otherUser?.name || (isSender ? msg.recipientHandle || 'Dare Operative' : msg.senderName),
             participants: [{
-              id: msg.senderId,
-              name: msg.senderName,
-              handle: msg.senderHandle,
-              avatar: msg.senderAvatar,
+              id: otherUser?.id || otherUserId || msg.senderId,
+              name: otherUser?.name || (isSender ? msg.recipientHandle || 'Dare Operative' : msg.senderName),
+              handle: otherUser?.handle || (isSender ? msg.recipientHandle || '@operative' : msg.senderHandle),
+              avatar: otherUser?.avatar || (isSender ? '' : msg.senderAvatar),
               isOnline: true
             }],
             lastMessage: msg,
@@ -2181,12 +2079,13 @@ Output ONLY valid JSON matching this schema:
           const c = convMap.get(msg.conversationId);
           c.lastMessage = msg;
           c.updatedAt = msg.timestamp;
+          if (msg.senderId !== currentUserId && msg.status !== 'read') {
+            c.unreadCount = (c.unreadCount || 0) + 1;
+          }
         }
       }
 
       const list = Array.from(convMap.values()).sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
 
@@ -2245,33 +2144,9 @@ Output ONLY valid JSON matching this schema:
 
       directMessages.push(newMsg);
 
-      // Automated simulated friendly response if chatting with a sample user
-      const sampleMatch = sampleRecipients.find(r => r.id === recipientId || convId.includes(r.id.replace('user_', '')));
-      if (sampleMatch && !dareAttachment) {
-        setTimeout(() => {
-          const autoReplies = [
-            `Haha, challenge accepted! Let's see what you've got 🔥`,
-            `On it! Check the feed later today for my proof submission 📸`,
-            `Awesome! Stake some Cred on it and let's make it interesting ⚔️`,
-            `Totally agree! Good luck on your daily dares today 🚀`,
-            `Great to connect on DARE! Let's climb the leaderboard 👑`
-          ];
-          const replyText = autoReplies[Math.floor(Math.random() * autoReplies.length)];
-          const replyMsg = {
-            id: `dm_reply_${Date.now()}`,
-            conversationId: convId,
-            senderId: sampleMatch.id,
-            senderName: sampleMatch.name,
-            senderHandle: sampleMatch.handle,
-            senderAvatar: sampleMatch.avatar,
-            recipientId: senderId,
-            text: replyText,
-            timestamp: new Date().toISOString(),
-            status: 'sent' as const,
-            reactions: {}
-          };
-          directMessages.push(replyMsg);
-        }, 1200);
+      // Persist genuine message to Firestore
+      if (db && hasAdminCredentials) {
+        db.collection('directMessages').doc(newMsg.id).set(newMsg).catch(() => {});
       }
 
       res.json({ success: true, message: newMsg, conversationId: convId });
