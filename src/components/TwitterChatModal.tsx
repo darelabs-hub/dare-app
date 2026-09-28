@@ -18,8 +18,45 @@ import {
   Swords,
   ChevronDown
 } from 'lucide-react';
-import { UserProfile, Conversation, DirectMessage, Dare } from '../types';
+import { UserProfile, DareItem } from '../types';
 import { playSound } from '../utils/soundEffects';
+
+export interface DirectMessage {
+  id: string;
+  senderId: string;
+  senderName?: string;
+  senderHandle?: string;
+  senderAvatar?: string;
+  recipientId?: string;
+  recipientHandle?: string;
+  content?: string;
+  text?: string;
+  createdAt?: string;
+  timestamp?: string;
+  status?: string;
+  read?: boolean;
+  dareAttachment?: any;
+  reactions?: Record<string, string[]>;
+}
+
+export interface ConversationParticipant {
+  id: string;
+  name: string;
+  handle: string;
+  avatar: string;
+  isPro?: boolean;
+  isOnline?: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  type?: string;
+  title?: string;
+  participants: ConversationParticipant[];
+  lastMessage?: DirectMessage;
+  unreadCount?: number;
+  updatedAt: string;
+}
 
 interface TwitterChatModalProps {
   isOpen: boolean;
@@ -27,8 +64,8 @@ interface TwitterChatModalProps {
   currentUser: UserProfile;
   allUsers?: UserProfile[];
   initialRecipientId?: string;
-  initialDareAttachment?: Dare;
-  onAcceptDare?: (dare: Dare) => void;
+  initialDareAttachment?: DareItem;
+  onAcceptDare?: (dare: DareItem) => void;
   onViewDare?: (dareId: string) => void;
   onOpenProfile?: (userId: string) => void;
   onUnreadCountChange?: (count: number) => void;
@@ -67,7 +104,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState('');
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
-  const [attachedDare, setAttachedDare] = useState<Dare | null>(initialDareAttachment || null);
+  const [attachedDare, setAttachedDare] = useState<DareItem | null>(initialDareAttachment || null);
   const [isMinimized, setIsMinimized] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,7 +127,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
         if (!activeConvId && convList.length > 0) {
           if (initialRecipientId) {
             const found = convList.find(c => 
-              c.participants.some(p => p.id === initialRecipientId)
+              c.participants.some((p: any) => p.id === initialRecipientId)
             );
             if (found) {
               setActiveConvId(found.id);
@@ -163,7 +200,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
   }, [messages]);
 
   const activeConversation = conversations.find(c => c.id === activeConvId);
-  const activeRecipient = activeConversation?.participants.find(p => p.id !== currentUser.id) || activeConversation?.participants[0];
+  const activeRecipient = activeConversation?.participants.find((p: any) => p.id !== currentUser.id) || activeConversation?.participants[0];
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -188,7 +225,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
         payload.dareAttachment = {
           id: attachedDare.id,
           title: attachedDare.title,
-          credReward: attachedDare.credReward,
+          credReward: attachedDare.rewardCred,
           category: attachedDare.category,
         };
       }
@@ -237,7 +274,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
   };
 
   const handleStartNewChatWithId = (recipientId: string) => {
-    const existing = conversations.find(c => c.participants.some(p => p.id === recipientId));
+    const existing = conversations.find(c => c.participants.some((p: any) => p.id === recipientId));
     if (existing) {
       setActiveConvId(existing.id);
       setIsNewChatOpen(false);
@@ -275,7 +312,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
   const filteredConversations = conversations.filter(c => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
-    const other = c.participants.find(p => p.id !== currentUser.id) || c.participants[0];
+    const other = c.participants.find((p: any) => p.id !== currentUser.id) || c.participants[0];
     const matchName = other?.name?.toLowerCase().includes(q) || false;
     const matchHandle = other?.handle?.toLowerCase().includes(q) || false;
     const matchLast = c.lastMessage?.text?.toLowerCase().includes(q) || false;
@@ -415,7 +452,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                 </div>
               ) : (
                 filteredConversations.map((conv) => {
-                  const other = conv.participants.find(p => p.id !== currentUser.id) || conv.participants[0];
+                  const other = conv.participants.find((p: any) => p.id !== currentUser.id) || conv.participants[0];
                   const isSelected = conv.id === activeConvId;
                   const lastMsg = conv.lastMessage;
                   const isSentByMe = lastMsg?.senderId === currentUser.id;
@@ -461,14 +498,14 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                           </div>
                           {lastMsg && (
                             <span className="text-[10px] text-slate-500 whitespace-nowrap shrink-0">
-                              {new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(lastMsg.timestamp || lastMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           )}
                         </div>
 
                         {/* Last message preview */}
                         <div className="flex items-center justify-between gap-2">
-                          <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'font-bold text-white' : 'text-slate-400'}`}>
+                          <p className={`text-xs truncate ${(conv.unreadCount || 0) > 0 ? 'font-bold text-white' : 'text-slate-400'}`}>
                             {isSentByMe && <span className="text-slate-500">You: </span>}
                             {lastMsg?.dareAttachment ? (
                               <span className="text-amber-400 flex items-center gap-1 inline-flex">
@@ -479,7 +516,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                             )}
                           </p>
 
-                          {conv.unreadCount > 0 && (
+                          {(conv.unreadCount || 0) > 0 && (
                             <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-sky-500 px-1 text-[9px] font-black text-slate-950 shrink-0">
                               {conv.unreadCount}
                             </span>
@@ -649,7 +686,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                                     <span className="flex items-center gap-1">
                                       <Target className="h-3 w-3" /> Dare Challenge
                                     </span>
-                                    <span className="text-amber-300">+{msg.dareAttachment.credReward} CR</span>
+                                    <span className="text-amber-300">+{msg.dareAttachment.credReward || msg.dareAttachment.rewardCred || 100} CR</span>
                                   </div>
                                   <p className="font-bold text-white text-xs mb-2">
                                     {msg.dareAttachment.title}
@@ -679,7 +716,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                                 isMe ? 'text-sky-200/80' : 'text-slate-400'
                               }`}>
                                 <span>
-                                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(msg.timestamp || msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                                 {isMe && (
                                   msg.status === 'read' ? (
@@ -694,20 +731,23 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                             {/* Emoji Reaction Display on Bubble */}
                             {hasReactions && (
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {Object.entries(msg.reactions!).map(([emoji, userIds]) => (
-                                  <button
-                                    key={emoji}
-                                    onClick={() => handleReactToMessage(msg.id, emoji)}
-                                    className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-mono border transition-all ${
-                                      userIds.includes(currentUser.id)
-                                        ? 'bg-sky-950/80 border-sky-400 text-sky-300'
-                                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
-                                    }`}
-                                  >
-                                    <span>{emoji}</span>
-                                    <span>{userIds.length}</span>
-                                  </button>
-                                ))}
+                                {Object.entries(msg.reactions!).map(([emoji, userIds]) => {
+                                  const ids = (Array.isArray(userIds) ? userIds : []) as string[];
+                                  return (
+                                    <button
+                                      key={emoji}
+                                      onClick={() => handleReactToMessage(msg.id, emoji)}
+                                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-mono border transition-all ${
+                                        ids.includes(currentUser.id)
+                                          ? 'bg-sky-950/80 border-sky-400 text-sky-300'
+                                          : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
+                                      }`}
+                                    >
+                                      <span>{emoji}</span>
+                                      <span>{ids.length}</span>
+                                    </button>
+                                  );
+                                })}
                               </div>
                             )}
 
@@ -758,7 +798,7 @@ export const TwitterChatModal: React.FC<TwitterChatModalProps> = ({
                       <div className="flex items-center gap-2 truncate">
                         <Target className="h-4 w-4 text-amber-400 shrink-0" />
                         <span className="font-bold truncate">Attached Dare: {attachedDare.title}</span>
-                        <span className="text-[10px] text-amber-400 font-mono">+{attachedDare.credReward} CR</span>
+                        <span className="text-[10px] text-amber-400 font-mono">+{attachedDare.rewardCred} CR</span>
                       </div>
                       <button
                         onClick={() => setAttachedDare(null)}

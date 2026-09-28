@@ -111,10 +111,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { t } = useLanguage();
   const [userDropdownOpen, setUserDropdownOpen] = React.useState(false);
+  const [hubMenuOpen, setHubMenuOpen] = React.useState(false);
   const [recentSearchesOpen, setRecentSearchesOpen] = React.useState(false);
   const [recentSearches, setRecentSearches] = React.useState<string[]>([]);
   const searchRef = React.useRef<HTMLDivElement>(null);
   const userDropdownRef = React.useRef<HTMLDivElement>(null);
+  const hubMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const saved = localStorage.getItem('recentSearches');
@@ -139,6 +141,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
         setUserDropdownOpen(false);
       }
+      if (hubMenuRef.current && !hubMenuRef.current.contains(e.target as Node)) {
+        setHubMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -146,10 +151,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#0f172a]/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 gap-2">
+      <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-3 sm:px-6 lg:px-8 gap-3">
         
-        {/* Logo & Brand */}
-        <div className="flex items-center gap-6">
+        {/* Logo & Brand Zone */}
+        <div className="flex items-center gap-4 sm:gap-6 shrink-0 min-w-0">
           <div 
             className="flex items-center cursor-pointer select-none shrink-0" 
             onClick={() => {
@@ -161,202 +166,288 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             title="DARE - Home"
           >
-            <DareDayLogo size={42} showText={true} />
+            <DareDayLogo size={36} showText={false} />
           </div>
 
-          {/* Minimal Clean Landing Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-300">
-            <button
-              onClick={() => {
-                playSound('click');
-                if (onNavigateToPath) {
-                  onNavigateToPath('/app');
-                } else {
-                  const el = document.getElementById('dare-feed-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              className="hover:text-pink-400 transition-colors cursor-pointer"
-            >
-              Challenges
-            </button>
-            <button
-              onClick={() => {
-                playSound('click');
-                if (window.location.pathname !== '/' && onNavigateToPath) {
-                  onNavigateToPath('/');
-                  setTimeout(() => {
-                    const el = document.getElementById('how-it-works-section');
+          {/* Minimal Clean Navigation Links (Never wrapping or colliding) */}
+          <nav className="hidden lg:flex items-center gap-5 text-xs font-bold uppercase tracking-wider text-slate-300 shrink-0">
+            {isMarketingMode ? (
+              <>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    if (onNavigateToPath) {
+                      onNavigateToPath('/app');
+                    } else {
+                      const el = document.getElementById('dare-feed-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="hover:text-pink-400 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Challenges
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    if (window.location.pathname !== '/' && onNavigateToPath) {
+                      onNavigateToPath('/');
+                      setTimeout(() => {
+                        const el = document.getElementById('how-it-works-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    } else {
+                      const el = document.getElementById('how-it-works-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="hover:text-purple-400 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  How It Works
+                </button>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    if (window.location.pathname !== '/' && onNavigateToPath) {
+                      onNavigateToPath('/');
+                      setTimeout(() => {
+                        const el = document.getElementById('community-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    } else {
+                      const el = document.getElementById('community-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
+                  className="hover:text-cyan-400 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Community
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    playSound('click');
+                    const el = document.getElementById('dares-feed-container');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 100);
-                } else {
-                  const el = document.getElementById('how-it-works-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              className="hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              How It Works
-            </button>
-            <button
-              onClick={() => {
-                playSound('click');
-                if (window.location.pathname !== '/' && onNavigateToPath) {
-                  onNavigateToPath('/');
-                  setTimeout(() => {
-                    const el = document.getElementById('community-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 100);
-                } else {
-                  const el = document.getElementById('community-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              className="hover:text-cyan-400 transition-colors cursor-pointer"
-            >
-              Community
-            </button>
+                  }}
+                  className="hover:text-pink-400 transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Challenges
+                </button>
+                {onOpenTournaments && (
+                  <button
+                    onClick={() => {
+                      playSound('laser');
+                      onOpenTournaments();
+                    }}
+                    className="hover:text-indigo-400 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1"
+                  >
+                    <span>Arena</span>
+                  </button>
+                )}
+                {onOpenArmory && (
+                  <button
+                    onClick={() => {
+                      playSound('purchase');
+                      onOpenArmory();
+                    }}
+                    className="hover:text-cyan-400 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Armory
+                  </button>
+                )}
+                {onOpenLeaderboard && (
+                  <button
+                    onClick={() => {
+                      playSound('click');
+                      onOpenLeaderboard();
+                    }}
+                    className="hover:text-amber-400 transition-colors cursor-pointer whitespace-nowrap"
+                  >
+                    Ranks
+                  </button>
+                )}
+              </>
+            )}
           </nav>
         </div>
 
-        {/* Global Live Ticker (Desktop only, 2xl) */}
-        {stats && (
-          <div className="hidden 2xl:flex items-center gap-4 rounded-full border border-slate-800 bg-slate-900/60 px-4 py-1 text-xs">
-            <div className="flex items-center gap-1.5 text-slate-300">
-              <Flame className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-slate-400">{t('credPool')}</span>
-              <span className="font-mono font-bold text-amber-300">{stats.totalCredPool} Cred</span>
-            </div>
-            <div className="h-3 w-px bg-slate-800" />
-            <div className="flex items-center gap-1.5 text-slate-300">
-              <Coins className="h-3.5 w-3.5 text-indigo-400" />
-              <span className="text-slate-400">{t('active')}</span>
-              <span className="font-mono font-bold text-indigo-300">{stats.totalDares}</span>
-            </div>
-            <div className="h-3 w-px bg-slate-800" />
-            <div className="flex items-center gap-1.5 text-slate-300">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-slate-400">{t('verified')}</span>
-              <span className="font-mono font-bold text-emerald-300">{stats.verifiedDares}</span>
-            </div>
-          </div>
-        )}
+        {/* Clean Center Spacer (Preserves breathing room, completely prevents overlapping) */}
+        <div className="flex-1 min-w-0" />
 
-        {/* Actions Cluster (Compact & Responsive) */}
-        <div className="flex items-center shrink-0 gap-1 sm:gap-2">
+        {/* Actions Cluster (Carefully partitioned for mobile & desktop) */}
+        <div className="flex items-center shrink-0 gap-1.5 sm:gap-2">
 
-          {/* EU Language Selector (Header Primary Dropdown) */}
+          {/* Primary CTA: START A DARE (Desktop / tablet) */}
+          <button
+            id="navbar-create-dare-cta"
+            type="button"
+            onClick={() => {
+              playSound('pop');
+              onOpenCreateModal();
+            }}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#FF007F] to-[#FF5533] px-3 sm:px-3.5 py-1.5 text-xs font-black text-white uppercase tracking-wider hover:brightness-110 shadow-[0_0_15px_rgba(255,0,127,0.3)] transition-all cursor-pointer shrink-0 active:scale-95"
+            title="Create and Deploy a DARE"
+          >
+            <Flame className="h-3.5 w-3.5 text-amber-200" />
+            <span className="hidden md:inline">START A DARE</span>
+            <span className="md:hidden">DARE</span>
+          </button>
+
+          {/* Arena & Features Hub Dropdown (Consolidates secondary tools to prevent navbar overrun) */}
+          {!isMarketingMode && (
+            <div className="relative shrink-0 hidden md:block" ref={hubMenuRef}>
+              <button
+                id="navbar-hub-menu-btn"
+                type="button"
+                onClick={() => {
+                  playSound('click');
+                  setHubMenuOpen(prev => !prev);
+                }}
+                className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  hubMenuOpen
+                    ? 'border-indigo-400 bg-indigo-950/80 text-white ring-1 ring-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+                    : 'border-slate-700/80 bg-slate-900/90 text-slate-200 hover:border-indigo-400 hover:bg-slate-800'
+                }`}
+                title="DARE Arena & Feature Hub"
+              >
+                <Swords className="h-3.5 w-3.5 text-pink-400" />
+                <span className="hidden lg:inline">Arena & Hub</span>
+                <span className="lg:hidden">Hub</span>
+                <ChevronDown className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${hubMenuOpen ? 'rotate-180 text-indigo-400' : ''}`} />
+              </button>
+
+              {/* Hub Dropdown Popover */}
+              {hubMenuOpen && (
+                <div 
+                  id="navbar-hub-dropdown-menu"
+                  className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-700 bg-[#0c1222]/98 p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.95)] backdrop-blur-2xl z-[100] animate-in fade-in slide-in-from-top-2 duration-150 space-y-1"
+                >
+                  <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold border-b border-slate-800 pb-1.5 mb-1 flex items-center justify-between">
+                    <span>DARE Hub & Features</span>
+                    <span className="text-cyan-400">v2.5</span>
+                  </div>
+
+                  {onOpenArmory && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('purchase');
+                        onOpenArmory();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-cyan-200 hover:bg-cyan-950/50 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-cyan-400" />
+                        <span>{t('armory')}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400">Shop →</span>
+                    </button>
+                  )}
+
+                  {onOpenSeasonPass && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('levelUp');
+                        onOpenSeasonPass();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-purple-200 hover:bg-purple-950/50 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-purple-400" />
+                        <span>{t('pass')}</span>
+                      </div>
+                      <span className="rounded bg-purple-500/30 px-1.5 py-0.5 text-[9px] font-mono text-purple-300">
+                        LVL {currentUser?.seasonPassLevel || 1}
+                      </span>
+                    </button>
+                  )}
+
+                  {onOpenDropZones && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('laser');
+                        onOpenDropZones();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-950/50 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Compass className="h-4 w-4 text-emerald-400 animate-spin-slow" />
+                        <span>{t('dropZones')}</span>
+                      </div>
+                      <span className="rounded bg-emerald-500/30 px-1.5 py-0.5 text-[9px] font-mono text-emerald-300">AR</span>
+                    </button>
+                  )}
+
+                  {onOpenTournaments && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('laser');
+                        onOpenTournaments();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-pink-200 hover:bg-pink-950/50 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Swords className="h-4 w-4 text-pink-400" />
+                        <span>{t('squadWars')}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-pink-400">Battle →</span>
+                    </button>
+                  )}
+
+                  {onOpenDareChat && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('click');
+                        onOpenDareChat();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold text-indigo-200 hover:bg-indigo-950/50 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-indigo-400" />
+                        <span>Dare Chat</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-indigo-400">AI Coach →</span>
+                    </button>
+                  )}
+
+                  {onOpenProUpgrade && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHubMenuOpen(false);
+                        playSound('oracle');
+                        onOpenProUpgrade();
+                      }}
+                      className="w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-bold text-amber-300 hover:bg-amber-950/40 hover:text-white transition-colors text-left cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Crown className="h-4 w-4 text-amber-400" />
+                        <span>{currentUser?.isPro ? t('proActive') : t('proUpgrade')}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-amber-400">2x Cred</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* EU Language Selector */}
           <LanguageSelector />
 
-          {/* Quick PWA App Download Button */}
-          <PWAInstallButton className="inline-flex" />
-
-          {/* Cyber Armory & Rewards Shop Button (App Mode Only) */}
-          {!isMarketingMode && onOpenArmory && (
-            <button
-              id="cyber-armory-btn"
-              onClick={() => {
-                playSound('purchase');
-                onOpenArmory();
-              }}
-              className="hidden md:flex items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-bold text-cyan-200 hover:border-cyan-400 hover:bg-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all shrink-0 cursor-pointer"
-              title="Cyber Armory & Boosters Store"
-            >
-              <ShoppingBag className="h-3.5 w-3.5 text-cyan-400" />
-              <span>{t('armory')}</span>
-            </button>
-          )}
-
-          {/* Season 1 Battle Pass Button (App Mode Only) */}
-          {!isMarketingMode && onOpenSeasonPass && (
-            <button
-              id="season-pass-btn"
-              onClick={() => {
-                playSound('levelUp');
-                onOpenSeasonPass();
-              }}
-              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-2.5 py-1.5 text-xs font-bold text-purple-200 hover:border-purple-400 hover:bg-purple-500/20 transition-all shrink-0 cursor-pointer"
-              title="Season 1 Battle Pass"
-            >
-              <Zap className="h-3.5 w-3.5 text-purple-400" />
-              <span>{t('pass')}</span>
-              <span className="rounded bg-purple-500/30 px-1 py-0.2 text-[9px] font-mono text-purple-300">
-                LVL {currentUser?.seasonPassLevel || 1}
-              </span>
-            </button>
-          )}
-
-          {/* Geofenced Drop Zones & AR Beacons Button (App Mode Only) */}
-          {!isMarketingMode && onOpenDropZones && (
-            <button
-              id="navbar-drop-zones-btn"
-              onClick={() => {
-                playSound('laser');
-                onOpenDropZones();
-              }}
-              className="hidden md:flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-bold text-emerald-200 hover:border-emerald-400 hover:bg-emerald-500/20 transition-all shrink-0 cursor-pointer"
-              title="Geofenced Drop Zones & AR Beacons"
-            >
-              <Compass className="h-3.5 w-3.5 text-emerald-400 animate-spin-slow" />
-              <span>{t('dropZones')}</span>
-              <span className="rounded bg-emerald-500/30 px-1 py-0.2 text-[9px] font-mono text-emerald-300">
-                AR
-              </span>
-            </button>
-          )}
-
-          {/* Squad Wars / Tournaments Arena Button (App Mode Only) */}
-          {!isMarketingMode && onOpenTournaments && (
-            <button
-              id="tournaments-arena-btn"
-              onClick={() => {
-                playSound('laser');
-                onOpenTournaments();
-              }}
-              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-pink-500/30 bg-pink-500/10 px-2.5 py-1.5 text-xs font-semibold text-pink-200 hover:border-pink-400/60 hover:bg-pink-500/20 transition-all shrink-0 cursor-pointer"
-              title="Squad vs. Squad Tournaments Arena"
-            >
-              <Swords className="h-3.5 w-3.5 text-pink-400" />
-              <span>{t('squadWars')}</span>
-            </button>
-          )}
-
-          {/* Dare Chat & Bot Button */}
-          {onOpenDareChat && (
-            <button
-              onClick={() => {
-                onOpenDareChat();
-                playSound('click');
-              }}
-              className="flex items-center gap-1.5 rounded-xl border border-indigo-500/40 bg-indigo-950/40 px-2.5 py-1.5 text-xs font-bold text-indigo-300 hover:bg-indigo-900/60 transition-colors shadow-sm cursor-pointer"
-              title="Dare Chat & Assistant"
-            >
-              <MessageSquare className="h-3.5 w-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Dare Chat</span>
-            </button>
-          )}
-
-          {/* PRO Premium Badge / Button (App Mode Only) */}
-          {!isMarketingMode && onOpenProUpgrade && (
-            <button
-              id="navbar-pro-tier-btn"
-              onClick={() => {
-                playSound('oracle');
-                onOpenProUpgrade();
-              }}
-              className={`hidden xl:flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                currentUser?.isPro
-                  ? 'border-indigo-500/60 bg-indigo-500/15 text-indigo-300 hover:border-indigo-400'
-                  : 'border-amber-500/40 bg-amber-500/10 text-amber-300 hover:border-amber-400 hover:bg-amber-500/20'
-              }`}
-              title={currentUser?.isPro ? 'PRO Active Subscription' : 'Upgrade to PRO'}
-            >
-              <Crown className="h-3.5 w-3.5 text-amber-400" />
-              <span>{currentUser?.isPro ? t('proActive') : t('proUpgrade')}</span>
-            </button>
-          )}
-
-          {/* Grid Telemetry Notifications Bell (App Mode or if unread notifications exist) */}
+          {/* Grid Notifications Bell */}
           {(!isMarketingMode || unreadNotificationsCount > 0) && (
             <div className="shrink-0">
               <NotificationsMenu
@@ -372,7 +463,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Prominent User Profile & Account Dropdown Trigger */}
+          {/* User Profile & Account Dropdown Trigger */}
           <div className="relative shrink-0" ref={userDropdownRef}>
             {!isAuthenticated ? (
               <button
@@ -382,7 +473,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   playSound('click');
                   if (onSignIn) onSignIn();
                 }}
-                className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-indigo-500/50 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 px-3 py-1.5 text-xs font-bold text-white hover:from-indigo-500 hover:to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer shrink-0 active:scale-95"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-indigo-500/50 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white hover:from-indigo-500 hover:to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer shrink-0 active:scale-95"
                 title="Sign In with Google"
               >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
@@ -842,22 +933,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
             )}
           </div>
-
-          {/* Quick Primary Header CTA: START A DARE (Desktop/tablet viewports; mobile uses hero CTA & bottom nav) */}
-          <button
-            id="navbar-create-dare-cta"
-            type="button"
-            onClick={() => {
-              playSound('pop');
-              onOpenCreateModal();
-            }}
-            className="hidden sm:flex items-center gap-1.5 sm:gap-2 rounded-xl bg-gradient-to-r from-[#FF007F] to-[#FF5533] px-3.5 sm:px-4 py-2 text-xs font-black text-white uppercase tracking-wider hover:brightness-110 shadow-[0_0_20px_rgba(255,0,127,0.35)] transition-all cursor-pointer shrink-0 active:scale-95"
-            title="Create and Deploy a DARE"
-          >
-            <Flame className="h-3.5 w-3.5 text-amber-200" />
-            <span className="hidden md:inline">START A DARE</span>
-            <span className="md:hidden">DARE</span>
-          </button>
 
         </div>
       </div>

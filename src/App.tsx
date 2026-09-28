@@ -1084,6 +1084,7 @@ export default function App() {
         onSelectTarget={setTargetFilter}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        stats={stats}
         onTriggerOracle={() => setIsOracleSurpriseOpen(true)}
         onOpenLiveDuels={() => setIsLiveDuelsOpen(true)}
         onOpenDropZones={() => handleOpenDropZones('radar')}
@@ -1107,7 +1108,7 @@ export default function App() {
       />
 
       {/* Main Content Feed Area */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+      <main className="flex-1 mx-auto w-full max-w-[1600px] px-3 sm:px-6 lg:px-8 py-6 pb-24 md:pb-8">
         
         {/* In-App PWA Install Banner */}
         <PWAInstallButton variant="banner" />

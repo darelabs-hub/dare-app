@@ -503,10 +503,10 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
 
   return (
     <>
-      {/* Sleek, Clearly Visible Platform Tour Tab on Screen Edge */}
+      {/* Sleek, Clearly Visible Platform Tour Tab on Screen Edge (Desktop only to prevent mobile overlap) */}
       <div 
         id="help-tour-side-tab-container"
-        className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center select-none"
+        className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 items-center select-none transition-transform duration-200 hover:-translate-x-1"
       >
         {/* Subtle dismiss button on the left of the tab */}
         <button
@@ -633,7 +633,7 @@ export const HelpBubbleSystem: React.FC<HelpBubbleSystemProps> = ({
               </button>
 
               <button
-                onClick={handleDismissPermanently}
+                onClick={(e) => handleDismiss(e)}
                 className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors px-1 py-1 cursor-pointer whitespace-nowrap"
                 title="Hide tutorial button completely"
               >
