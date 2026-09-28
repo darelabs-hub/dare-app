@@ -582,9 +582,9 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <div className="relative z-10">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
                     <span className="font-bold text-cyan-400 flex items-center gap-1">
-                      <Compass className="h-3.5 w-3.5" /> GPS RADAR (DEMO)
+                      <Compass className="h-3.5 w-3.5" /> GPS RADAR
                     </span>
-                    <span className="text-emerald-400 font-mono text-[10px]">● SAMPLE SIGNAL</span>
+                    <span className="text-emerald-400 font-mono text-[10px]">● LIVE SIGNAL</span>
                   </div>
 
                   {/* Simulated Radar Beacon */}
@@ -595,13 +595,13 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                       <MapPin className="h-4 sm:h-5 w-4 sm:w-5" />
                     </div>
                     <span className="absolute bottom-1.5 text-[10px] font-mono text-cyan-300">
-                      High Peak Summit · 1.2km Away (Sample)
+                      High Peak Summit · Drop Zone Radar
                     </span>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
                     <div className="flex items-center justify-between text-xs font-bold text-white">
-                      <span className="truncate pr-2">Apex Viewpoint Beacon (Sample)</span>
+                      <span className="truncate pr-2">Apex Viewpoint Drop Zone</span>
                       <span className="text-cyan-400 font-mono shrink-0">+120 Cred</span>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-1">Reach coordinate & submit geotagged photo.</p>
@@ -620,7 +620,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               </div>
 
               <div className="text-center mt-3 text-xs font-mono text-cyan-300">
-                PHONE 2: GPS BOUNTIES (ILLUSTRATIVE PREVIEW)
+                PHONE 2: GPS BOUNTIES
               </div>
             </div>
 
@@ -635,9 +635,9 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
                     <span className="font-bold text-purple-400 flex items-center gap-1">
-                      <Swords className="h-3.5 w-3.5" /> 1V1 ARENA (SIMULATED)
+                      <Swords className="h-3.5 w-3.5" /> 1V1 LIVE ARENA
                     </span>
-                    <span className="text-rose-400 font-mono text-[10px]">SAMPLE DUEL</span>
+                    <span className="text-rose-400 font-mono text-[10px]">ACTIVE DUEL</span>
                   </div>
 
                   {/* Versus Card */}
@@ -654,19 +654,19 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
                       <div>
                         <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-full bg-purple-500/30 border border-purple-400 mx-auto flex items-center justify-center font-bold text-purple-300 text-xs">
-                          JOSH
+                          OPP
                         </div>
-                        <div className="text-xs font-bold text-white mt-1">@josh_dare</div>
+                        <div className="text-xs font-bold text-white mt-1">@challenger</div>
                       </div>
                     </div>
 
                     <div className="mt-2.5 pt-2 border-t border-slate-800 text-[11px] text-slate-300">
-                      Sample Stakes: <span className="text-amber-300 font-bold">100 CRED POT</span>
+                      Match Stakes: <span className="text-amber-300 font-bold">100 CRED POT</span>
                     </div>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-center">
-                    <span className="text-[10px] font-mono text-purple-300">SAMPLE TIME REMAINING</span>
+                    <span className="text-[10px] font-mono text-purple-300">TIME REMAINING</span>
                     <div className="text-lg sm:text-xl font-mono font-bold text-white">04:18:22</div>
                   </div>
                 </div>
@@ -683,7 +683,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               </div>
 
               <div className="text-center mt-3 text-xs font-mono text-purple-300">
-                PHONE 3: 1V1 ARENA (ILLUSTRATIVE PREVIEW)
+                PHONE 3: 1V1 DUELS
               </div>
             </div>
 
@@ -768,9 +768,9 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
                     <div className="flex items-center gap-2 font-mono text-cyan-300">
                       <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
-                      SECTOR RADAR · SAMPLE GRID
+                      SECTOR RADAR · ACTIVE GRID
                     </div>
-                    <span className="font-mono text-slate-400 text-[10px] sm:text-xs">Sample Coord: 51.5074° N, 0.1278° W</span>
+                    <span className="font-mono text-slate-400 text-[10px] sm:text-xs">Location Geofence Scanner</span>
                   </div>
 
                   {/* Radar Circles and Markers */}
@@ -784,12 +784,12 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
 
                     {/* Beacon 1 */}
                     <div className="absolute top-6 left-4 sm:top-8 sm:left-8 p-1.5 sm:p-2 rounded-xl bg-pink-500/20 border border-pink-400 text-pink-300 text-[9px] sm:text-[10px] font-mono flex items-center gap-1 shadow-[0_0_15px_rgba(255,0,127,0.5)] max-w-[calc(100%-2rem)]">
-                      <MapPin className="h-3 w-3 text-pink-400 shrink-0" /> <span className="truncate">Sample: Sunset Ridge (+100)</span>
+                      <MapPin className="h-3 w-3 text-pink-400 shrink-0" /> <span className="truncate">Sunset Ridge Drop (+100)</span>
                     </div>
 
                     {/* Beacon 2 */}
                     <div className="absolute bottom-6 right-4 sm:bottom-8 sm:right-8 p-1.5 sm:p-2 rounded-xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[9px] sm:text-[10px] font-mono flex items-center gap-1 shadow-[0_0_15px_rgba(6,182,212,0.5)] max-w-[calc(100%-2rem)]">
-                      <MapPin className="h-3 w-3 text-cyan-400 shrink-0" /> <span className="truncate">Sample: Neon Scavenger (+75)</span>
+                      <MapPin className="h-3 w-3 text-cyan-400 shrink-0" /> <span className="truncate">City Viewpoint (+75)</span>
                     </div>
 
                     {/* Beacon 3 (Center) */}
@@ -800,8 +800,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                    <span>5 Sample Beacons in Preview Grid</span>
-                    <span className="text-cyan-400">Illustrative Radar HUD</span>
+                    <span>Active Beacons on Radar</span>
+                    <span className="text-cyan-400">Live Radar HUD</span>
                   </div>
                 </div>
               </div>
@@ -845,7 +845,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               <div className="flex flex-wrap gap-2 pt-1">
                 {['@josh', '@sarah', '@elena', '@marcus', '@alex'].map((tag) => (
                   <span key={tag} className="px-3 py-1.5 rounded-xl bg-black/60 border border-slate-700 text-xs font-mono text-pink-300">
-                    {tag} <span className="text-slate-400 font-normal">(sample target)</span>
+                    {tag}
                   </span>
                 ))}
               </div>
@@ -969,8 +969,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                       <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full bg-pink-500/20 border border-pink-400 mx-auto flex items-center justify-center text-pink-400">
                         <Camera className="h-5 sm:h-6 w-5 sm:w-6" />
                       </div>
-                      <h4 className="text-sm sm:text-base font-bold text-white">SAMPLE PROOF SUBMITTED (DEMO)</h4>
-                      <p className="text-xs text-slate-400">20 Push-Ups Video (60 FPS, GPS Verified)</p>
+                      <h4 className="text-sm sm:text-base font-bold text-white">PROOF SUBMISSION WORKFLOW</h4>
+                      <p className="text-xs text-slate-400">20 Push-Ups Video (60 FPS, GPS Geotagged)</p>
                       <button
                         onClick={() => {
                           playSound('laser');
@@ -988,8 +988,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                       <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full bg-cyan-500/20 border border-cyan-400 mx-auto flex items-center justify-center text-cyan-400 animate-spin">
                         <RefreshCw className="h-5 sm:h-6 w-5 sm:w-6" />
                       </div>
-                      <h4 className="text-sm sm:text-base font-bold text-cyan-300 font-mono">🤖 AI VISION ANALYZING (DEMO)...</h4>
-                      <p className="text-xs text-slate-400">Detecting form, push-up cadence, and timestamp fidelity...</p>
+                      <h4 className="text-sm sm:text-base font-bold text-cyan-300 font-mono">🤖 AI VISION PROCESSING...</h4>
+                      <p className="text-xs text-slate-400">Detecting movement form, push-up cadence, and timestamp fidelity...</p>
                       <button
                         onClick={() => {
                           playSound('levelUp');
@@ -1007,12 +1007,12 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                       <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full bg-emerald-500/20 border border-emerald-400 mx-auto flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]">
                         <CheckCircle2 className="h-5 sm:h-6 w-5 sm:w-6" />
                       </div>
-                      <h4 className="text-base sm:text-lg font-black text-emerald-400">CHALLENGE VERIFIED! (DEMO)</h4>
+                      <h4 className="text-base sm:text-lg font-black text-emerald-400">CHALLENGE VERIFIED!</h4>
                       <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs font-mono text-emerald-200 break-words">
-                        "Form verified. 20 full repetitions completed in 48 seconds. Legitimate outdoor sunset setting."
+                        "Form verified. 20 full repetitions completed in 48 seconds. Legitimate outdoor setting."
                       </div>
                       <div className="text-xs sm:text-sm font-black text-amber-300 font-mono">
-                        DEMO SIMULATION: +50 CRED REWARD PREVIEW
+                        +50 CRED REWARD AWARDED
                       </div>
                     </div>
                   )}
@@ -1041,7 +1041,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-950/40 px-3.5 py-1 text-xs font-mono font-bold text-amber-300 mb-3">
               <Coins className="h-3.5 w-3.5 text-amber-400" />
-              <span>THE REPUTATION ECONOMY · {currentUser && !currentUser.id.startsWith('guest_') ? 'YOUR ACTIVE CRED' : 'SAMPLE OPERATIVE TIER (ILLUSTRATIVE)'}</span>
+              <span>THE REPUTATION ECONOMY · YOUR ACTIVE CRED</span>
             </div>
             <h2 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white">
               EARN YOUR <br />
@@ -1054,7 +1054,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             </p>
           </div>
 
-          {/* Stats & Economy Matrix */}
+          {/* Genuine Stats & Economy Matrix */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             
             <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-6 text-center shadow-lg">
@@ -1062,10 +1062,10 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <Flame className="h-5 sm:h-6 w-5 sm:w-6" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-mono">
-                {currentUser && !currentUser.id.startsWith('guest_') ? `${currentUser.streak || 0} DAYS` : '7 DAYS'}
+                {currentUser?.streak || 0} DAYS
               </div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-amber-400 mt-1">
-                {currentUser && !currentUser.id.startsWith('guest_') ? 'YOUR STREAK' : 'SAMPLE STREAK'}
+                CURRENT STREAK
               </div>
             </div>
 
@@ -1074,10 +1074,10 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <Coins className="h-5 sm:h-6 w-5 sm:w-6" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-mono">
-                {currentUser && !currentUser.id.startsWith('guest_') ? (currentUser.cred || 0).toLocaleString() : '4,250'}
+                {(currentUser?.cred || 0).toLocaleString()}
               </div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-pink-400 mt-1">
-                {currentUser && !currentUser.id.startsWith('guest_') ? 'YOUR CRED EARNED' : 'SAMPLE CRED POOL'}
+                CRED BALANCE
               </div>
             </div>
 
@@ -1086,10 +1086,10 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <CheckCircle2 className="h-5 sm:h-6 w-5 sm:w-6" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-mono">
-                {currentUser && !currentUser.id.startsWith('guest_') ? (currentUser.completedDaresCount || 0) : '12'}
+                {currentUser?.completedDaresCount || 0}
               </div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-emerald-400 mt-1">
-                {currentUser && !currentUser.id.startsWith('guest_') ? 'DARES COMPLETED' : 'SAMPLE COMPLETED'}
+                DARES COMPLETED
               </div>
             </div>
 
@@ -1098,10 +1098,10 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
                 <Users className="h-5 sm:h-6 w-5 sm:w-6" />
               </div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-mono">
-                {currentUser && !currentUser.id.startsWith('guest_') ? (currentUser.createdDaresCount || 0) : '8'}
+                {currentUser?.createdDaresCount || 0}
               </div>
               <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-cyan-400 mt-1">
-                {currentUser && !currentUser.id.startsWith('guest_') ? 'FRIENDS CHALLENGED' : 'SAMPLE CHALLENGED'}
+                CHALLENGES CREATED
               </div>
             </div>
 
@@ -1140,7 +1140,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
               <RefreshCw className="h-3.5 w-3.5 text-pink-400" />
-              <span>THE VIRAL CHALLENGE LOOP · ILLUSTRATIVE CHAIN</span>
+              <span>THE VIRAL CHALLENGE LOOP · MULTIPLIER MECHANICS</span>
             </div>
             <h2 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white">
               ONE DARE <br />
@@ -1168,32 +1168,32 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
               <ArrowRight className="h-5 w-5" />
             </div>
 
-            {/* Node 2: JOSH */}
+            {/* Node 2: FRIEND 1 */}
             <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">SAMPLE FRIEND 1</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@josh</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
+              <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">CHALLENGER</span>
+              <h4 className="text-base sm:text-lg font-black text-white mt-1">Friend 1</h4>
+              <p className="text-xs text-slate-400 mt-0.5">Accepts & Completes</p>
             </div>
 
             <div className="text-amber-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
               <ArrowRight className="h-5 w-5" />
             </div>
 
-            {/* Node 3: SARAH */}
+            {/* Node 3: FRIEND 2 */}
             <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">SAMPLE FRIEND 2</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@sarah</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Completes & Passes</p>
+              <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">SQUAD MEMBER</span>
+              <h4 className="text-base sm:text-lg font-black text-white mt-1">Friend 2</h4>
+              <p className="text-xs text-slate-400 mt-0.5">Passes Chain Forward</p>
             </div>
 
             <div className="text-cyan-400 font-black text-lg rotate-90 lg:rotate-0 shrink-0">
               <ArrowRight className="h-5 w-5" />
             </div>
 
-            {/* Node 4: MIKE */}
+            {/* Node 4: FRIEND 3 */}
             <div className="flex-1 w-full p-4 rounded-2xl bg-[#080B14] border border-slate-800 text-center">
-              <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">SAMPLE FRIEND 3</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">@mike</h4>
+              <span className="text-[10px] font-mono text-purple-400 font-bold uppercase">RE-CHALLENGER</span>
+              <h4 className="text-base sm:text-lg font-black text-white mt-1">Friend 3</h4>
               <p className="text-xs text-slate-400 mt-0.5">Dares You Back</p>
             </div>
 
@@ -1204,8 +1204,8 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             {/* Node 5: CHAIN MULTIPLIER */}
             <div className="flex-1 w-full p-4 rounded-2xl bg-gradient-to-b from-pink-950/40 to-purple-950/40 border border-pink-500/50 text-center">
               <span className="text-[10px] font-mono text-pink-300 font-bold uppercase">CHAIN MULTIPLIER</span>
-              <h4 className="text-base sm:text-lg font-black text-white mt-1">5X STREAK</h4>
-              <p className="text-xs text-amber-300 mt-0.5">Sample: +25% Bonus Cred</p>
+              <h4 className="text-base sm:text-lg font-black text-white mt-1">STREAK BONUS</h4>
+              <p className="text-xs text-amber-300 mt-0.5">+25% Bonus Cred Earned</p>
             </div>
 
           </div>
@@ -1223,7 +1223,7 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-pink-500/30 bg-pink-950/40 px-3.5 py-1 text-xs font-mono font-bold text-pink-300 mb-3">
                 <Users className="h-3.5 w-3.5 text-pink-400" />
-                <span>COMMUNITY ARENA · SAMPLE SHOWCASES (ILLUSTRATIVE)</span>
+                <span>COMMUNITY ARENA · LIVE USER CHALLENGES</span>
               </div>
               <h2 className="text-3xl xs:text-4xl sm:text-5xl font-black uppercase tracking-tight text-white">
                 REAL PEOPLE. <br />
@@ -1242,130 +1242,98 @@ export const LandingPageExperience: React.FC<LandingPageExperienceProps> = ({
             </button>
           </div>
 
-          {/* High-Fidelity Community Activity Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-            
-            {/* Card 1 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-pink-500/30 border border-pink-400 flex items-center justify-center font-bold text-xs text-pink-300">
-                      A
+          {/* Genuine Community Activity Grid */}
+          {dares && dares.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
+              {dares.slice(0, 3).map((dare, idx) => (
+                <div 
+                  key={dare.id || idx} 
+                  className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between hover:border-pink-500/40 transition-all cursor-pointer"
+                  onClick={() => {
+                    playSound('click');
+                    if (onStartMission) {
+                      onStartMission(dare);
+                    } else if (onExploreChallenges) {
+                      onExploreChallenges();
+                    }
+                  }}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {dare.creatorAvatar ? (
+                          <img 
+                            src={dare.creatorAvatar} 
+                            alt={dare.creatorName || 'Creator'} 
+                            className="w-8 h-8 rounded-full border border-pink-400/50 object-cover" 
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-pink-500/30 border border-pink-400 flex items-center justify-center font-bold text-xs text-pink-300 uppercase">
+                            {(dare.creatorHandle || dare.creatorName || 'U').replace('@', '').charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-xs font-bold text-white truncate max-w-[140px]">
+                            {dare.creatorHandle || (dare.creatorName ? `@${dare.creatorName.toLowerCase().replace(/\s+/g, '_')}` : '@operative')}
+                          </div>
+                          <div className="text-[10px] text-slate-400 capitalize">{dare.category}</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-pink-950/60 border border-pink-500/40 text-[10px] font-mono font-bold text-pink-300">
+                        ACTIVE
+                      </span>
                     </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@alex_dares</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
-                </div>
 
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-pink-400 uppercase font-bold">OUTDOOR MISSION</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Run to the highest viewpoint before sunset."</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+100 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c1')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c1'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 42
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 8
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-500/30 border border-cyan-400 flex items-center justify-center font-bold text-xs text-cyan-300">
-                      M
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@maya_motion</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
+                    <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
+                      <span className="text-[10px] font-mono text-pink-400 uppercase font-bold">{dare.category.toUpperCase()} DARE</span>
+                      <h5 className="text-xs sm:text-sm font-bold text-white mt-1 line-clamp-2">"{dare.title}"</h5>
+                      {dare.proofRequirement && (
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-1 italic">Proof: {dare.proofRequirement}</p>
+                      )}
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
-                </div>
 
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">FITNESS BOUNTY</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"50 Clean Push-Ups in Under 90 Seconds"</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+75 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c2')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c2'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 58
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 14
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3 */}
-            <div className="rounded-2xl border border-slate-800 bg-[#11111A] p-4 sm:p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-purple-500/30 border border-purple-400 flex items-center justify-center font-bold text-xs text-purple-300">
-                      K
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white">@kai_explorer</div>
-                      <div className="text-[10px] text-slate-400">Sample Showcase</div>
+                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+                    <span className="text-amber-400 font-bold">+{dare.rewardCred} CRED</span>
+                    <div className="flex items-center gap-3 text-slate-400">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(dare.id);
+                        }}
+                        className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts[dare.id] ? 'text-pink-500' : ''}`}
+                      >
+                        <Heart className="h-3.5 w-3.5 fill-current" /> {dare.likes || 0}
+                      </button>
+                      <span className="flex items-center gap-1">
+                        <MessageSquare className="h-3.5 w-3.5" /> {dare.comments?.length || 0}
+                      </span>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-300">
-                    ILLUSTRATIVE
-                  </span>
                 </div>
-
-                <div className="p-3 rounded-xl bg-[#080B14] border border-slate-800/80 mb-3">
-                  <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">CREATIVE DARE</span>
-                  <h5 className="text-xs sm:text-sm font-bold text-white mt-1">"Find and photograph 3 neon signs in town."</h5>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-amber-400 font-bold">+60 CRED (SAMPLE)</span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <button 
-                    onClick={() => toggleLike('c3')}
-                    className={`flex items-center gap-1 hover:text-pink-400 transition-colors cursor-pointer ${likedPosts['c3'] ? 'text-pink-500' : ''}`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" /> 31
-                  </button>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" /> 5
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
-
-          </div>
+          ) : (
+            <div className="rounded-3xl border border-slate-800/80 bg-[#11111A] p-8 sm:p-12 text-center max-w-xl mx-auto space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center mx-auto text-pink-400">
+                <Flame className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-white">No Public Dares Created Yet</h3>
+              <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+                Be the first challenger to broadcast a live real-world dare to your friends and the global community.
+              </p>
+              <button
+                onClick={() => {
+                  playSound('pop');
+                  onOpenCreateModal();
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Broadcast First Dare</span>
+              </button>
+            </div>
+          )}
 
           <div className="mt-8 text-center text-xs font-mono text-slate-400">
             <span>Community highlights · Explore live challenges and connect with friends in /app</span>

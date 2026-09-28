@@ -57,7 +57,7 @@ interface MerchItemCustom extends MerchItem {
   badge?: string;
 }
 
-const MOCK_MERCH: MerchItemCustom[] = [
+const OFFICIAL_MERCH_CATALOG: MerchItemCustom[] = [
   { id: 'm1', title: '300 / 100 Challenge Tee', price: 'TBA', image: challengeTeeImg, subtitle: 'Dawn Strength Gauntlet • 300 Squats & 100 Pushups • Partition & Conquer', badge: 'GAUNTLET SERIES' },
   { id: 'm2', title: 'DARE Water Bottle', price: 'TBA', image: waterBottleImg, subtitle: 'Vacuum-Sealed Steel • Magenta Core Finish • Hydration Protocol Ready', badge: 'HYDRATION' },
   { id: 'm3', title: 'Streak x2 Wrist Wraps', price: 'TBA', image: wristWrapsImg, subtitle: 'Heavy-Duty Support • Streak x2 Branding • Secure Thumb Loop', badge: 'PRO GEAR' },
@@ -94,7 +94,7 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
     playSound('complete');
     setNotifiedAll(true);
     const updated: Record<string, boolean> = {};
-    MOCK_MERCH.forEach(m => {
+    OFFICIAL_MERCH_CATALOG.forEach(m => {
       updated[m.id] = true;
     });
     setNotifiedMerchIds(updated);
@@ -472,7 +472,7 @@ export const EventsMerchModal: React.FC<EventsMerchModalProps> = ({ isOpen, onCl
 
               {/* Merch Grid with Coming Soon Badges */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {MOCK_MERCH.map(item => {
+                {OFFICIAL_MERCH_CATALOG.map(item => {
                   const isNotified = notifiedMerchIds[item.id];
                   return (
                     <div 
