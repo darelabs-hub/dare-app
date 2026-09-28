@@ -73,6 +73,31 @@ export default function App() {
       });
     };
     window.addEventListener('popstate', handlePopState);
+
+    // Check for Stripe Checkout return
+    const searchParams = new URLSearchParams(window.location.search);
+    const sessionId = searchParams.get('session_id');
+    const paymentStatus = searchParams.get('payment_status');
+
+    if (paymentStatus === 'success' && sessionId) {
+      fetch(`/api/stripe/verify-session/${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setCurrentUser(data.user);
+            setUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u));
+          }
+          triggerConfetti();
+          playSound('complete');
+          fetchNotifications();
+          fetchStats();
+        })
+        .catch(() => {})
+        .finally(() => {
+          window.history.replaceState({}, '', window.location.pathname);
+        });
+    }
+
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
@@ -1494,6 +1519,7 @@ export default function App() {
         isOpen={isProUpgradeOpen}
         onClose={() => setIsProUpgradeOpen(false)}
         currentUser={currentUser}
+        onSignIn={signIn}
         onUpgradeSuccess={(updatedUser) => {
           setCurrentUser(updatedUser);
           setUsers((prev) => prev.map((u) => u.id === updatedUser.id ? updatedUser : u));
