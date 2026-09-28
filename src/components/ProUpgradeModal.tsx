@@ -555,12 +555,12 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                     }}
                     className={`flex items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold font-mono transition-all ${
                       paymentMode === 'cred'
-                        ? 'bg-[#1e293b] border border-indigo-500/30 text-indigo-300'
+                        ? 'bg-[#1e293b] border border-indigo-500/30 text-indigo-300 font-bold'
                         : 'text-slate-400 hover:text-slate-200'
                     }`}
                   >
-                    <Coins className="h-3.5 w-3.5" />
-                    <span>In-Game Creds</span>
+                    <Coins className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Pay with In-Game Creds</span>
                   </button>
                 </div>
 
@@ -747,7 +747,9 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                     <>
                       <ShieldCheck className="h-4 w-4" />
                       <span>
-                        Authorize {paymentMode === 'card' ? currentTierData?.priceUSD : `${currentTierData?.priceCred} CR`}
+                        {paymentMode === 'card' 
+                          ? `Authorize & Subscribe ${currentTierData?.priceUSD}` 
+                          : `Redeem ${currentTierData?.priceCred.toLocaleString()} CR (No Card Required)`}
                       </span>
                     </>
                   )}
