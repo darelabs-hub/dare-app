@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #07090e;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+}
+
+/* Apple / Nike Modern Sleek Typography */
+.font-tech {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Modern Clean Brand Colors */
+.bg-dare-pink {
+  background-color: #EC4899;
+}
+
+.text-dare-pink {
+  color: #F472B6;
+}
+
+.border-dare-pink {
+  border-color: #EC4899;
+}
+
+.bg-dare-purple {
+  background-color: #8B5CF6;
+}
+
+.text-dare-purple {
+  color: #A78BFA;
+}
+
+.border-dare-purple {
+  border-color: #8B5CF6;
+}
+
+.btn-dare-primary {
+  background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 9999px;
+  box-shadow: 0 2px 12px rgba(236, 72, 153, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-dare-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(236, 72, 153, 0.35);
+}
+
+.btn-dare-primary:active {
+  transform: scale(0.97);
+}
+
+.dare-card-bg {
+  background-color: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dare-card-elevated {
+  background-color: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Refined Subtle Apple-style Elevations (No harsh neon glare) */
+.glow-magenta {
+  box-shadow: 0 4px 20px -2px rgba(236, 72, 153, 0.15);
+}
+
+.glow-purple {
+  box-shadow: 0 4px 20px -2px rgba(139, 92, 246, 0.15);
+}
+
+.glow-cyan {
+  box-shadow: 0 4px 20px -2px rgba(6, 182, 212, 0.15);
+}
+
+.glow-green {
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.15);
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #07090e;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

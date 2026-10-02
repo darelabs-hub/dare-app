@@ -1,0 +1,14 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /app
+Allow: /privacy
+Allow: /privacy-policy
+Allow: /terms
+Allow: /terms-of-service
+
+# Disallow internal API endpoints & query endpoints from raw indexing
+Disallow: /api/
+Disallow: /ingest/
+
+Sitemap: https://ais-dev-f2jev5e77tancw47utwpz2-604116600759.europe-west2.run.app/sitemap.xml
