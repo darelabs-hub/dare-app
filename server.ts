@@ -1136,16 +1136,26 @@ async function loadAllInitialDataFromFirestore() {
       console.log(`[Firestore] Hydrated ${chatSnap.size} squad chat message(s).`);
     }
 
-    // Load Transactions
+    // Load Transactions (Strict genuine transactions only; purge orphaned test transactions)
     const txSnap = await db.collection('transactions').orderBy('timestamp', 'desc').limit(200).get();
     if (txSnap && !txSnap.empty) {
+      const txPurgePromises: Promise<any>[] = [];
       txSnap.forEach((doc: any) => {
         const tx = doc.data() as CredTransaction;
+        // Purge transactions for non-existent test dares
+        if (tx.dareTitle && tx.dareTitle.includes('Stranger Squat')) {
+          txPurgePromises.push(doc.ref.delete());
+          return;
+        }
         if (!transactions.some(existing => existing.id === tx.id)) {
           transactions.push(tx);
         }
       });
-      console.log(`[Firestore] Hydrated ${txSnap.size} transaction(s).`);
+      if (txPurgePromises.length > 0) {
+        await Promise.allSettled(txPurgePromises);
+        console.log(`[Firestore] Purged ${txPurgePromises.length} legacy test transaction(s).`);
+      }
+      console.log(`[Firestore] Hydrated ${transactions.length} genuine transaction(s).`);
     }
 
     // Load Notifications
@@ -1240,6 +1250,37 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
   // --- API ROUTES ---
+
+  // Transparent Firebase Auth Handler Proxy for Custom Domains (e.g. dare.me.uk/__/auth/handler)
+  app.all('/__/auth/*', async (req, res) => {
+    try {
+      const targetUrl = `https://gen-lang-client-0878556058.firebaseapp.com${req.originalUrl}`;
+      const headers: Record<string, string> = {};
+      Object.entries(req.headers).forEach(([k, v]) => {
+        if (v && k !== 'host' && k !== 'connection') {
+          headers[k] = Array.isArray(v) ? v.join(', ') : v;
+        }
+      });
+      headers['host'] = 'gen-lang-client-0878556058.firebaseapp.com';
+
+      const proxyRes = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+        body: ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined,
+        redirect: 'manual',
+      });
+
+      res.status(proxyRes.status);
+      proxyRes.headers.forEach((val, key) => {
+        res.setHeader(key, val);
+      });
+      const buffer = await proxyRes.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    } catch (err) {
+      console.warn('Firebase Auth proxy notice:', err);
+      res.status(502).send('Auth Proxy Error');
+    }
+  });
 
   // Health check with active database connection status
   app.get('/api/health', async (_req, res) => {

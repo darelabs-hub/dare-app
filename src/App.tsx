@@ -1791,8 +1791,6 @@ export default function App() {
                   </div>
                 )}
 
-                <SocialActivityFeed transactions={transactions} />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {dares.map((dare) => (
                     <DareCard
