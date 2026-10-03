@@ -119,27 +119,19 @@ export default function App() {
     setCurrentPath(path.toLowerCase());
   };
   const getInitialUser = (): UserProfile => {
-    // 1. Check if there is an active custom profile saved on this device
-    try {
-      const lastCustom = localStorage.getItem('dareday_last_custom_profile');
-      if (lastCustom) {
-        const parsed = JSON.parse(lastCustom);
-        if (parsed && parsed.id && parsed.name && parsed.name !== 'Guest Player' && parsed.name !== 'Guest Operative') {
-          return parsed;
+    // 1. Check if user is known to be signed in
+    const hasSignedIn = localStorage.getItem('dareday_user_has_signed_in') === 'true';
+    if (hasSignedIn) {
+      try {
+        const lastCustom = localStorage.getItem('dareday_last_custom_profile');
+        if (lastCustom) {
+          const parsed = JSON.parse(lastCustom);
+          if (parsed && parsed.id && parsed.name && !parsed.id.startsWith('guest_') && parsed.name !== 'Guest Player') {
+            return parsed;
+          }
         }
-      }
-    } catch (_e) {}
-
-    // 2. Check guest session
-    try {
-      const saved = localStorage.getItem('dareday_guest_session');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.id) {
-          return parsed;
-        }
-      }
-    } catch (_e) {}
+      } catch (_e) {}
+    }
 
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     const randomSuffix = Math.random().toString(36).substring(2, 7);
@@ -157,14 +149,13 @@ export default function App() {
       streak: 0,
       badges: [],
       isPro: false,
+      proTier: null,
       inventory: [],
       activeBoosters: [],
       seasonPassLevel: 1,
       seasonPassXp: 0,
+      isGuest: true,
     };
-    try {
-      localStorage.setItem('dareday_guest_session', JSON.stringify(guest));
-    } catch (_e) {}
     return guest;
   };
 
@@ -241,10 +232,19 @@ export default function App() {
     }
     localStorage.removeItem('dareday_user_has_signed_in');
     localStorage.removeItem('dareday_last_custom_profile');
+    localStorage.removeItem('dareday_guest_session');
+    try {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('dareday_profile_')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch (_e) {}
     resetAnalytics();
     lastIdentifiedUidRef.current = null;
     const guest = getInitialUser();
     setCurrentUser(guest);
+    playSound('pop');
     navigateTo('/');
   };
 
@@ -485,11 +485,13 @@ export default function App() {
               name: currentUser.name || u.name,
               handle: currentUser.handle || u.handle,
               avatar: currentUser.avatar || u.avatar,
+              completedDaresCount: currentUser.completedDaresCount ?? u.completedDaresCount,
+              cred: currentUser.cred ?? u.cred,
             };
           }
           return u;
         });
-        if (!updatedUsers.some((u: UserProfile) => u.id === currentUser.id)) {
+        if (!currentUser.id.startsWith('guest_') && !updatedUsers.some((u: UserProfile) => u.id === currentUser.id)) {
           updatedUsers.push(currentUser);
         }
         setUsers(updatedUsers);
@@ -571,7 +573,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setCurrentUser(prev => {
+        if (prev.id.startsWith('guest_')) return prev;
+        return getInitialUser();
+      });
+      return;
+    }
 
     let isMounted = true;
     const syncUserProfile = async () => {

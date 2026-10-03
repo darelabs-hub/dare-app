@@ -44,21 +44,17 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
         ...user,
         calculatedStats: {
           cred: user.cred || 0,
-          completed: user.completedDaresCount || 0,
+          completed: user.completedDaresCount || (user as any).completedDares?.length || 0,
           created: user.createdDaresCount || 0,
           streak: user.streak || 0,
         }
       }))
       .filter(user => {
-        // Enforce rule: Do not display users on the leaderboard unless they have successfully implemented and/or completed an activity.
-        const hasActivity = 
-          (user.completedDaresCount || 0) > 0 ||
-          (user.createdDaresCount || 0) > 0 ||
-          Boolean((user as any).daresCompleted && (user as any).daresCompleted.length > 0) ||
-          Boolean((user as any).daresCreated && (user as any).daresCreated.length > 0) ||
-          Boolean((user as any).activities && (user as any).activities.length > 0);
+        // Enforce rule: Only display users on the leaderboard who have completed at least 1 verified activity/dare.
+        const completedCount = user.calculatedStats.completed;
+        const hasCompletedActivity = completedCount > 0;
 
-        if (!hasActivity) {
+        if (!hasCompletedActivity) {
           return false;
         }
 
@@ -358,7 +354,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
               <Trophy className="h-9 w-9 text-slate-600 mx-auto" />
               <p className="text-sm font-semibold text-slate-200">No active challengers ranked yet</p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Users only appear on the leaderboard after successfully completing a dare or creating an activity.
+                Users only appear on the leaderboard after successfully completing at least one challenge.
               </p>
               {searchQuery && (
                 <button
@@ -484,7 +480,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
               </>
             ) : (
               <span className="text-slate-400">
-                Complete a dare or create a challenge to qualify for the leaderboard!
+                Complete a challenge and submit verified proof to qualify for the leaderboard!
               </span>
             )}
           </div>

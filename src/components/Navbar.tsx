@@ -538,8 +538,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   playSound('click');
                   if (onSignIn) onSignIn();
                 }}
-                className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-indigo-500/50 bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-white hover:from-indigo-500 hover:to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer shrink-0 active:scale-95"
-                title="Sign In with Google"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-white/[0.08] bg-white/[0.06] hover:bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all cursor-pointer shrink-0 active:scale-95 shadow-sm"
+                title="Sign In"
               >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -552,7 +552,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {currentUser && (
+            {isAuthenticated && currentUser && (
               <div className="relative shrink-0" ref={userDropdownRef}>
                 <button
                   id="user-profile-menu-btn"
@@ -564,8 +564,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={`flex items-center gap-1 sm:gap-2 rounded-xl border p-1 sm:px-2.5 sm:py-1.5 text-left transition-all cursor-pointer ${
                     userDropdownOpen
-                      ? 'border-indigo-400 bg-indigo-950/80 shadow-[0_0_15px_rgba(99,102,241,0.4)] ring-2 ring-indigo-500'
-                      : 'border-slate-700 bg-slate-900/95 hover:border-indigo-500 hover:bg-slate-800'
+                      ? 'border-white/20 bg-white/10 ring-1 ring-white/20'
+                      : 'border-white/[0.08] bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'
                   }`}
                   aria-expanded={userDropdownOpen}
                   aria-label="User Profile and Account Menu"
@@ -579,7 +579,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         currentUser.equippedFrame === 'frame_matrix_glitch' ? 'ring-2 ring-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.8)]' :
                         currentUser.equippedFrame === 'frame_syndicate_gold' ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.9)]' :
                         currentUser.equippedFrame === 'frame_quantum_void' ? 'ring-2 ring-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.9)] animate-pulse' :
-                        'ring-1.5 ring-indigo-500/60 shadow-sm'
+                        'ring-1 ring-white/10 shadow-sm'
                       }`}
                     />
                     {currentUser.isPro && (
@@ -592,7 +592,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="flex flex-col min-w-0 pr-0.5">
                     <div className="flex items-center gap-0.5 sm:gap-1">
                       <span className="font-bold text-xs text-white truncate max-w-[55px] xs:max-w-[75px] sm:max-w-[95px]">{currentUser.handle}</span>
-                      <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 text-indigo-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-white' : ''}`} />
+                      <ChevronDown className={`h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-white' : ''}`} />
                     </div>
                     <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
                       <span className="text-amber-400 font-bold">{currentUser.cred} CR</span>
