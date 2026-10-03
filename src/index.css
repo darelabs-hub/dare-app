@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    position: relative;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #07090e;
+    color: #f1f5f9;
+    font-size: 15px;
+    line-height: 1.625;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Lifestyle & Editorial Headings: Tighter letter-spacing & balanced leading */
+  h1 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.035em;
+    line-height: 1.15;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    font-weight: 650;
+    text-wrap: balance;
+  }
+
+  h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  p {
+    line-height: 1.625;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+  }
+
+  button, input, select, textarea {
+    font-family: inherit;
+    letter-spacing: -0.012em;
+  }
+}
+
+/* Lifestyle & High-End Performance Typography */
+.font-tech,
+.font-display {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.025em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+.tracking-lifestyle-tight {
+  letter-spacing: -0.03em;
+}
+
+.leading-lifestyle-relaxed {
+  line-height: 1.65;
+}
+
+/* Subtle Modern Brand Accents (Lifestyle & Premium) */
+.bg-dare-pink {
+  background-color: #EC4899;
+}
+
+.text-dare-pink {
+  color: #F472B6;
+}
+
+.border-dare-pink {
+  border-color: #EC4899;
+}
+
+.bg-dare-purple {
+  background-color: #8B5CF6;
+}
+
+.text-dare-purple {
+  color: #A78BFA;
+}
+
+.border-dare-purple {
+  border-color: #8B5CF6;
+}
+
+.btn-dare-primary {
+  background: #ffffff;
+  color: #090d16;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  letter-spacing: -0.015em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-dare-primary:hover {
+  background: #f8fafc;
+  transform: translateY(-0.5px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.btn-dare-primary:active {
+  transform: scale(0.98);
+}
+
+.dare-card-bg {
+  background-color: #0A0D14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dare-card-elevated {
+  background-color: #10141E;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Refined Subtle Modern Elevations */
+.glow-magenta {
+  box-shadow: 0 4px 20px -2px rgba(236, 72, 153, 0.12);
+}
+
+.glow-purple {
+  box-shadow: 0 4px 20px -2px rgba(139, 92, 246, 0.12);
+}
+
+.glow-cyan {
+  box-shadow: 0 4px 20px -2px rgba(6, 182, 212, 0.12);
+}
+
+.glow-green {
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.12);
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #07090e;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
